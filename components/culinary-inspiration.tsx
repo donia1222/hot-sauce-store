@@ -59,7 +59,7 @@ const recipes: Recipe[] = [
     id: "recipe2",
     title: "Feurige Tacos al Pastor",
     description: "Traditionelle mexikanische Tacos mit marinierten Schweinefleisch und unserer Heat Wave Sauce",
-    image: "/placeholder.svg?height=400&width=600",
+    image: "mexican-tacos-with-beef-tomato-",
     prepTime: "30 min + 4h Marinieren",
     cookTime: "25 min",
     servings: 6,

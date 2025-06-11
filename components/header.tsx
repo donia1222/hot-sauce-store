@@ -1,5 +1,17 @@
 "use client"
-import { ShoppingCart, Crown, Zap, MapPin, Home, Package, Gift, ChefHat, Heart } from "lucide-react"
+
+import { useState, useEffect } from "react"
+import {
+  ShoppingCart,
+  Crown,
+  Zap,
+  MapPin,
+  Home,
+  Package,
+  Gift,
+  ChefHat,
+  Heart,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -9,6 +21,27 @@ interface HeaderProps {
 }
 
 export function Header({ cartItemsCount, onCartOpen }: HeaderProps) {
+  const [showHeader, setShowHeader] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
+
+  // Maneja el scroll para ocultar/mostrar
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scroll hacia abajo: oculta
+        setShowHeader(false)
+      } else {
+        // Scroll hacia arriba: muestra
+        setShowHeader(true)
+      }
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [lastScrollY])
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     if (element) {
@@ -24,7 +57,14 @@ export function Header({ cartItemsCount, onCartOpen }: HeaderProps) {
   ]
 
   return (
-    <header className="bg-gradient-to-r from-gray-900 via-gray-800 to-black/95 backdrop-blur-xl shadow-2xl sticky top-0 z-50 border-b border-orange-400/20">
+    <header
+      className={`
+        fixed top-0 left-0 w-full z-50
+        bg-gradient-to-r from-gray-900 via-gray-800 to-black/95 backdrop-blur-xl shadow-2xl border-b border-orange-400/20
+        transform transition-transform duration-300
+        ${showHeader ? "translate-y-0" : "-translate-y-full"}
+      `}
+    >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo Section */}
@@ -40,8 +80,6 @@ export function Header({ cartItemsCount, onCartOpen }: HeaderProps) {
               <h1 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent tracking-tight">
                 FEUER KÖNIGREICH
               </h1>
-           
-      
             </div>
           </div>
 
@@ -64,9 +102,7 @@ export function Header({ cartItemsCount, onCartOpen }: HeaderProps) {
 
           {/* Mobile Navigation Toggle */}
           <div className="flex items-center space-x-3">
-            <div className="lg:hidden">
-  
-            </div>
+            <div className="lg:hidden">{/* Aquí iría tu botón de menú móvil */}</div>
 
             {/* Cart Button */}
             <Button

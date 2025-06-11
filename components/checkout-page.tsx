@@ -81,22 +81,23 @@ export function CheckoutPage({ cart, onBackToStore }: CheckoutPageProps) {
   }
 
   // Cargar PayPal SDK
-  useEffect(() => {
-    const loadPayPalScript = () => {
-      if (window.paypal) {
-        setIsPayPalLoaded(true)
-        return
-      }
-
-      const script = document.createElement("script")
-      script.src = "https://www.paypal.com/sdk/js?client-id=sb&currency=CHF&locale=de_DE"
-      script.async = true
-      script.onload = () => setIsPayPalLoaded(true)
-      document.body.appendChild(script)
+useEffect(() => {
+  const loadPayPalScript = () => {
+    if (window.paypal) {
+      setIsPayPalLoaded(true)
+      return
     }
 
-    loadPayPalScript()
-  }, [])
+    const script = document.createElement("script")
+    script.src = "https://www.paypal.com/sdk/js?client-id=Ae66-ThMZlJFudWCaqibC7DFhCLbwSu6P-Jf3VA96AiE6yRl_-50pkk0D6ibaxPT8W1iaFsYmeEcyW0V&currency=CHF&locale=de_DE"
+    script.async = true
+    script.onload = () => setIsPayPalLoaded(true)
+    document.body.appendChild(script)
+  }
+
+  loadPayPalScript()
+}, [])
+
 
   // Inicializar botones de PayPal
   useEffect(() => {
