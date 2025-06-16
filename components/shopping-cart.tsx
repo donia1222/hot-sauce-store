@@ -27,6 +27,7 @@ interface ShoppingCartProps {
   onAddToCart: (product: Product) => void
   onRemoveFromCart: (productId: number) => void
   onGoToCheckout: () => void
+  onClearCart: () => void // Nueva función para limpiar carrito
 }
 
 export function ShoppingCartComponent({
@@ -36,6 +37,7 @@ export function ShoppingCartComponent({
   onAddToCart,
   onRemoveFromCart,
   onGoToCheckout,
+  onClearCart,
 }: ShoppingCartProps) {
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0)
@@ -108,6 +110,16 @@ export function ShoppingCartComponent({
                     <Shield className="w-5 h-5 mr-2" />
                     Zur Kasse gehen
                   </Button>
+
+                  {/* Botón para limpiar carrito manualmente */}
+                  <Button
+                    onClick={onClearCart}
+                    variant="outline"
+                    className="w-full border-gray-600 text-gray-400 hover:bg-gray-800 hover:text-white"
+                  >
+                    🗑️ Warenkorb leeren
+                  </Button>
+
                   <p className="text-xs text-gray-400 text-center">Sichere Zahlung mit PayPal</p>
                 </div>
               </div>

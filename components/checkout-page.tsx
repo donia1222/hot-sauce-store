@@ -29,6 +29,7 @@ interface CartItem extends Product {
 interface CheckoutPageProps {
   cart: CartItem[]
   onBackToStore: () => void
+  onClearCart?: () => void // Nueva prop para limpiar carrito
 }
 
 interface CustomerInfo {
@@ -49,7 +50,7 @@ declare global {
   }
 }
 
-export function CheckoutPage({ cart, onBackToStore }: CheckoutPageProps) {
+export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: "",
     lastName: "",
@@ -62,10 +63,31 @@ export function CheckoutPage({ cart, onBackToStore }: CheckoutPageProps) {
     notes: "",
   })
 
-  const [isPayPalLoaded, setIsPayPalLoaded] = useState(false)
   const [orderStatus, setOrderStatus] = useState<"pending" | "processing" | "completed" | "error">("pending")
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
+
+  // Cargar datos del usuario desde localStorage al iniciar
+  useEffect(() => {
+    const savedCustomerInfo = localStorage.getItem("cantina-customer-info")
+    if (savedCustomerInfo) {
+      try {
+        const parsedInfo = JSON.parse(savedCustomerInfo)
+        setCustomerInfo(parsedInfo)
+      } catch (error) {
+        console.error("Error loading customer info from localStorage:", error)
+      }
+    }
+  }, [])
+
+  // Guardar datos del usuario en localStorage cada vez que cambien
+  useEffect(() => {
+    // Solo guardar si hay al menos un campo completado
+    const hasData = Object.values(customerInfo).some((value) => value.trim() !== "")
+    if (hasData) {
+      localStorage.setItem("cantina-customer-info", JSON.stringify(customerInfo))
+    }
+  }, [customerInfo])
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0)
@@ -73,115 +95,52 @@ export function CheckoutPage({ cart, onBackToStore }: CheckoutPageProps) {
 
   const getShippingCost = () => {
     const total = getTotalPrice()
-    return total >= 50 ? 0 : 8.5 // Envío gratis para pedidos superiores a 50 CHF
+    // return total >= 50 ? 0 : 8.5 // Envío gratis para pedidos superiores a 50 CHF
+    return 0 // 🎉 ENVÍO GRATIS PARA PRUEBAS
   }
 
   const getFinalTotal = () => {
     return getTotalPrice() + getShippingCost()
   }
 
-  // Cargar PayPal SDK
-useEffect(() => {
-  const loadPayPalScript = () => {
-    if (window.paypal) {
-      setIsPayPalLoaded(true)
+  // Método simple de PayPal - sin SDK
+  const handlePayPalPayment = () => {
+    if (!validateForm()) {
       return
     }
 
-    const script = document.createElement("script")
-    script.src = "https://www.paypal.com/sdk/js?client-id=Ae66-ThMZlJFudWCaqibC7DFhCLbwSu6P-Jf3VA96AiE6yRl_-50pkk0D6ibaxPT8W1iaFsYmeEcyW0V&currency=CHF&locale=de_DE"
-    script.async = true
-    script.onload = () => setIsPayPalLoaded(true)
-    document.body.appendChild(script)
+    const total = getFinalTotal()
+    const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=info@cantinatexmex.ch&amount=${total.toFixed(2)}&currency_code=CHF&item_name=FEUER KÖNIGREICH Order&return=${window.location.origin}/success&cancel_return=${window.location.origin}/cancel`
+
+    setOrderStatus("processing")
+    window.open(paypalUrl, "_blank")
+
+    // NO auto-success - stay in processing until user confirms
+    // Remove the setTimeout that was automatically showing success
   }
 
-  loadPayPalScript()
-}, [])
+  const handlePaymentConfirmation = (success: boolean) => {
+    if (success) {
+      setOrderStatus("completed")
+      setOrderDetails({
+        id: `ORDER_${Date.now()}`,
+        status: "COMPLETED",
+        customerInfo: customerInfo,
+        cart: cart,
+        total: getFinalTotal(),
+      })
 
+      // Limpiar el carrito después del pago exitoso
+      if (onClearCart) {
+        onClearCart()
+      }
 
-  // Inicializar botones de PayPal
-  useEffect(() => {
-    if (isPayPalLoaded && window.paypal && orderStatus === "pending") {
-      window.paypal
-        .Buttons({
-          style: {
-            layout: "vertical",
-            color: "gold",
-            shape: "rect",
-            label: "paypal",
-            height: 50,
-          },
-          createOrder: (data: any, actions: any) => {
-            if (!validateForm()) {
-              return Promise.reject("Formulario incompleto")
-            }
-
-            return actions.order.create({
-              purchase_units: [
-                {
-                  amount: {
-                    value: getFinalTotal().toFixed(2),
-                    currency_code: "CHF",
-                    breakdown: {
-                      item_total: {
-                        currency_code: "CHF",
-                        value: getTotalPrice().toFixed(2),
-                      },
-                      shipping: {
-                        currency_code: "CHF",
-                        value: getShippingCost().toFixed(2),
-                      },
-                    },
-                  },
-                  items: cart.map((item) => ({
-                    name: item.name,
-                    unit_amount: {
-                      currency_code: "CHF",
-                      value: item.price.toFixed(2),
-                    },
-                    quantity: item.quantity.toString(),
-                  })),
-                  shipping: {
-                    name: {
-                      full_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
-                    },
-                    address: {
-                      address_line_1: customerInfo.address,
-                      admin_area_2: customerInfo.city,
-                      postal_code: customerInfo.postalCode,
-                      country_code: "CH",
-                    },
-                  },
-                },
-              ],
-              application_context: {
-                shipping_preference: "SET_PROVIDED_ADDRESS",
-              },
-            })
-          },
-          onApprove: async (data: any, actions: any) => {
-            setOrderStatus("processing")
-            try {
-              const details = await actions.order.capture()
-              setOrderDetails(details)
-              setOrderStatus("completed")
-
-              // Aquí podrías enviar los datos a tu backend
-              console.log("Pedido completado:", details)
-              console.log("Información del cliente:", customerInfo)
-            } catch (error) {
-              console.error("Error al procesar el pago:", error)
-              setOrderStatus("error")
-            }
-          },
-          onError: (err: any) => {
-            console.error("Error de PayPal:", err)
-            setOrderStatus("error")
-          },
-        })
-        .render("#paypal-button-container")
+      // También limpiar localStorage del carrito para asegurar
+      localStorage.removeItem("cantina-cart")
+    } else {
+      setOrderStatus("error")
     }
-  }, [isPayPalLoaded, customerInfo, cart, orderStatus])
+  }
 
   const validateForm = () => {
     const errors: Partial<CustomerInfo> = {}
@@ -282,7 +241,6 @@ useEffect(() => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Zurück zum Shop
           </Button>
-
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -290,9 +248,15 @@ useEffect(() => {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <User className="w-5 h-5 mr-2 text-orange-600" />
-                  Persönliche Daten
+                <CardTitle className="flex items-center justify-between text-xl">
+                  <div className="flex items-center">
+                    <User className="w-5 h-5 mr-2 text-orange-600" />
+                    Persönliche Daten
+                  </div>
+                  <div className="flex items-center text-xs text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+                    Automatisch gespeichert
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -488,7 +452,7 @@ useEffect(() => {
               </CardContent>
             </Card>
 
-            {/* PayPal Payment */}
+            {/* PayPal Payment - Método Simple */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
@@ -502,27 +466,48 @@ useEffect(() => {
                     <Shield className="w-5 h-5 text-green-600" />
                     <span className="text-sm text-gray-600">Sichere Zahlung mit PayPal</span>
                   </div>
-                  <p className="text-xs text-gray-500">Ihre Zahlungsdaten werden sicher über PayPal verarbeitet.</p>
+                  <p className="text-xs text-gray-500">
+                    Sie werden zu PayPal weitergeleitet um die Zahlung abzuschließen.
+                  </p>
                 </div>
 
                 {orderStatus === "processing" ? (
-                  <div className="text-center py-8">
+                  <div className="text-center py-8 space-y-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Zahlung wird verarbeitet...</p>
+                    <p className="text-gray-600 font-semibold">Warten auf PayPal Zahlung...</p>
+                    <p className="text-sm text-gray-500">Bitte schließen Sie die Zahlung in dem PayPal-Fenster ab</p>
+
+                    <div className="flex gap-4 justify-center mt-6">
+                      <Button
+                        onClick={() => handlePaymentConfirmation(true)}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        ✅ Zahlung abgeschlossen
+                      </Button>
+                      <Button
+                        onClick={() => handlePaymentConfirmation(false)}
+                        variant="outline"
+                        className="border-red-500 text-red-600 hover:bg-red-50"
+                      >
+                        ❌ Zahlung fehlgeschlagen
+                      </Button>
+                    </div>
+
+                    <p className="text-xs text-gray-400 mt-4">
+                      Klicken Sie auf "Zahlung abgeschlossen" nur wenn PayPal die Zahlung bestätigt hat
+                    </p>
                   </div>
                 ) : (
-                  <div id="paypal-button-container" className="min-h-[120px]">
-                    {!isPayPalLoaded && (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600 mx-auto mb-2"></div>
-                        <p className="text-sm text-gray-600">PayPal wird geladen...</p>
-                      </div>
-                    )}
-                  </div>
+                  <Button
+                    onClick={handlePayPalPayment}
+                    className="w-full h-16 text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black shadow-xl hover:shadow-2xl transition-all duration-300"
+                  >
+                    💳 Mit PayPal bezahlen - {getFinalTotal().toFixed(2)} CHF
+                  </Button>
                 )}
 
                 <p className="text-xs text-gray-500 mt-4 text-center">
-                  Mit dem Klick auf "Jetzt bezahlen" akzeptieren Sie unsere AGB und Datenschutzbestimmungen.
+                  Mit dem Klick auf "Mit PayPal bezahlen" akzeptieren Sie unsere AGB und Datenschutzbestimmungen.
                 </p>
               </CardContent>
             </Card>

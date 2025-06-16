@@ -4,7 +4,6 @@ import { useState } from "react"
 import { ChefHat, Clock, Users, Flame, BookOpen, Package, Utensils, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Recipe {
   id: string
@@ -88,6 +87,109 @@ const recipes: Recipe[] = [
       "Das Fleisch und die Ananas in kleine Stücke schneiden.",
       "Tortillas kurz erwärmen und mit Fleisch, Ananas, Zwiebeln und Koriander füllen.",
       "Mit einem zusätzlichen Spritzer Heat Wave Sauce und Limettenspalten servieren.",
+    ],
+  },
+  {
+    id: "recipe3",
+    title: "Mediterrane Gemüse-Quesadillas",
+    description: "Knusprige Quesadillas mit gegrilltem Gemüse und unserer Smoky Chipotle Sauce",
+    image: "/placeholder.svg?height=400&width=600",
+    prepTime: "20 min",
+    cookTime: "15 min",
+    servings: 4,
+    difficulty: "Einfach",
+    sauce: "Big Red's Hot Sauce - Smoky Chipotle",
+    ingredients: [
+      "4 große Weizen-Tortillas",
+      "1 rote Paprika, in Streifen geschnitten",
+      "1 gelbe Paprika, in Streifen geschnitten",
+      "1 Zucchini, in Scheiben geschnitten",
+      "1 rote Zwiebel, in Ringe geschnitten",
+      "200g Mozzarella, gerieben",
+      "100g Feta-Käse, zerbröckelt",
+      "3 EL Big Red's Smoky Chipotle Sauce",
+      "2 EL Olivenöl",
+      "1 TL getrockneter Oregano",
+      "Frischer Basilikum",
+      "Salz und Pfeffer nach Geschmack",
+    ],
+    instructions: [
+      "Das Gemüse mit Olivenöl, Salz, Pfeffer und Oregano marinieren.",
+      "Gemüse in einer Grillpfanne bei mittlerer Hitze 8-10 Minuten grillen, bis es weich und leicht gebräunt ist.",
+      "Eine Tortilla mit Smoky Chipotle Sauce bestreichen.",
+      "Die Hälfte der Tortilla mit gegrilltem Gemüse, Mozzarella und Feta belegen.",
+      "Tortilla zusammenklappen und in einer Pfanne bei mittlerer Hitze 2-3 Minuten pro Seite goldbraun braten.",
+      "In Dreiecke schneiden und mit frischem Basilikum garniert servieren.",
+      "Mit zusätzlicher Smoky Chipotle Sauce zum Dippen servieren.",
+    ],
+  },
+  {
+    id: "recipe4",
+    title: "Würzige Süßkartoffel-Tacos",
+    description: "Geröstete Süßkartoffeln mit schwarzen Bohnen und unserer Jalapeño Lime Sauce",
+    image: "/placeholder.svg?height=400&width=600",
+    prepTime: "15 min",
+    cookTime: "30 min",
+    servings: 6,
+    difficulty: "Einfach",
+    sauce: "Big Red's Hot Sauce - Jalapeño Lime",
+    ingredients: [
+      "2 große Süßkartoffeln, gewürfelt",
+      "1 Dose schwarze Bohnen, abgespült",
+      "12 kleine Mais-Tortillas",
+      "1 Avocado, in Scheiben geschnitten",
+      "1/2 Rotkohl, fein gehobelt",
+      "1 Limette, in Spalten geschnitten",
+      "4 EL Big Red's Jalapeño Lime Sauce",
+      "2 EL Olivenöl",
+      "1 TL Kreuzkümmel",
+      "1 TL Paprikapulver",
+      "1/2 TL Cayennepfeffer",
+      "Frischer Koriander",
+      "Salz nach Geschmack",
+    ],
+    instructions: [
+      "Ofen auf 200°C vorheizen.",
+      "Süßkartoffelwürfel mit Olivenöl, Kreuzkümmel, Paprikapulver, Cayennepfeffer und Salz vermischen.",
+      "Auf einem Backblech verteilen und 25-30 Minuten rösten, bis sie weich und leicht karamellisiert sind.",
+      "Schwarze Bohnen in einem Topf erwärmen und mit etwas Jalapeño Lime Sauce würzen.",
+      "Tortillas kurz erwärmen.",
+      "Tortillas mit gerösteten Süßkartoffeln, schwarzen Bohnen, Avocado und Rotkohl füllen.",
+      "Mit Koriander garnieren und mit Jalapeño Lime Sauce und Limettenspalten servieren.",
+    ],
+  },
+  {
+    id: "recipe5",
+    title: "Feurige Gemüse-Pasta",
+    description: "Cremige Pasta mit geröstetem Gemüse und unserer Garlic Sriracha Sauce",
+    image: "/placeholder.svg?height=400&width=600",
+    prepTime: "15 min",
+    cookTime: "25 min",
+    servings: 4,
+    difficulty: "Mittel",
+    sauce: "Big Red's Hot Sauce - Garlic Sriracha",
+    ingredients: [
+      "400g Penne oder Fusilli",
+      "1 Aubergine, gewürfelt",
+      "2 Zucchini, in Scheiben geschnitten",
+      "1 rote Paprika, in Streifen",
+      "200g Kirschtomaten, halbiert",
+      "200ml Sahne",
+      "100g Parmesan, gerieben",
+      "4 EL Big Red's Garlic Sriracha Sauce",
+      "3 Knoblauchzehen, gehackt",
+      "3 EL Olivenöl",
+      "Frisches Basilikum",
+      "Salz und Pfeffer nach Geschmack",
+    ],
+    instructions: [
+      "Pasta nach Packungsanweisung kochen und abgießen, dabei 1 Tasse Nudelwasser aufbewahren.",
+      "Gemüse mit Olivenöl, Salz und Pfeffer würzen und bei 200°C 20 Minuten rösten.",
+      "In einer großen Pfanne Knoblauch in etwas Öl anbraten.",
+      "Sahne und Garlic Sriracha Sauce hinzufügen und köcheln lassen.",
+      "Geröstetes Gemüse und gekochte Pasta zur Sauce geben.",
+      "Bei Bedarf etwas Nudelwasser hinzufügen für die richtige Konsistenz.",
+      "Mit Parmesan und frischem Basilikum garniert servieren.",
     ],
   },
 ]
@@ -284,108 +386,147 @@ export function CulinaryInspiration() {
               </div>
             </div>
 
-            {/* Recipe Inspiration */}
-            <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 text-white shadow-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h5 className="text-xl font-bold mb-2">Teilen Sie Ihre Kreationen!</h5>
-                  <p className="text-white/90 text-sm">
-                    Haben Sie ein tolles Rezept mit unseren Saucen? Teilen Sie es mit uns und gewinnen Sie!
-                  </p>
+            {/* Vegetarian Recipe Card */}
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden shadow-lg border border-orange-500/20 hover:border-orange-500/50 transition-all duration-300">
+              <div className="flex flex-col md:flex-row">
+                <div className="md:w-1/3 relative">
+                  <img
+                    src="/placeholder.svg?height=400&width=600"
+                    alt="Mediterrane Gemüse-Quesadillas"
+                    className="w-full h-full object-cover"
+                  />
+                  <Badge className="absolute top-4 left-4 bg-green-600 text-white">Vegetarisch</Badge>
                 </div>
-                <Button className="bg-white text-orange-600 hover:bg-gray-100">Rezept einreichen</Button>
+                <div className="md:w-2/3 p-6">
+                  <h5 className="text-xl font-bold text-white mb-2">Mediterrane Gemüse-Quesadillas</h5>
+                  <p className="text-gray-300 text-sm mb-4">
+                    Knusprige Quesadillas mit gegrilltem Gemüse und unserer Smoky Chipotle Sauce
+                  </p>
+                  <div className="flex items-center space-x-4 text-xs text-gray-400 mb-4">
+                    <div className="flex items-center space-x-1">
+                      <Clock className="w-3 h-3" />
+                      <span>35 min</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Users className="w-3 h-3" />
+                      <span>4 Portionen</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Flame className="w-3 h-3" />
+                      <span>Einfach</span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => openRecipeModal(recipes[2])}
+                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm"
+                  >
+                    <BookOpen className="w-3 h-3 mr-2" />
+                    Rezept ansehen
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      {/* Recipe Modal */}
+      {selectedRecipe && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="relative">
+              <img
+                src={selectedRecipe.image || "/placeholder.svg"}
+                alt={selectedRecipe.title}
+                className="w-full h-64 object-cover rounded-t-2xl"
+              />
+              <button
+                onClick={() => setSelectedRecipe(null)}
+                className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition-colors"
+              >
+                ✕
+              </button>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                <h2 className="text-3xl font-bold text-white mb-2">{selectedRecipe.title}</h2>
+                <p className="text-gray-200">{selectedRecipe.description}</p>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center">
+                  <Clock className="w-6 h-6 text-orange-400 mx-auto mb-1" />
+                  <p className="text-sm text-gray-400">Vorbereitung</p>
+                  <p className="text-white font-semibold">{selectedRecipe.prepTime}</p>
+                </div>
+                <div className="text-center">
+                  <Utensils className="w-6 h-6 text-orange-400 mx-auto mb-1" />
+                  <p className="text-sm text-gray-400">Kochzeit</p>
+                  <p className="text-white font-semibold">{selectedRecipe.cookTime}</p>
+                </div>
+                <div className="text-center">
+                  <Users className="w-6 h-6 text-orange-400 mx-auto mb-1" />
+                  <p className="text-sm text-gray-400">Portionen</p>
+                  <p className="text-white font-semibold">{selectedRecipe.servings}</p>
+                </div>
+                <div className="text-center">
+                  <Flame className="w-6 h-6 text-orange-400 mx-auto mb-1" />
+                  <p className="text-sm text-gray-400">Schwierigkeit</p>
+                  <p className="text-white font-semibold">{selectedRecipe.difficulty}</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-orange-600/20 to-red-600/20 rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-bold text-orange-400 mb-2">Empfohlene Sauce</h3>
+                <p className="text-white">{selectedRecipe.sauce}</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                    <Package className="w-5 h-5 mr-2 text-orange-400" />
+                    Zutaten
+                  </h3>
+                  <ul className="space-y-2">
+                    {selectedRecipe.ingredients.map((ingredient, index) => (
+                      <li key={index} className="flex items-start space-x-2 text-gray-300">
+                        <span className="w-2 h-2 rounded-full bg-orange-400 mt-2 flex-shrink-0"></span>
+                        <span>{ingredient}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                    <BookOpen className="w-5 h-5 mr-2 text-orange-400" />
+                    Zubereitung
+                  </h3>
+                  <ol className="space-y-3">
+                    {selectedRecipe.instructions.map((instruction, index) => (
+                      <li key={index} className="flex items-start space-x-3 text-gray-300">
+                        <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                          {index + 1}
+                        </span>
+                        <span>{instruction}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-700 flex justify-center">
+                <Button
+                  onClick={() => setSelectedRecipe(null)}
+                  className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-8"
+                >
+                  Modal schließen
+                </Button>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Recipe Categories */}
-        <div className="mt-20 max-w-7xl mx-auto">
-          <h4 className="text-2xl font-bold text-white mb-8 text-center">Entdecken Sie nach Kategorie</h4>
-
-          <Tabs defaultValue="quick" className="w-full">
-            <TabsList className="grid grid-cols-3 max-w-3xl mx-auto bg-gray-800/50 p-1 rounded-lg">
-              <TabsTrigger value="quick" className="data-[state=active]:bg-orange-600">
-                Schnell & Einfach
-              </TabsTrigger>
-              <TabsTrigger value="grill" className="data-[state=active]:bg-orange-600">
-                Grill & BBQ
-              </TabsTrigger>
-              <TabsTrigger value="vegan" className="data-[state=active]:bg-orange-600">
-                Vegetarisch
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="quick" className="mt-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                  >
-                    <img
-                      src={`/placeholder.svg?height=200&width=400&query=quick easy recipe ${i} with hot sauce`}
-                      alt={`Schnelles Rezept ${i}`}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-4">
-                      <h5 className="font-bold text-white mb-1">Schnelles Rezept {i}</h5>
-                      <p className="text-gray-400 text-sm">Fertig in unter 20 Minuten</p>
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center space-x-1 text-xs text-gray-400">
-                          <Clock className="w-3 h-3" />
-                          <span>15-20 min</span>
-                        </div>
-                        <Badge className="bg-orange-600">Entdecken</Badge>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="grill" className="mt-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                  >
-                    <img
-                      src={`/placeholder.svg?height=200&width=400&query=bbq grill recipe ${i} with hot sauce`}
-                      alt={`Grill Rezept ${i}`}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-4">
-                      <h5 className="font-bold text-white mb-1">Grill & BBQ Rezept {i}</h5>
-                      <p className="text-gray-400 text-sm">Perfekt für Ihre nächste Grillparty</p>
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center space-x-1 text-xs text-gray-400">
-                          <Flame className="w-3 h-3" />
-                          <span>Grill-Spezialität</span>
-                        </div>
-                        <Badge className="bg-orange-600">Entdecken</Badge>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="vegan" className="mt-8">
-              <div className="text-center text-gray-400 py-8">Vegetarische Rezepte werden bald verfügbar sein!</div>
-            </TabsContent>
-
-            <TabsContent value="party" className="mt-8">
-              <div className="text-center text-gray-400 py-8">Party Food Rezepte werden bald verfügbar sein!</div>
-            </TabsContent>
-
-            <TabsContent value="world" className="mt-8">
-              <div className="text-center text-gray-400 py-8">Weltküche Rezepte werden bald verfügbar sein!</div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+      )}
     </section>
   )
 }
