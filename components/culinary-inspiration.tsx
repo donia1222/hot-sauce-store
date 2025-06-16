@@ -350,7 +350,7 @@ export function CulinaryInspiration() {
               <div className="flex flex-col md:flex-row">
                 <div className="md:w-1/3 relative">
                   <img
-                    src="/placeholder.svg?height=400&width=600"
+                    src="/mexican-tacos-with-beef-tomato-sauce-salsa.jpg"
                     alt="Feurige Tacos al Pastor"
                     className="w-full h-full object-cover"
                   />
@@ -391,7 +391,7 @@ export function CulinaryInspiration() {
               <div className="flex flex-col md:flex-row">
                 <div className="md:w-1/3 relative">
                   <img
-                    src="/placeholder.svg?height=400&width=600"
+                    src="/mexican-chicken-quesadillas-with-cheese-peppers-wooden-table.jpg"
                     alt="Mediterrane Gemüse-Quesadillas"
                     className="w-full h-full object-cover"
                   />
