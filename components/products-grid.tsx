@@ -37,7 +37,7 @@ const products: Product[] = [
   {
     id: 1,
     name: "Big Red's Hot Sauce - Big Yella",
-    price: 1.1,
+    price: 14.90,
     image: "/images/big-yella.webp",
     description: "Goldgelbe Schärfe mit sonnigem Geschmack und intensivem Kick",
     heatLevel: 4,
