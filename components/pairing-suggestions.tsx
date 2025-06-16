@@ -67,7 +67,7 @@ export function PairingSuggestions() {
             </div>
           </div>
           
-          <h3 className="text-6xl font-black mb-6 bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent">
+          <h3 className="text-4xl font-black mb-6 bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent">
             Food Pairing Guide
           </h3>
           <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light">
