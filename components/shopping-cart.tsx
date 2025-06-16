@@ -1,6 +1,6 @@
 "use client"
 
-import { ShoppingCart, Plus, Minus, Shield } from "lucide-react"
+import { ShoppingCart, Plus, Minus, Shield, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
@@ -27,7 +27,7 @@ interface ShoppingCartProps {
   onAddToCart: (product: Product) => void
   onRemoveFromCart: (productId: number) => void
   onGoToCheckout: () => void
-  onClearCart: () => void // Nueva función para limpiar carrito
+  onClearCart: () => void
 }
 
 export function ShoppingCartComponent({
@@ -39,6 +39,8 @@ export function ShoppingCartComponent({
   onGoToCheckout,
   onClearCart,
 }: ShoppingCartProps) {
+  const MINIMUM_ORDER_AMOUNT = 50
+
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0)
   }
@@ -47,11 +49,29 @@ export function ShoppingCartComponent({
     return cart.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
+  const isMinimumOrderMet = () => {
+    return getTotalPrice() >= MINIMUM_ORDER_AMOUNT
+  }
+
+  const getRemainingAmount = () => {
+    return Math.max(0, MINIMUM_ORDER_AMOUNT - getTotalPrice())
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="bg-slate-900 border-orange-500/20">
         <SheetHeader>
-          <SheetTitle className="text-orange-400 text-xl">Einkaufswagen</SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="text-orange-400 text-xl">Einkaufswagen</SheetTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           {cart.length === 0 ? (
@@ -101,17 +121,43 @@ export function ShoppingCartComponent({
                   <span className="text-white">Total:</span>
                   <span className="text-orange-400">{getTotalPrice().toFixed(2)} CHF</span>
                 </div>
+
+                {/* Minimum order warning */}
+                {!isMinimumOrderMet() && cart.length > 0 && (
+                  <div className="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 mb-4">
+                    <p className="text-yellow-300 text-sm text-center font-semibold">
+                      ⚠️ Mindestbestellwert: {MINIMUM_ORDER_AMOUNT} CHF
+                    </p>
+                    <p className="text-yellow-200 text-xs text-center mt-1">
+                      Noch {getRemainingAmount().toFixed(2)} CHF bis zum kostenlosen Versand
+                    </p>
+                  </div>
+                )}
+
+                {/* Free shipping confirmation */}
+                {isMinimumOrderMet() && cart.length > 0 && (
+                  <div className="bg-green-900/50 border border-green-600 rounded-lg p-3 mb-4">
+                    <p className="text-green-300 text-sm text-center font-semibold">
+                      ✅ Kostenloser Versand aktiviert!
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <Button
                     onClick={onGoToCheckout}
-                    disabled={cart.length === 0}
-                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-3 text-lg"
+                    disabled={cart.length === 0 || !isMinimumOrderMet()}
+                    className={`w-full font-bold py-3 text-lg ${
+                      isMinimumOrderMet()
+                        ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+                        : "bg-gray-600 text-gray-300 cursor-not-allowed hover:bg-gray-600"
+                    }`}
                   >
                     <Shield className="w-5 h-5 mr-2" />
-                    Zur Kasse gehen
+                    {isMinimumOrderMet() ? "Zur Kasse gehen" : `Mindestens ${MINIMUM_ORDER_AMOUNT} CHF erforderlich`}
                   </Button>
 
-                  {/* Botón para limpiar carrito manualmente */}
+                  {/* Clear cart button */}
                   <Button
                     onClick={onClearCart}
                     variant="outline"
@@ -120,7 +166,11 @@ export function ShoppingCartComponent({
                     🗑️ Warenkorb leeren
                   </Button>
 
-                  <p className="text-xs text-gray-400 text-center">Sichere Zahlung mit PayPal</p>
+                  <p className="text-xs text-gray-400 text-center">
+                    {isMinimumOrderMet()
+                      ? "✅ Kostenloser Versand • Sichere Zahlung mit PayPal"
+                      : `Kostenloser Versand ab ${MINIMUM_ORDER_AMOUNT} CHF • Sichere Zahlung mit PayPal`}
+                  </p>
                 </div>
               </div>
             </>
