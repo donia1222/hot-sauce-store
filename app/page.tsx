@@ -200,6 +200,7 @@ export default function PremiumHotSauceStore() {
 
       <HeroSection />
 
+    <section id="offers">
       <ProductsGrid
         onAddToCart={addToCart}
         onAddComboToCart={addComboToCart}
@@ -208,6 +209,7 @@ export default function PremiumHotSauceStore() {
         onMarkAsPurchased={markAsPurchased}
         onMarkComboAsPurchased={markComboAsPurchased}
       />
+    </section>
       <CulinaryInspiration />
       <PairingSuggestions />
 
