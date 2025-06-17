@@ -215,11 +215,11 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-700 mt-6 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-gray-400">© 2024 FEUER KÖNIGREICH. Alle Rechte vorbehalten.</div>
+            <div className="text-sm text-gray-400">© 2025 FEUER KÖNIGREICH. Alle Rechte vorbehalten.</div>
             <div className="flex items-center gap-4 text-sm text-gray-400">
               <span className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Made in Switzerland
+                Made in USA
               </span>
               <span className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />

@@ -372,10 +372,10 @@ export default function ProductsGrid({
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <Sparkles className="inline-block w-8 h-8 text-red-500 animate-bounce" />
-          <h3 className="inline-block mx-4 text-5xl font-extrabold text-gray-900 drop-shadow-lg">
+          <h3 className="inline-block mx-4 text-4xl font-extrabold text-gray-900 drop-shadow-lg">
             Unsere Premium-Saucen & Angebote
           </h3>
-          <Sparkles className="inline-block w-8 h-8 text-red-500 animate-bounce" />
+  
           <p className="mt-4 text-lg text-gray-600">
             Handverlesene Hot Sauces mit modernem Flair und exklusive Combo-Angebote.
           </p>
@@ -386,7 +386,7 @@ export default function ProductsGrid({
           <div className="text-center mb-8">
             <Gift className="inline-block w-8 h-8 text-orange-500 animate-bounce mr-2" />
             <h4 className="inline-block text-3xl font-bold text-orange-600">🔥 Spezial Angebote 🔥</h4>
-            <Gift className="inline-block w-8 h-8 text-orange-500 animate-bounce ml-2" />
+    
             <p className="mt-2 text-gray-600">Sparen Sie mit unseren exklusiven 3er-Paketen!</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
