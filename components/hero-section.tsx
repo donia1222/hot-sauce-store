@@ -35,7 +35,7 @@ export function HeroSection() {
         <div className="text-center max-w-6xl mx-auto">
           {/* Insignia Premium */}
           <div className="flex justify-center mb-12">
-            <div className="bg-gradient-to-r from-red-900 to-red-800 text-red-100 font-semibold text-sm px-6 py-2 rounded-full border border-red-700/50 shadow-lg">
+            <div className="bg-gradient-to-r from-red-600 to-red-500 text-red-100 font-semibold text-sm px-6 py-2 rounded-full border border-red-700/50 shadow-lg mt-20">
               <Crown className="w-4 h-4 inline mr-2" />
               PREMIUM COLLECTION
             </div>
@@ -95,16 +95,6 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Llamada a la acción */}
-          <div className="relative">
-            <Button
-              onClick={scrollToProducts}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-lg px-10 py-4 rounded-lg shadow-xl transform hover:scale-105 transition-all duration-300 border border-red-500/50 hover:border-red-400/50 group"
-            >
-              Jetzt Entdecken
-              <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
-            </Button>
-          </div>
         </div>
       </div>
 
