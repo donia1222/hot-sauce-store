@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Package, CreditCard, Shield, CheckCircle, AlertCircle, MapPin, User } from "lucide-react"
+import { ArrowLeft, Package, CreditCard, Shield, CheckCircle, AlertCircle, MapPin, User, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -102,13 +102,173 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   // Función para probar la conexión PHP
   const testPHPConnection = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/test.php`)
+      const response = await fetch(`${API_BASE_URL}/test_simple.php`)
       const result = await response.json()
       setDebugInfo(`PHP Test: ${JSON.stringify(result, null, 2)}`)
       console.log("PHP Test Result:", result)
     } catch (error) {
       setDebugInfo(`PHP Test Error: ${error}`)
       console.error("PHP Test Error:", error)
+    }
+  }
+
+  // Función para crear pedidos de prueba
+  const createTestOrders = async () => {
+    try {
+      setDebugInfo("Creando pedidos de prueba...")
+
+      // Pedido exitoso
+      const successOrder = {
+        customerInfo: {
+          firstName: "Juan",
+          lastName: "Pérez",
+          email: "juan.perez@example.com",
+          phone: "+41 79 123 45 67",
+          address: "Bahnhofstrasse 123",
+          city: "Zürich",
+          postalCode: "8001",
+          canton: "Zürich",
+          notes: "Pedido de prueba - EXITOSO",
+        },
+        cart: [
+          {
+            id: 1,
+            name: "Carolina Reaper Hot Sauce",
+            price: 15.9,
+            quantity: 2,
+            description: "Extremadamente picante",
+            image: "",
+            heatLevel: 10,
+            rating: 4.5,
+            badge: "EXTREME",
+            origin: "Carolina",
+          },
+          {
+            id: 2,
+            name: "Habanero Sauce",
+            price: 12.5,
+            quantity: 1,
+            description: "Picante medio",
+            image: "",
+            heatLevel: 7,
+            rating: 4.2,
+            badge: "HOT",
+            origin: "Mexico",
+          },
+        ],
+        totalAmount: 44.3,
+        shippingCost: 0,
+        paymentMethod: "paypal",
+        paymentStatus: "completed",
+      }
+
+      // Pedido cancelado
+      const cancelledOrder = {
+        customerInfo: {
+          firstName: "Maria",
+          lastName: "García",
+          email: "maria.garcia@example.com",
+          phone: "+41 79 987 65 43",
+          address: "Limmatstrasse 456",
+          city: "Basel",
+          postalCode: "4001",
+          canton: "Basel-Stadt",
+          notes: "Pedido de prueba - CANCELADO",
+        },
+        cart: [
+          {
+            id: 3,
+            name: "Jalapeño Sauce",
+            price: 9.9,
+            quantity: 3,
+            description: "Suave y sabroso",
+            image: "",
+            heatLevel: 4,
+            rating: 4.0,
+            badge: "MILD",
+            origin: "Mexico",
+          },
+        ],
+        totalAmount: 29.7,
+        shippingCost: 0,
+        paymentMethod: "paypal",
+        paymentStatus: "failed",
+      }
+
+      // Pedido pendiente
+      const pendingOrder = {
+        customerInfo: {
+          firstName: "Peter",
+          lastName: "Müller",
+          email: "peter.mueller@example.com",
+          phone: "+41 79 555 44 33",
+          address: "Hauptstrasse 789",
+          city: "Bern",
+          postalCode: "3001",
+          canton: "Bern",
+          notes: "Pedido de prueba - PENDIENTE",
+        },
+        cart: [
+          {
+            id: 4,
+            name: "Ghost Pepper Sauce",
+            price: 18.5,
+            quantity: 1,
+            description: "Para valientes",
+            image: "",
+            heatLevel: 9,
+            rating: 4.8,
+            badge: "EXTREME",
+            origin: "India",
+          },
+        ],
+        totalAmount: 18.5,
+        shippingCost: 0,
+        paymentMethod: "paypal",
+        paymentStatus: "pending",
+      }
+
+      const orders = [
+        { data: successOrder, status: "completed", name: "EXITOSO" },
+        { data: cancelledOrder, status: "cancelled", name: "CANCELADO" },
+        { data: pendingOrder, status: "pending", name: "PENDIENTE" },
+      ]
+
+      const results = []
+
+      for (const order of orders) {
+        try {
+          // Modificar el status del pedido
+          const orderData = {
+            ...order.data,
+            paymentStatus:
+              order.status === "completed" ? "completed" : order.status === "cancelled" ? "failed" : "pending",
+          }
+
+          const response = await fetch(`${API_BASE_URL}/add_order.php`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(orderData),
+          })
+
+          const responseText = await response.text()
+          const result = JSON.parse(responseText)
+
+          if (result.success) {
+            results.push(`✅ ${order.name}: ${result.orderNumber}`)
+          } else {
+            results.push(`❌ ${order.name}: ${result.error}`)
+          }
+        } catch (error) {
+          results.push(`❌ ${order.name}: Error - ${error}`)
+        }
+      }
+
+      setDebugInfo(`Pedidos de prueba creados:\n${results.join("\n")}`)
+    } catch (error) {
+      setDebugInfo(`Error creando pedidos de prueba: ${error}`)
     }
   }
 
@@ -160,6 +320,65 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
       console.error("Error saving order to database:", error)
       setDebugInfo(`Error: ${error.message}`)
       throw error
+    }
+  }
+
+  // Función para probar directamente el add_order.php
+  const testOrderSubmission = async () => {
+    try {
+      setDebugInfo("Probando envío directo de pedido...")
+
+      const testOrderData = {
+        customerInfo: {
+          firstName: "Test",
+          lastName: "Usuario",
+          email: "test@example.com",
+          phone: "+41 79 123 45 67",
+          address: "Teststrasse 123",
+          city: "Zürich",
+          postalCode: "8001",
+          canton: "Zürich",
+          notes: "Prueba desde frontend",
+        },
+        cart: [
+          {
+            id: 1,
+            name: "Test Product",
+            price: 15.9,
+            quantity: 1,
+            description: "Test description",
+            image: "",
+            heatLevel: 5,
+            rating: 4.0,
+            badge: "TEST",
+            origin: "Test",
+          },
+        ],
+        totalAmount: 15.9,
+        shippingCost: 0,
+        paymentMethod: "paypal",
+        paymentStatus: "completed",
+      }
+
+      console.log("Test order data:", testOrderData)
+
+      const response = await fetch(`${API_BASE_URL}/add_order.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(testOrderData),
+      })
+
+      console.log("Test response status:", response.status)
+      const responseText = await response.text()
+      console.log("Test raw response:", responseText)
+
+      const result = JSON.parse(responseText)
+      setDebugInfo(`Test Result: ${JSON.stringify(result, null, 2)}`)
+    } catch (error) {
+      setDebugInfo(`Test Error: ${error}`)
+      console.error("Test Error:", error)
     }
   }
 
@@ -281,7 +500,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             <AlertCircle className="w-24 h-24 text-red-500 mx-auto mb-6" />
             <h1 className="text-4xl font-bold text-red-700 mb-4">Fehler bei der Bestellung</h1>
             <p className="text-xl text-gray-600 mb-6">
-              Es gab ein Problem beim Verarbeiten Ihrer Zahlung. Bitte versuchen Sie es erneut.
+              Es gab ein problema beim Verarbeiten Ihrer Zahlung. Bitte versuchen Sie es erneut.
             </p>
 
             {debugInfo && (
@@ -319,14 +538,33 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             Zurück zum Shop
           </Button>
 
-          {/* Debug button */}
-          <Button
-            onClick={testPHPConnection}
-            variant="outline"
-            className="ml-4 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700"
-          >
-            🔧 Test PHP
-          </Button>
+          {/* Debug buttons */}
+          <div className="flex gap-2 ml-4">
+            <Button
+              onClick={testPHPConnection}
+              variant="outline"
+              className="bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700"
+            >
+              🔧 Test PHP
+            </Button>
+
+            <Button
+              onClick={testOrderSubmission}
+              variant="outline"
+              className="bg-green-50 hover:bg-green-100 border border-green-300 text-green-700"
+            >
+              🧪 Test Order
+            </Button>
+
+            <Button
+              onClick={createTestOrders}
+              variant="outline"
+              className="bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              Crear Pedidos Prueba
+            </Button>
+          </div>
         </div>
 
         {/* Debug info */}
