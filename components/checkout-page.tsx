@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Package, CreditCard, Shield, CheckCircle, AlertCircle, MapPin, User, Database } from "lucide-react"
+import { ArrowLeft, Package, CreditCard, Shield, CheckCircle, AlertCircle, MapPin, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -44,6 +44,12 @@ interface CustomerInfo {
   notes: string
 }
 
+declare global {
+  interface Window {
+    paypal: any
+  }
+}
+
 export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: "",
@@ -61,10 +67,9 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string>("")
 
-  // API Base URL - URL CORRECTA
-  const API_BASE_URL = "https://web.lweb.ch/shop"
+  // API Base URL - cambiar según tu configuración
+  const API_BASE_URL = "https://web.lweb.ch/shop/"
 
   // Load user data from localStorage on start
   useEffect(() => {
@@ -81,6 +86,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   // Save user data to localStorage whenever it changes
   useEffect(() => {
+    // Only save if at least one field is completed
     const hasData = Object.values(customerInfo).some((value) => value.trim() !== "")
     if (hasData) {
       localStorage.setItem("cantina-customer-info", JSON.stringify(customerInfo))
@@ -92,296 +98,46 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   }
 
   const getShippingCost = () => {
-    return 0 // Envío siempre gratuito para pruebas
+    const total = getTotalPrice()
+    return total >= 0 ? 0 : 8.5 // Envío gratis a partir de 50 CHF
   }
 
   const getFinalTotal = () => {
     return getTotalPrice() + getShippingCost()
   }
 
-  // Función para probar la conexión PHP
-  const testPHPConnection = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/test_simple.php`)
-      const result = await response.json()
-      setDebugInfo(`PHP Test: ${JSON.stringify(result, null, 2)}`)
-      console.log("PHP Test Result:", result)
-    } catch (error) {
-      setDebugInfo(`PHP Test Error: ${error}`)
-      console.error("PHP Test Error:", error)
-    }
-  }
-
-  // Función para crear pedidos de prueba
-  const createTestOrders = async () => {
-    try {
-      setDebugInfo("Creando pedidos de prueba...")
-
-      // Pedido exitoso
-      const successOrder = {
-        customerInfo: {
-          firstName: "Juan",
-          lastName: "Pérez",
-          email: "juan.perez@example.com",
-          phone: "+41 79 123 45 67",
-          address: "Bahnhofstrasse 123",
-          city: "Zürich",
-          postalCode: "8001",
-          canton: "Zürich",
-          notes: "Pedido de prueba - EXITOSO",
-        },
-        cart: [
-          {
-            id: 1,
-            name: "Carolina Reaper Hot Sauce",
-            price: 15.9,
-            quantity: 2,
-            description: "Extremadamente picante",
-            image: "",
-            heatLevel: 10,
-            rating: 4.5,
-            badge: "EXTREME",
-            origin: "Carolina",
-          },
-          {
-            id: 2,
-            name: "Habanero Sauce",
-            price: 12.5,
-            quantity: 1,
-            description: "Picante medio",
-            image: "",
-            heatLevel: 7,
-            rating: 4.2,
-            badge: "HOT",
-            origin: "Mexico",
-          },
-        ],
-        totalAmount: 44.3,
-        shippingCost: 0,
-        paymentMethod: "paypal",
-        paymentStatus: "completed",
-      }
-
-      // Pedido cancelado
-      const cancelledOrder = {
-        customerInfo: {
-          firstName: "Maria",
-          lastName: "García",
-          email: "maria.garcia@example.com",
-          phone: "+41 79 987 65 43",
-          address: "Limmatstrasse 456",
-          city: "Basel",
-          postalCode: "4001",
-          canton: "Basel-Stadt",
-          notes: "Pedido de prueba - CANCELADO",
-        },
-        cart: [
-          {
-            id: 3,
-            name: "Jalapeño Sauce",
-            price: 9.9,
-            quantity: 3,
-            description: "Suave y sabroso",
-            image: "",
-            heatLevel: 4,
-            rating: 4.0,
-            badge: "MILD",
-            origin: "Mexico",
-          },
-        ],
-        totalAmount: 29.7,
-        shippingCost: 0,
-        paymentMethod: "paypal",
-        paymentStatus: "failed",
-      }
-
-      // Pedido pendiente
-      const pendingOrder = {
-        customerInfo: {
-          firstName: "Peter",
-          lastName: "Müller",
-          email: "peter.mueller@example.com",
-          phone: "+41 79 555 44 33",
-          address: "Hauptstrasse 789",
-          city: "Bern",
-          postalCode: "3001",
-          canton: "Bern",
-          notes: "Pedido de prueba - PENDIENTE",
-        },
-        cart: [
-          {
-            id: 4,
-            name: "Ghost Pepper Sauce",
-            price: 18.5,
-            quantity: 1,
-            description: "Para valientes",
-            image: "",
-            heatLevel: 9,
-            rating: 4.8,
-            badge: "EXTREME",
-            origin: "India",
-          },
-        ],
-        totalAmount: 18.5,
-        shippingCost: 0,
-        paymentMethod: "paypal",
-        paymentStatus: "pending",
-      }
-
-      const orders = [
-        { data: successOrder, status: "completed", name: "EXITOSO" },
-        { data: cancelledOrder, status: "cancelled", name: "CANCELADO" },
-        { data: pendingOrder, status: "pending", name: "PENDIENTE" },
-      ]
-
-      const results = []
-
-      for (const order of orders) {
-        try {
-          // Modificar el status del pedido
-          const orderData = {
-            ...order.data,
-            paymentStatus:
-              order.status === "completed" ? "completed" : order.status === "cancelled" ? "failed" : "pending",
-          }
-
-          const response = await fetch(`${API_BASE_URL}/add_order.php`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(orderData),
-          })
-
-          const responseText = await response.text()
-          const result = JSON.parse(responseText)
-
-          if (result.success) {
-            results.push(`✅ ${order.name}: ${result.orderNumber}`)
-          } else {
-            results.push(`❌ ${order.name}: ${result.error}`)
-          }
-        } catch (error) {
-          results.push(`❌ ${order.name}: Error - ${error}`)
-        }
-      }
-
-      setDebugInfo(`Pedidos de prueba creados:\n${results.join("\n")}`)
-    } catch (error) {
-      setDebugInfo(`Error creando pedidos de prueba: ${error}`)
-    }
-  }
-
   // Función para guardar el pedido en la base de datos
-  const saveOrderToDatabase = async () => {
+  const saveOrderToDatabase = async (orderData: any) => {
     try {
-      setDebugInfo("Enviando pedido a la base de datos...")
-
-      const orderData = {
-        customerInfo: customerInfo,
-        cart: cart,
-        totalAmount: getFinalTotal(),
-        shippingCost: getShippingCost(),
-        paymentMethod: "paypal",
-        paymentStatus: "completed",
-      }
-
-      console.log("Sending order data:", orderData)
-
       const response = await fetch(`${API_BASE_URL}/add_order.php`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(orderData),
+        body: JSON.stringify({
+          customerInfo: customerInfo,
+          cart: cart,
+          totalAmount: getFinalTotal(),
+          shippingCost: getShippingCost(),
+          paymentMethod: "paypal",
+          paymentStatus: "completed",
+        }),
       })
 
-      console.log("Response status:", response.status)
-      console.log("Response headers:", response.headers)
-
-      const responseText = await response.text()
-      console.log("Raw response:", responseText)
-
-      let result
-      try {
-        result = JSON.parse(responseText)
-      } catch (parseError) {
-        throw new Error(`Invalid JSON response: ${responseText}`)
-      }
+      const result = await response.json()
 
       if (!result.success) {
         throw new Error(result.error || "Error saving order")
       }
 
-      setDebugInfo(`Pedido guardado exitosamente: ${result.orderNumber}`)
       return result.data
-    } catch (unknownError) {
-      const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError))
+    } catch (error) {
       console.error("Error saving order to database:", error)
-      setDebugInfo(`Error: ${error.message}`)
       throw error
     }
   }
 
-  // Función para probar directamente el add_order.php
-  const testOrderSubmission = async () => {
-    try {
-      setDebugInfo("Probando envío directo de pedido...")
-
-      const testOrderData = {
-        customerInfo: {
-          firstName: "Test",
-          lastName: "Usuario",
-          email: "test@example.com",
-          phone: "+41 79 123 45 67",
-          address: "Teststrasse 123",
-          city: "Zürich",
-          postalCode: "8001",
-          canton: "Zürich",
-          notes: "Prueba desde frontend",
-        },
-        cart: [
-          {
-            id: 1,
-            name: "Test Product",
-            price: 15.9,
-            quantity: 1,
-            description: "Test description",
-            image: "",
-            heatLevel: 5,
-            rating: 4.0,
-            badge: "TEST",
-            origin: "Test",
-          },
-        ],
-        totalAmount: 15.9,
-        shippingCost: 0,
-        paymentMethod: "paypal",
-        paymentStatus: "completed",
-      }
-
-      console.log("Test order data:", testOrderData)
-
-      const response = await fetch(`${API_BASE_URL}/add_order.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(testOrderData),
-      })
-
-      console.log("Test response status:", response.status)
-      const responseText = await response.text()
-      console.log("Test raw response:", responseText)
-
-      const result = JSON.parse(responseText)
-      setDebugInfo(`Test Result: ${JSON.stringify(result, null, 2)}`)
-    } catch (error) {
-      setDebugInfo(`Test Error: ${error}`)
-      console.error("Test Error:", error)
-    }
-  }
-
+  // Simple PayPal method - without SDK
   const handlePayPalPayment = () => {
     if (!validateForm()) {
       return
@@ -399,7 +155,12 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
       setIsSubmitting(true)
 
       try {
-        const savedOrder = await saveOrderToDatabase()
+        // Guardar pedido en la base de datos
+        const savedOrder = await saveOrderToDatabase({
+          customerInfo,
+          cart,
+          total: getFinalTotal(),
+        })
 
         setOrderStatus("completed")
         setOrderDetails({
@@ -411,14 +172,16 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
           createdAt: savedOrder.createdAt,
         })
 
+        // Clear cart after successful payment
         if (onClearCart) {
           onClearCart()
         }
 
+        // Also clear localStorage cart to ensure
         localStorage.removeItem("cantina-cart")
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error saving order:", error)
-        alert(`Error al guardar el pedido: ${error.message}`)
+        alert("Error al guardar el pedido. Por favor contacte con soporte.")
         setOrderStatus("error")
       } finally {
         setIsSubmitting(false)
@@ -440,11 +203,13 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     if (!customerInfo.postalCode.trim()) errors.postalCode = "PLZ ist erforderlich"
     if (!customerInfo.canton.trim()) errors.canton = "Kanton ist erforderlich"
 
+    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (customerInfo.email && !emailRegex.test(customerInfo.email)) {
       errors.email = "Ungültige E-Mail-Adresse"
     }
 
+    // Validate Swiss postal code
     const postalCodeRegex = /^\d{4}$/
     if (customerInfo.postalCode && !postalCodeRegex.test(customerInfo.postalCode)) {
       errors.postalCode = "PLZ muss 4 Ziffern haben"
@@ -456,6 +221,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const handleInputChange = (field: keyof CustomerInfo, value: string) => {
     setCustomerInfo((prev) => ({ ...prev, [field]: value }))
+    // Clear field error when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: undefined }))
     }
@@ -500,16 +266,8 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             <AlertCircle className="w-24 h-24 text-red-500 mx-auto mb-6" />
             <h1 className="text-4xl font-bold text-red-700 mb-4">Fehler bei der Bestellung</h1>
             <p className="text-xl text-gray-600 mb-6">
-              Es gab ein problema beim Verarbeiten Ihrer Zahlung. Bitte versuchen Sie es erneut.
+              Es gab ein Problem beim Verarbeiten Ihrer Zahlung. Bitte versuchen Sie es erneut.
             </p>
-
-            {debugInfo && (
-              <div className="bg-red-50 rounded-lg p-4 mb-6 text-left">
-                <h4 className="font-semibold text-red-700 mb-2">Debug Info:</h4>
-                <pre className="text-xs text-red-600 whitespace-pre-wrap">{debugInfo}</pre>
-              </div>
-            )}
-
             <div className="space-y-4">
               <Button onClick={() => setOrderStatus("pending")} className="bg-orange-600 hover:bg-orange-700">
                 Erneut versuchen
@@ -537,45 +295,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             <ArrowLeft className="w-4 h-4 mr-2" />
             Zurück zum Shop
           </Button>
-
-          {/* Debug buttons */}
-          <div className="flex gap-2 ml-4">
-            <Button
-              onClick={testPHPConnection}
-              variant="outline"
-              className="bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700"
-            >
-              🔧 Test PHP
-            </Button>
-
-            <Button
-              onClick={testOrderSubmission}
-              variant="outline"
-              className="bg-green-50 hover:bg-green-100 border border-green-300 text-green-700"
-            >
-              🧪 Test Order
-            </Button>
-
-            <Button
-              onClick={createTestOrders}
-              variant="outline"
-              className="bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-700"
-            >
-              <Database className="w-4 h-4 mr-2" />
-              Crear Pedidos Prueba
-            </Button>
-          </div>
         </div>
-
-        {/* Debug info */}
-        {debugInfo && (
-          <Card className="mb-6 bg-blue-50 border-blue-200">
-            <CardContent className="p-4">
-              <h4 className="font-semibold text-blue-700 mb-2">Debug Info:</h4>
-              <pre className="text-xs text-blue-600 whitespace-pre-wrap">{debugInfo}</pre>
-            </CardContent>
-          </Card>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Customer form */}
@@ -753,9 +473,18 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   <div className="flex justify-between">
                     <span>Versand:</span>
                     <span>
-                      <Badge className="bg-green-100 text-green-700">Kostenlos</Badge>
+                      {getShippingCost() === 0 ? (
+                        <Badge className="bg-green-100 text-green-700">Kostenlos</Badge>
+                      ) : (
+                        `${getShippingCost().toFixed(2)} CHF`
+                      )}
                     </span>
                   </div>
+                  {getTotalPrice() < 50 && (
+                    <p className="text-sm text-gray-600">
+                      Noch {(50 - getTotalPrice()).toFixed(2)} CHF für kostenlosen Versand!
+                    </p>
+                  )}
                   <Separator />
                   <div className="flex justify-between text-xl font-bold">
                     <span>Gesamt:</span>
@@ -772,13 +501,13 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                 <ul className="text-sm text-blue-700 space-y-1">
                   <li>• Versand nur innerhalb der Schweiz</li>
                   <li>• Lieferzeit: 2-3 Werktage</li>
-                  <li>• Kostenloser Versand für alle Bestellungen</li>
+                  <li>• Kostenloser Versand ab 50 CHF</li>
                   <li>• Versand aus 9745 Sevelen</li>
                 </ul>
               </CardContent>
             </Card>
 
-            {/* PayPal Payment */}
+            {/* PayPal Payment - Simple Method */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
