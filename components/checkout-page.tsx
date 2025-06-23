@@ -92,8 +92,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   }
 
   const getShippingCost = () => {
-    const total = getTotalPrice()
-    return total >= 0 ? 0 : 8.5
+    return 0 // Envío siempre gratuito para pruebas
   }
 
   const getFinalTotal = () => {
@@ -156,14 +155,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
       setDebugInfo(`Pedido guardado exitosamente: ${result.orderNumber}`)
       return result.data
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error saving order to database:", error.message)
-        setDebugInfo(`Error: ${error.message}`)
-      } else {
-        console.error("Error saving order to database:", error)
-        setDebugInfo("An unknown error occurred")
-      }
+    } catch (unknownError) {
+      const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError))
+      console.error("Error saving order to database:", error)
+      setDebugInfo(`Error: ${error.message}`)
       throw error
     }
   }
@@ -520,18 +515,9 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   <div className="flex justify-between">
                     <span>Versand:</span>
                     <span>
-                      {getShippingCost() === 0 ? (
-                        <Badge className="bg-green-100 text-green-700">Kostenlos</Badge>
-                      ) : (
-                        `${getShippingCost().toFixed(2)} CHF`
-                      )}
+                      <Badge className="bg-green-100 text-green-700">Kostenlos</Badge>
                     </span>
                   </div>
-                  {getTotalPrice() < 50 && (
-                    <p className="text-sm text-gray-600">
-                      Noch {(50 - getTotalPrice()).toFixed(2)} CHF für kostenlosen Versand!
-                    </p>
-                  )}
                   <Separator />
                   <div className="flex justify-between text-xl font-bold">
                     <span>Gesamt:</span>
@@ -548,7 +534,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                 <ul className="text-sm text-blue-700 space-y-1">
                   <li>• Versand nur innerhalb der Schweiz</li>
                   <li>• Lieferzeit: 2-3 Werktage</li>
-                  <li>• Kostenloser Versand ab 50 CHF</li>
+                  <li>• Kostenloser Versand für alle Bestellungen</li>
                   <li>• Versand aus 9745 Sevelen</li>
                 </ul>
               </CardContent>
