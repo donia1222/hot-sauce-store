@@ -93,7 +93,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const getShippingCost = () => {
     const total = getTotalPrice()
-    return total >= 50 ? 0 : 8.5
+    return total >= 0 ? 0 : 8.5
   }
 
   const getFinalTotal = () => {
