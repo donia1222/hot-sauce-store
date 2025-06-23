@@ -66,6 +66,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [orderStatus, setOrderStatus] = useState<"pending" | "processing" | "completed" | "error">("pending")
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // API Base URL - cambiar según tu configuración
+  const API_BASE_URL = "https://web.lweb.ch/shop/"
 
   // Load user data from localStorage on start
   useEffect(() => {
@@ -95,11 +99,42 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const getShippingCost = () => {
     const total = getTotalPrice()
-    return 0 // Free shipping for testing
+    return total >= 0 ? 0 : 8.5 // Envío gratis a partir de 50 CHF
   }
 
   const getFinalTotal = () => {
     return getTotalPrice() + getShippingCost()
+  }
+
+  // Función para guardar el pedido en la base de datos
+  const saveOrderToDatabase = async (orderData: any) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/add_order.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerInfo: customerInfo,
+          cart: cart,
+          totalAmount: getFinalTotal(),
+          shippingCost: getShippingCost(),
+          paymentMethod: "paypal",
+          paymentStatus: "completed",
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || "Error saving order")
+      }
+
+      return result.data
+    } catch (error) {
+      console.error("Error saving order to database:", error)
+      throw error
+    }
   }
 
   // Simple PayPal method - without SDK
@@ -115,24 +150,42 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     window.open(paypalUrl, "_blank")
   }
 
-  const handlePaymentConfirmation = (success: boolean) => {
+  const handlePaymentConfirmation = async (success: boolean) => {
     if (success) {
-      setOrderStatus("completed")
-      setOrderDetails({
-        id: `ORDER_${Date.now()}`,
-        status: "COMPLETED",
-        customerInfo: customerInfo,
-        cart: cart,
-        total: getFinalTotal(),
-      })
+      setIsSubmitting(true)
 
-      // Clear cart after successful payment
-      if (onClearCart) {
-        onClearCart()
+      try {
+        // Guardar pedido en la base de datos
+        const savedOrder = await saveOrderToDatabase({
+          customerInfo,
+          cart,
+          total: getFinalTotal(),
+        })
+
+        setOrderStatus("completed")
+        setOrderDetails({
+          id: savedOrder.orderNumber,
+          status: "COMPLETED",
+          customerInfo: customerInfo,
+          cart: cart,
+          total: getFinalTotal(),
+          createdAt: savedOrder.createdAt,
+        })
+
+        // Clear cart after successful payment
+        if (onClearCart) {
+          onClearCart()
+        }
+
+        // Also clear localStorage cart to ensure
+        localStorage.removeItem("cantina-cart")
+      } catch (error) {
+        console.error("Error saving order:", error)
+        alert("Error al guardar el pedido. Por favor contacte con soporte.")
+        setOrderStatus("error")
+      } finally {
+        setIsSubmitting(false)
       }
-
-      // Also clear localStorage cart to ensure
-      localStorage.removeItem("cantina-cart")
     } else {
       setOrderStatus("error")
     }
@@ -190,6 +243,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               <p className="text-green-600">Bestellnummer: {orderDetails?.id}</p>
               <p className="text-green-600">Betrag: {getFinalTotal().toFixed(2)} CHF</p>
               <p className="text-green-600">Status: Bezahlt</p>
+              <p className="text-green-600">Gespeichert in Datenbank: ✅</p>
             </div>
 
             <div className="space-y-4">
@@ -481,12 +535,21 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     <div className="flex gap-4 justify-center mt-6">
                       <Button
                         onClick={() => handlePaymentConfirmation(true)}
+                        disabled={isSubmitting}
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
-                        ✅ Zahlung abgeschlossen
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Speichere...
+                          </>
+                        ) : (
+                          "✅ Zahlung abgeschlossen"
+                        )}
                       </Button>
                       <Button
                         onClick={() => handlePaymentConfirmation(false)}
+                        disabled={isSubmitting}
                         variant="outline"
                         className="border-red-500 text-red-600 hover:bg-red-50"
                       >
@@ -518,4 +581,3 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     </div>
   )
 }
-

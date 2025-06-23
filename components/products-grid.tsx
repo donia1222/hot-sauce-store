@@ -70,7 +70,7 @@ const products: Product[] = [
   {
     id: 4,
     name: "Big Red's Hot Sauce - Original Sauce",
-    price: 13.24,
+    price: 1.10,
     image: "/images/original-sauce.webp",
     description: "Die legendäre Originalrezept seit Generationen unverändert",
     heatLevel: 4,

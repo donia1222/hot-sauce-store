@@ -39,7 +39,7 @@ export function ShoppingCartComponent({
   onGoToCheckout,
   onClearCart,
 }: ShoppingCartProps) {
-  const MINIMUM_ORDER_AMOUNT = 50
+  const MINIMUM_ORDER_AMOUNT = 0
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0)
