@@ -78,6 +78,7 @@ const products: Product[] = [
     badge: "Klassiker",
     origin: "Original",
   },
+  
 
   {
     id: 6,
