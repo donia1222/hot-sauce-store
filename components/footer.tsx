@@ -140,11 +140,13 @@ export function Footer() {
                       Allgemeine Geschäftsbedingungen
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-2xl max-h-[80vh] text-gray-200  overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>{legalContent.agb.title}</DialogTitle>
                     </DialogHeader>
-                    <div className="whitespace-pre-line text-sm">{legalContent.agb.content}</div>
+                    <div className="whitespace-pre-line text-sm text-gray-200 dark:text-gray-100">
+                      {legalContent.agb.content}
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -159,11 +161,13 @@ export function Footer() {
                       Datenschutzrichtlinie
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-2xl max-h-[80vh] text-gray-200  overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>{legalContent.datenschutz.title}</DialogTitle>
                     </DialogHeader>
-                    <div className="whitespace-pre-line text-sm">{legalContent.datenschutz.content}</div>
+                    <div className="whitespace-pre-line text-sm text-gray-200 dark:text-gray-100">
+                      {legalContent.datenschutz.content}
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -176,11 +180,13 @@ export function Footer() {
                   <DialogTrigger asChild>
                     <button className="hover:text-red-500 transition-colors text-left block">Rückgaberichtlinie</button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-2xl max-h-[80vh] text-gray-200 overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>{legalContent.rueckgabe.title}</DialogTitle>
                     </DialogHeader>
-                    <div className="whitespace-pre-line text-sm">{legalContent.rueckgabe.content}</div>
+                    <div className="whitespace-pre-line text-sm text-gray-200 dark:text-gray-100">
+                      {legalContent.rueckgabe.content}
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>

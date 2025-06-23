@@ -78,17 +78,7 @@ const products: Product[] = [
     badge: "Klassiker",
     origin: "Original",
   },
-  {
-    id: 5,
-    name: "A La Diabla Hot Sauce",
-    price: 15.73,
-    image: "/images/a-la-diabla.webp",
-    description: "Teuflisch scharfe Familienrezeptur mit reichem, würzigem Geschmack",
-    heatLevel: 5,
-    rating: 4.9,
-    badge: "Teuflisch",
-    origin: "Familienrezept",
-  },
+
   {
     id: 6,
     name: "Big Red's Hot Sauce - Habanero",
@@ -225,7 +215,7 @@ export default function ProductsGrid({
           <img
             src={product.image || "/placeholder.svg"}
             alt={product.name}
-            className="w-full h-60 object-cover hover:scale-105 transition-transform duration-700"
+            className="w-full h-68 object-cover hover:scale-105 transition-transform duration-700"
           />
         </div>
         <Badge className="absolute top-4 left-4 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold px-3 py-1 rounded-full shadow-md">
@@ -393,14 +383,7 @@ export default function ProductsGrid({
         <div className="mb-16">
  
 
-          {/* SCROLL LATERAL DE OFERTAS ESPECIALES */}
-          <div className="relative">
-     
-            {/* Scroll Indicator */}
-            <div className="flex justify-center mt-6 space-x-2">
-      
-            </div>
-          </div>
+
         </div>
 
         {/* Individual Products Section */}

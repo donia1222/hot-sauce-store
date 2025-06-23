@@ -29,7 +29,7 @@ interface CartItem extends Product {
 interface CheckoutPageProps {
   cart: CartItem[]
   onBackToStore: () => void
-  onClearCart?: () => void // Nueva prop para limpiar carrito
+  onClearCart?: () => void
 }
 
 interface CustomerInfo {
@@ -67,7 +67,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
 
-  // Cargar datos del usuario desde localStorage al iniciar
+  // Load user data from localStorage on start
   useEffect(() => {
     const savedCustomerInfo = localStorage.getItem("cantina-customer-info")
     if (savedCustomerInfo) {
@@ -80,9 +80,9 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     }
   }, [])
 
-  // Guardar datos del usuario en localStorage cada vez que cambien
+  // Save user data to localStorage whenever it changes
   useEffect(() => {
-    // Solo guardar si hay al menos un campo completado
+    // Only save if at least one field is completed
     const hasData = Object.values(customerInfo).some((value) => value.trim() !== "")
     if (hasData) {
       localStorage.setItem("cantina-customer-info", JSON.stringify(customerInfo))
@@ -95,15 +95,14 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const getShippingCost = () => {
     const total = getTotalPrice()
-    // return total >= 50 ? 0 : 8.5 // Envío gratis para pedidos superiores a 50 CHF
-    return 0 // 🎉 ENVÍO GRATIS PARA PRUEBAS
+    return 0 // Free shipping for testing
   }
 
   const getFinalTotal = () => {
     return getTotalPrice() + getShippingCost()
   }
 
-  // Método simple de PayPal - sin SDK
+  // Simple PayPal method - without SDK
   const handlePayPalPayment = () => {
     if (!validateForm()) {
       return
@@ -114,9 +113,6 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
     setOrderStatus("processing")
     window.open(paypalUrl, "_blank")
-
-    // NO auto-success - stay in processing until user confirms
-    // Remove the setTimeout that was automatically showing success
   }
 
   const handlePaymentConfirmation = (success: boolean) => {
@@ -130,12 +126,12 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
         total: getFinalTotal(),
       })
 
-      // Limpiar el carrito después del pago exitoso
+      // Clear cart after successful payment
       if (onClearCart) {
         onClearCart()
       }
 
-      // También limpiar localStorage del carrito para asegurar
+      // Also clear localStorage cart to ensure
       localStorage.removeItem("cantina-cart")
     } else {
       setOrderStatus("error")
@@ -154,13 +150,13 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     if (!customerInfo.postalCode.trim()) errors.postalCode = "PLZ ist erforderlich"
     if (!customerInfo.canton.trim()) errors.canton = "Kanton ist erforderlich"
 
-    // Validar email
+    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (customerInfo.email && !emailRegex.test(customerInfo.email)) {
       errors.email = "Ungültige E-Mail-Adresse"
     }
 
-    // Validar código postal suizo
+    // Validate Swiss postal code
     const postalCodeRegex = /^\d{4}$/
     if (customerInfo.postalCode && !postalCodeRegex.test(customerInfo.postalCode)) {
       errors.postalCode = "PLZ muss 4 Ziffern haben"
@@ -172,7 +168,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const handleInputChange = (field: keyof CustomerInfo, value: string) => {
     setCustomerInfo((prev) => ({ ...prev, [field]: value }))
-    // Limpiar error del campo cuando el usuario empiece a escribir
+    // Clear field error when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: undefined }))
     }
@@ -237,14 +233,18 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
         <div className="flex items-center mb-8">
-          <Button onClick={onBackToStore} variant="outline" className="mr-4">
+          <Button
+            onClick={onBackToStore}
+            variant="outline"
+            className="mr-4 bg-white hover:bg-gray-50 border border-gray-300"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Zurück zum Shop
           </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Formulario del cliente */}
+          {/* Customer form */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -267,7 +267,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                       id="firstName"
                       value={customerInfo.firstName}
                       onChange={(e) => handleInputChange("firstName", e.target.value)}
-                      className={formErrors.firstName ? "border-red-500" : ""}
+                      className={`bg-white ${formErrors.firstName ? "border-red-500" : ""}`}
                     />
                     {formErrors.firstName && <p className="text-red-500 text-sm mt-1">{formErrors.firstName}</p>}
                   </div>
@@ -277,7 +277,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                       id="lastName"
                       value={customerInfo.lastName}
                       onChange={(e) => handleInputChange("lastName", e.target.value)}
-                      className={formErrors.lastName ? "border-red-500" : ""}
+                      className={`bg-white ${formErrors.lastName ? "border-red-500" : ""}`}
                     />
                     {formErrors.lastName && <p className="text-red-500 text-sm mt-1">{formErrors.lastName}</p>}
                   </div>
@@ -290,7 +290,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     type="email"
                     value={customerInfo.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className={formErrors.email ? "border-red-500" : ""}
+                    className={`bg-white ${formErrors.email ? "border-red-500" : ""}`}
                   />
                   {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
                 </div>
@@ -301,7 +301,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     id="phone"
                     value={customerInfo.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className={formErrors.phone ? "border-red-500" : ""}
+                    className={`bg-white ${formErrors.phone ? "border-red-500" : ""}`}
                     placeholder="+41 XX XXX XX XX"
                   />
                   {formErrors.phone && <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>}
@@ -323,7 +323,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     id="address"
                     value={customerInfo.address}
                     onChange={(e) => handleInputChange("address", e.target.value)}
-                    className={formErrors.address ? "border-red-500" : ""}
+                    className={`bg-white ${formErrors.address ? "border-red-500" : ""}`}
                   />
                   {formErrors.address && <p className="text-red-500 text-sm mt-1">{formErrors.address}</p>}
                 </div>
@@ -335,7 +335,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                       id="postalCode"
                       value={customerInfo.postalCode}
                       onChange={(e) => handleInputChange("postalCode", e.target.value)}
-                      className={formErrors.postalCode ? "border-red-500" : ""}
+                      className={`bg-white ${formErrors.postalCode ? "border-red-500" : ""}`}
                       placeholder="1234"
                     />
                     {formErrors.postalCode && <p className="text-red-500 text-sm mt-1">{formErrors.postalCode}</p>}
@@ -346,7 +346,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                       id="city"
                       value={customerInfo.city}
                       onChange={(e) => handleInputChange("city", e.target.value)}
-                      className={formErrors.city ? "border-red-500" : ""}
+                      className={`bg-white ${formErrors.city ? "border-red-500" : ""}`}
                     />
                     {formErrors.city && <p className="text-red-500 text-sm mt-1">{formErrors.city}</p>}
                   </div>
@@ -358,7 +358,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     id="canton"
                     value={customerInfo.canton}
                     onChange={(e) => handleInputChange("canton", e.target.value)}
-                    className={formErrors.canton ? "border-red-500" : ""}
+                    className={`bg-white ${formErrors.canton ? "border-red-500" : ""}`}
                     placeholder="z.B. Zürich, Bern, Basel..."
                   />
                   {formErrors.canton && <p className="text-red-500 text-sm mt-1">{formErrors.canton}</p>}
@@ -372,13 +372,14 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     onChange={(e) => handleInputChange("notes", e.target.value)}
                     placeholder="Besondere Lieferhinweise..."
                     rows={3}
+                    className="bg-white"
                   />
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Resumen del pedido */}
+          {/* Order summary */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -392,7 +393,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   {cart.map((item) => (
                     <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                       <img
-                        src={item.image || "/placeholder.svg"}
+                        src={item.image || "/placeholder.svg?height=64&width=64&query=product"}
                         alt={item.name}
                         className="w-16 h-16 object-cover rounded-lg"
                       />
@@ -439,7 +440,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               </CardContent>
             </Card>
 
-            {/* Información de envío */}
+            {/* Shipping information */}
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-6">
                 <h3 className="font-semibold text-blue-800 mb-2">📦 Versandinformationen</h3>
@@ -452,7 +453,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               </CardContent>
             </Card>
 
-            {/* PayPal Payment - Método Simple */}
+            {/* PayPal Payment - Simple Method */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
@@ -502,7 +503,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     onClick={handlePayPalPayment}
                     className="w-full h-16 text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black shadow-xl hover:shadow-2xl transition-all duration-300"
                   >
-                    💳 Mit PayPal bezahlen - {getFinalTotal().toFixed(2)} CHF
+                    💳 PayPal - {getFinalTotal().toFixed(2)} CHF
                   </Button>
                 )}
 
@@ -517,3 +518,4 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     </div>
   )
 }
+

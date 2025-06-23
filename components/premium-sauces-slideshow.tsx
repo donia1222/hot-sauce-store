@@ -280,12 +280,6 @@ export function PremiumSaucesSlideshow({
             ))}
           </div>
 
-          {/* Scroll Indicators */}
-          <div className="flex justify-center mt-6 space-x-2">
-            <div className="text-sm text-stone-500 bg-white/70 px-3 py-1 rounded-full border border-stone-300">
-              ← Scrollen Sie horizontal für mehr Produkte →
-            </div>
-          </div>
         </div>
 
         {/* Call to Action */}
