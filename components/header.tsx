@@ -1,14 +1,20 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { ShoppingCart, Flame, Zap, Home, ChefHat, Heart, Menu, X } from "lucide-react"
+import { ShoppingCart, Flame, Zap, Home, ChefHat, Heart, Menu, X, Shield, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface HeaderProps {
   cartItemsCount: number
   onCartOpen: () => void
+  onAdminOpen: () => void // Remove the optional ?
 }
 
 // Componente personalizado para icono de chili
@@ -62,11 +68,43 @@ const BBQIcon = ({ className }: { className?: string }) => (
   </div>
 )
 
-export function Header({ cartItemsCount, onCartOpen }: HeaderProps) {
+export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps) {
   const [showHeader, setShowHeader] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentSection, setCurrentSection] = useState("hero")
+  const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const [loginData, setLoginData] = useState({ email: "", password: "" })
+  const [showPassword, setShowPassword] = useState(false)
+  const [loginError, setLoginError] = useState("")
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const savedLoginState = localStorage.getItem("admin-login-state")
+    if (savedLoginState) {
+      try {
+        const loginState = JSON.parse(savedLoginState)
+        if (loginState.isLoggedIn && loginState.timestamp) {
+          // Check if login is still valid (e.g., within 7 days)
+          const now = new Date().getTime()
+          const loginTime = new Date(loginState.timestamp).getTime()
+          const daysDiff = (now - loginTime) / (1000 * 60 * 60 * 24)
+
+          if (daysDiff < 7) {
+            setIsLoggedIn(true)
+            setLoginData({ email: loginState.email, password: "" })
+          } else {
+            localStorage.removeItem("admin-login-state")
+          }
+        }
+      } catch (error) {
+        console.error("Error loading saved login state:", error)
+        localStorage.removeItem("admin-login-state")
+      }
+    }
+  }, [])
 
   // Secciones con fondo claro
   const lightSections = ["premium-showcase", "offers"]
@@ -115,6 +153,45 @@ export function Header({ cartItemsCount, onCartOpen }: HeaderProps) {
       element.scrollIntoView({ behavior: "smooth" })
       setIsMenuOpen(false)
     }
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoggingIn(true)
+    setLoginError("")
+
+    // Simular delay de autenticación
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    if (loginData.email === "info@lweb.ch" && loginData.password === "perritos56") {
+      console.log("Login successful, calling onAdminOpen")
+      setIsLoggedIn(true)
+      setIsLoginOpen(false)
+
+      // Save login state if "remember me" is checked
+      if (rememberMe) {
+        const loginState = {
+          isLoggedIn: true,
+          email: loginData.email,
+          timestamp: new Date().toISOString(),
+        }
+        localStorage.setItem("admin-login-state", JSON.stringify(loginState))
+      }
+
+      setLoginData({ email: "", password: "" })
+      setRememberMe(false)
+      onAdminOpen()
+    } else {
+      setLoginError("Email o contraseña incorrectos")
+    }
+
+    setIsLoggingIn(false)
+  }
+
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    setLoginData({ email: "", password: "" })
+    localStorage.removeItem("admin-login-state")
   }
 
   const navItems = [
@@ -251,6 +328,125 @@ export function Header({ cartItemsCount, onCartOpen }: HeaderProps) {
 
           {/* Mobile Controls */}
           <div className="flex items-center space-x-3">
+            {/* Login Button */}
+            {isLoggedIn ? (
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="icon"
+                className={`relative p-3 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
+                  isLightSection
+                    ? "bg-green-500/20 hover:bg-red-500/20 text-white border-green-400/50 hover:border-red-400/50"
+                    : "bg-green-500/10 hover:bg-red-500/10 text-white border-green-400/30 hover:border-red-400/30"
+                }`}
+                title="Admin Logout"
+              >
+                <Shield className="w-5 h-5 text-green-400 hover:text-red-400 transition-colors" />
+              </Button>
+            ) : (
+              <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`relative p-3 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
+                      isLightSection
+                        ? "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-orange-400/50"
+                        : "bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-orange-400/30"
+                    }`}
+                    title="Admin Login"
+                  >
+                    <Shield className="w-5 h-5" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center space-x-2">
+                      <Shield className="w-5 h-5 text-orange-600" />
+                      <span>Admin Login</span>
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={loginData.email}
+                        onChange={(e) => setLoginData((prev) => ({ ...prev, email: e.target.value }))}
+                        placeholder="admin@example.com"
+                        required
+                        className="bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Contraseña</Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          value={loginData.password}
+                          onChange={(e) => setLoginData((prev) => ({ ...prev, password: e.target.value }))}
+                          placeholder="••••••••"
+                          required
+                          className="bg-white pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4 text-gray-500" />
+                          ) : (
+                            <Eye className="w-4 h-4 text-gray-500" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="rememberMe"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                      />
+                      <Label htmlFor="rememberMe" className="text-sm text-gray-600">
+                        Recordar por 7 días
+                      </Label>
+                    </div>
+
+                    {loginError && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-red-600 text-sm">{loginError}</p>
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      disabled={isLoggingIn}
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
+                    >
+                      {isLoggingIn ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Iniciando sesión...
+                        </>
+                      ) : (
+                        "Iniciar Sesión"
+                      )}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
+
             {/* Menu Button Mobile */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>

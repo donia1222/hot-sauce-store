@@ -10,6 +10,7 @@ import { ShoppingCartComponent } from "@/components/shopping-cart"
 import { CheckoutPage } from "@/components/checkout-page"
 import { Footer } from "@/components/footer"
 import { PremiumSaucesSlideshow } from "@/components/premium-sauces-slideshow"
+import { Admin } from "@/components/admin"
 
 interface Product {
   id: number
@@ -51,7 +52,7 @@ export default function PremiumHotSauceStore() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [purchasedItems, setPurchasedItems] = useState<Set<number>>(new Set())
   const [purchasedCombos, setPurchasedCombos] = useState<Set<string>>(new Set())
-  const [currentPage, setCurrentPage] = useState<"store" | "checkout">("store")
+  const [currentPage, setCurrentPage] = useState<"store" | "checkout" | "admin">("store")
 
   // 💾 Cargar carrito desde localStorage al iniciar
   useEffect(() => {
@@ -185,6 +186,24 @@ export default function PremiumHotSauceStore() {
     // No limpiar carrito aquí automáticamente - se limpia cuando el pago se confirma
   }
 
+  // 🔐 Funciones para el admin
+  const goToAdmin = () => {
+    console.log("Navigating to admin panel...")
+    setCurrentPage("admin")
+    setIsCartOpen(false)
+  }
+
+  const backFromAdmin = () => {
+    console.log("Returning from admin panel...")
+    setCurrentPage("store")
+  }
+
+  // 📊 Renderizar página de admin
+  if (currentPage === "admin") {
+    return <Admin onClose={backFromAdmin} />
+  }
+
+  // 🛒 Renderizar página de checkout
   if (currentPage === "checkout") {
     return (
       <CheckoutPage
@@ -195,9 +214,10 @@ export default function PremiumHotSauceStore() {
     )
   }
 
+  // 🏪 Renderizar página principal del store
   return (
     <div className="bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <Header cartItemsCount={getTotalItems()} onCartOpen={() => setIsCartOpen(true)} />
+      <Header cartItemsCount={getTotalItems()} onCartOpen={() => setIsCartOpen(true)} onAdminOpen={goToAdmin} />
 
       <HeroSection />
 
