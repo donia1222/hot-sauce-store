@@ -78,17 +78,7 @@ const products: Product[] = [
     badge: "Klassiker",
     origin: "Original",
   },
-  {
-    id: 5,
-    name: "A La Diabla Hot Sauce",
-    price: 15.73,
-    image: "/images/a-la-diabla.webp",
-    description: "Teuflisch scharfe Familienrezeptur mit reichem, würzigem Geschmack",
-    heatLevel: 5,
-    rating: 4.9,
-    badge: "Teuflisch",
-    origin: "Familienrezept",
-  },
+
   {
     id: 6,
     name: "Big Red's Hot Sauce - Habanero",
@@ -111,7 +101,7 @@ const comboOffers: ComboOffer[] = [
     offerPrice: 29.9,
     discount: 22,
     products: ["Big Red's Big Yella", "Big Red's Heat Wave", "Big Red's Green Chili"],
-    image: "/R-IND-SMOKEYHAB.png",
+    image: "/placeholder.svg?height=400&width=300&text=Combo+1",
     heatLevel: 4,
     rating: 4.8,
     badge: "COMBO DEAL",
@@ -125,7 +115,7 @@ const comboOffers: ComboOffer[] = [
     offerPrice: 34.9,
     discount: 20,
     products: ["Big Red's Heat Wave", "A La Diabla", "Big Red's Habanero"],
-    image: "/R-IND-GREENCHILI.png",
+    image: "/placeholder.svg?height=400&width=300&text=Combo+2",
     heatLevel: 5,
     rating: 4.9,
     badge: "EXTREME",
@@ -139,7 +129,7 @@ const comboOffers: ComboOffer[] = [
     offerPrice: 33.9,
     discount: 21,
     products: ["Big Red's Original", "A La Diabla", "Big Red's Big Yella"],
-    image: "/R-IND-BIGYELLA.png",
+    image: "/placeholder.svg?height=400&width=300&text=Combo+3",
     heatLevel: 4,
     rating: 4.7,
     badge: "GOURMET",
@@ -215,7 +205,7 @@ export default function ProductsGrid({
   const renderProductCard = (product: Product) => (
     <Card
       key={product.id}
-      className="relative bg-white bg-opacity-60 backdrop-blur-md border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transform transition-transform duration-500 hover:-translate-y-2"
+      className="flex-shrink-0 w-80 relative bg-white bg-opacity-60 backdrop-blur-md border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transform transition-transform duration-500 hover:-translate-y-2 snap-center"
     >
       <CardContent className="p-0 overflow-hidden rounded-t-3xl">
         <div
@@ -225,7 +215,7 @@ export default function ProductsGrid({
           <img
             src={product.image || "/placeholder.svg"}
             alt={product.name}
-            className="w-full h-64 object-cover hover:scale-105 transition-transform duration-700"
+            className="w-full h-68 object-cover hover:scale-105 transition-transform duration-700"
           />
         </div>
         <Badge className="absolute top-4 left-4 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold px-3 py-1 rounded-full shadow-md">
@@ -236,28 +226,28 @@ export default function ProductsGrid({
         </Badge>
       </CardContent>
       <CardContent className="px-6 py-4">
-        <h4 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h4>
-        <p className="text-gray-700 text-sm mb-4">{product.description}</p>
+        <h4 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{product.name}</h4>
+        <p className="text-gray-700 text-sm mb-4 line-clamp-2">{product.description}</p>
         <div className="flex justify-between items-center mb-4">
           <div>
             <div className="flex space-x-1">{renderHeatLevel(product.heatLevel)}</div>
-            <span className="text-xs text-gray-500">Schärfe-Level</span>
+            <span className="text-xs text-gray-500">Schärfe</span>
           </div>
           <div className="text-right">
             <div className="flex justify-end space-x-1">{renderStars(product.rating)}</div>
             <span className="text-xs text-gray-500">{product.rating.toFixed(1)}</span>
           </div>
         </div>
-        <div className="text-3xl font-extrabold text-red-600 mb-4">
+        <div className="text-2xl font-extrabold text-red-600 mb-4">
           {(product.price * getQty(product.id)).toFixed(2)} CHF
         </div>
-        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden w-max">
-          <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, -1)} className="px-3">
-            <Minus />
+        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden w-max mb-4 bg-white">
+          <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, -1)} className="px-2">
+            <Minus className="w-4 h-4" />
           </Button>
-          <span className="px-4 font-medium">{getQty(product.id)}</span>
-          <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, 1)} className="px-3">
-            <Plus />
+          <span className="px-3 font-medium">{getQty(product.id)}</span>
+          <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, 1)} className="px-2">
+            <Plus className="w-4 h-4" />
           </Button>
         </div>
       </CardContent>
@@ -268,10 +258,10 @@ export default function ProductsGrid({
             onMarkAsPurchased(product.id)
           }}
           disabled={purchasedItems.has(product.id)}
-          className="w-full py-3 font-semibold rounded-full text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600 transition-colors duration-300"
+          className="w-full py-2 font-semibold rounded-full text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600 transition-colors duration-300 text-sm"
         >
-          <ShoppingCart className="w-5 h-5 inline-block mr-2" />
-          {purchasedItems.has(product.id) ? "✓ Hinzugefügt" : "In den Warenkorb"}
+          <ShoppingCart className="w-4 h-4 inline-block mr-2" />
+          {purchasedItems.has(product.id) ? "✓ Hinzugefügt" : "In Warenkorb"}
         </Button>
       </CardFooter>
     </Card>
@@ -281,16 +271,12 @@ export default function ProductsGrid({
   const renderComboCard = (offer: ComboOffer) => (
     <Card
       key={offer.id}
-      className="relative bg-gradient-to-br from-orange-50 to-red-50 border-2 border-red-300 rounded-3xl shadow-xl hover:shadow-2xl transform transition-transform duration-500 hover:-translate-y-2 overflow-hidden"
+      className="flex-shrink-0 w-96 relative bg-gradient-to-br from-orange-50 to-red-50 border-2 border-red-300 rounded-3xl shadow-xl hover:shadow-2xl transform transition-transform duration-500 hover:-translate-y-2 overflow-hidden snap-center"
     >
       <CardContent className="p-0 overflow-hidden rounded-t-3xl relative">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-500/10 to-orange-500/10 z-10"></div>
         <div className="cursor-pointer" onClick={() => openImageModal(offer.image || "/placeholder.svg", offer.name)}>
-          <img
-            src={offer.image || "/placeholder.svg"}
-            alt={offer.name}
-            className="w-full h-80 object-cover hover:scale-105 transition-transform duration-700"
-          />
+
         </div>
         <Badge className="absolute top-4 left-4 bg-red-600 text-white font-bold px-3 py-1 text-sm animate-pulse z-20">
           -{offer.discount}% SPAREN
@@ -303,23 +289,26 @@ export default function ProductsGrid({
         </div>
       </CardContent>
       <CardContent className="px-6 py-4">
-        <h4 className="text-2xl font-bold text-gray-900 mb-2">{offer.name}</h4>
-        <p className="text-gray-700 text-sm mb-4">{offer.description}</p>
+        <h4 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{offer.name}</h4>
+        <p className="text-gray-700 text-sm mb-4 line-clamp-1">{offer.description}</p>
 
         {/* Products included */}
-        <div className="space-y-2 mb-4">
-          {offer.products.map((product, index) => (
-            <div key={index} className="flex items-center space-x-2 text-sm text-gray-700">
-              <Package className="w-4 h-4 text-orange-500" />
-              <span className="font-medium">{product}</span>
+        <div className="space-y-1 mb-4">
+          {offer.products.slice(0, 2).map((product, index) => (
+            <div key={index} className="flex items-center space-x-2 text-xs text-gray-700">
+              <Package className="w-3 h-3 text-orange-500" />
+              <span className="font-medium truncate">{product}</span>
             </div>
           ))}
+          {offer.products.length > 2 && (
+            <div className="text-xs text-gray-500">+{offer.products.length - 2} weitere...</div>
+          )}
         </div>
 
         <div className="flex justify-between items-center mb-4">
           <div>
             <div className="flex space-x-1">{renderHeatLevel(offer.heatLevel)}</div>
-            <span className="text-xs text-gray-500">Ø Schärfe-Level</span>
+            <span className="text-xs text-gray-500">Ø Schärfe</span>
           </div>
           <div className="text-right">
             <div className="flex justify-end space-x-1">{renderStars(offer.rating)}</div>
@@ -329,25 +318,25 @@ export default function ProductsGrid({
 
         <div className="mb-4">
           <div className="flex justify-center items-center space-x-2 mb-2">
-            <span className="text-3xl font-bold text-red-600">
+            <span className="text-2xl font-bold text-red-600">
               {(offer.offerPrice * getComboQty(offer.id)).toFixed(2)} CHF
             </span>
-            <span className="text-lg text-gray-400 line-through">
+            <span className="text-sm text-gray-400 line-through">
               {(offer.originalPrice * getComboQty(offer.id)).toFixed(2)} CHF
             </span>
           </div>
-          <p className="text-green-600 font-bold text-center">
+          <p className="text-green-600 font-bold text-center text-sm">
             Sie sparen {((offer.originalPrice - offer.offerPrice) * getComboQty(offer.id)).toFixed(2)} CHF!
           </p>
         </div>
 
-        <div className="flex items-center justify-center border border-gray-300 rounded-lg overflow-hidden w-max mx-auto">
-          <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, -1)} className="px-3">
-            <Minus />
+        <div className="flex items-center justify-center border border-gray-300 rounded-lg overflow-hidden w-max mx-auto mb-4 bg-white">
+          <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, -1)} className="px-2">
+            <Minus className="w-4 h-4" />
           </Button>
-          <span className="px-4 font-medium">{getComboQty(offer.id)}</span>
-          <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, 1)} className="px-3">
-            <Plus />
+          <span className="px-3 font-medium">{getComboQty(offer.id)}</span>
+          <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, 1)} className="px-2">
+            <Plus className="w-4 h-4" />
           </Button>
         </div>
       </CardContent>
@@ -358,9 +347,9 @@ export default function ProductsGrid({
             onMarkComboAsPurchased(offer.id)
           }}
           disabled={purchasedCombos.has(offer.id)}
-          className="w-full py-3 font-semibold rounded-full text-white bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 transition-colors duration-300"
+          className="w-full py-2 font-semibold rounded-full text-white bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 transition-colors duration-300 text-sm"
         >
-          <Gift className="w-5 h-5 inline-block mr-2" />
+          <Gift className="w-4 h-4 inline-block mr-2" />
           {purchasedCombos.has(offer.id) ? "✓ Combo hinzugefügt" : "Combo sichern"}
         </Button>
       </CardFooter>
@@ -368,14 +357,13 @@ export default function ProductsGrid({
   )
 
   return (
-    <section className="py-24 px-6 bg-gray-50">
+    <section className="py-24 px-6 bg-gradient-to-br from-red-50/30 via-rose-50/20 to-pink-50/30">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <Sparkles className="inline-block w-8 h-8 text-red-500 animate-bounce" />
           <h3 className="inline-block mx-4 text-4xl font-extrabold text-gray-900 drop-shadow-lg">
             Unsere Premium-Saucen & Angebote
           </h3>
-  
           <p className="mt-4 text-lg text-gray-600">
             Handverlesene Hot Sauces mit modernem Flair und exklusive Combo-Angebote.
           </p>
@@ -386,11 +374,21 @@ export default function ProductsGrid({
           <div className="text-center mb-8">
             <Gift className="inline-block w-8 h-8 text-orange-500 animate-bounce mr-2" />
             <h4 className="inline-block text-3xl font-bold text-orange-600">🔥 Spezial Angebote 🔥</h4>
-    
             <p className="mt-2 text-gray-600">Sparen Sie mit unseren exklusiven 3er-Paketen!</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {comboOffers.map(renderComboCard)}
+
+          {/* SCROLL LATERAL DE OFERTAS ESPECIALES */}
+          <div className="relative">
+            <div className="flex overflow-x-auto scrollbar-hide gap-6 pb-4 px-4 snap-x snap-mandatory">
+              {comboOffers.map(renderComboCard)}
+            </div>
+
+            {/* Scroll Indicator */}
+            <div className="flex justify-center mt-6 space-x-2">
+              <div className="text-sm text-gray-500 bg-white/70 px-3 py-1 rounded-full border border-gray-300">
+                ← Scrollen Sie horizontal für mehr Angebote →
+              </div>
+            </div>
           </div>
         </div>
 
@@ -400,9 +398,23 @@ export default function ProductsGrid({
             <h4 className="text-3xl font-bold text-gray-900">Einzelne Produkte</h4>
             <p className="mt-2 text-gray-600">Wählen Sie Ihre Lieblings-Hot-Sauce einzeln aus</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">{products.map(renderProductCard)}</div>
+
+          {/* SCROLL LATERAL DE PRODUCTOS INDIVIDUALES */}
+          <div className="relative">
+            <div className="flex overflow-x-auto scrollbar-hide gap-6 pb-4 px-4 snap-x snap-mandatory">
+              {products.map(renderProductCard)}
+            </div>
+
+            {/* Scroll Indicator */}
+            <div className="flex justify-center mt-6 space-x-2">
+              <div className="text-sm text-gray-500 bg-white/70 px-3 py-1 rounded-full border border-gray-300">
+                ← Scrollen Sie horizontal für mehr Produkte →
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
       {/* Image Modal */}
       {selectedImage && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -424,6 +436,28 @@ export default function ProductsGrid({
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </section>
   )
 }

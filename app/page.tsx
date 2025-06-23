@@ -9,6 +9,7 @@ import { PairingSuggestions } from "@/components/pairing-suggestions"
 import { ShoppingCartComponent } from "@/components/shopping-cart"
 import { CheckoutPage } from "@/components/checkout-page"
 import { Footer } from "@/components/footer"
+import { PremiumSaucesSlideshow } from "@/components/premium-sauces-slideshow"
 
 interface Product {
   id: number
@@ -200,16 +201,26 @@ export default function PremiumHotSauceStore() {
 
       <HeroSection />
 
-    <section id="offers">
-      <ProductsGrid
-        onAddToCart={addToCart}
-        onAddComboToCart={addComboToCart}
-        purchasedItems={purchasedItems}
-        purchasedCombos={purchasedCombos}
-        onMarkAsPurchased={markAsPurchased}
-        onMarkComboAsPurchased={markComboAsPurchased}
-      />
-    </section>
+      {/* 🔥 PREMIUM SAUCES SLIDESHOW SECTION */}
+      <section id="premium-showcase" className="6">
+        <PremiumSaucesSlideshow
+          onAddToCart={addToCart}
+          purchasedItems={purchasedItems}
+          onMarkAsPurchased={markAsPurchased}
+        />
+      </section>
+
+      <section id="offers">
+        <ProductsGrid
+          onAddToCart={addToCart}
+          onAddComboToCart={addComboToCart}
+          purchasedItems={purchasedItems}
+          purchasedCombos={purchasedCombos}
+          onMarkAsPurchased={markAsPurchased}
+          onMarkComboAsPurchased={markComboAsPurchased}
+        />
+      </section>
+
       <CulinaryInspiration />
       <PairingSuggestions />
 
@@ -222,8 +233,8 @@ export default function PremiumHotSauceStore() {
         onGoToCheckout={goToCheckout}
         onClearCart={clearCart} // Pasar función para limpiar carrito
       />
-      <Footer />
 
+      <Footer />
     </div>
   )
 }

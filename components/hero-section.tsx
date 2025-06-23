@@ -41,18 +41,15 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Título principal */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 text-white tracking-tight leading-none">
-            FEUER
-          </h1>
+   
           <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-16 text-gray-300 tracking-wide leading-none">
-            KÖNIGREICH
+                HOT & BBQ
           </h2>
 
           {/* Descripción */}
           <div className="max-w-4xl mx-auto mb-20">
             <p className="text-xl md:text-2xl lg:text-3xl mb-8 text-gray-300 font-light leading-relaxed">
-              Die exklusivste Premium-Kollektion scharfer Saucen der Welt
+              Die exklusivste Premium-Kollektion BBQ & scharfer Saucen
             </p>
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent mx-auto mb-8"></div>
             <p className="text-lg md:text-xl text-gray-400 font-light">
