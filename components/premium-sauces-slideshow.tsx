@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Flame, Star, ShoppingCart, Minus, Plus } from "lucide-react"
@@ -23,8 +23,7 @@ const sauces = [
     name: "Honey Barbecue Sauce",
     flavor: "Süß & Rauchig",
     description: "Eine perfekte Mischung aus natürlichem Honig und rauchigen Gewürzen, die jeden Grillabend veredelt",
-    image:
-      "r1.png",
+    image: "r1.png",
     color: "from-amber-600 to-orange-700",
     bgColor: "bg-gradient-to-br from-amber-50 to-orange-50",
     price: 14.0,
@@ -120,32 +119,7 @@ export function PremiumSaucesSlideshow({
   purchasedItems = new Set(),
   onMarkAsPurchased = () => {},
 }: PremiumSaucesProps) {
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [isAutoPlay, setIsAutoPlay] = useState(true)
   const [quantities, setQuantities] = useState<Record<number, number>>({})
-
-  // Auto-play functionality
-  useEffect(() => {
-    if (!isAutoPlay) return
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % sauces.length)
-    }, 4000)
-
-    return () => clearInterval(interval)
-  }, [isAutoPlay])
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % sauces.length)
-  }
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + sauces.length) % sauces.length)
-  }
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index)
-  }
 
   const updateQty = (id: number, delta: number) => {
     setQuantities((prev) => {
@@ -177,12 +151,8 @@ export function PremiumSaucesSlideshow({
       />
     ))
 
-  const currentSauce = sauces[currentSlide]
-
   return (
-    <div
-      className={`min-h-screen transition-all duration-1000 bg-gradient-to-br from-stone-100 via-amber-50 to-orange-50`}
-    >
+    <div className="min-h-screen transition-all duration-1000 bg-gradient-to-br from-red-50/30 via-rose-50/20 to-pink-50/30">
       {/* Header */}
       <div className="text-center pt-12 pb-8">
         <div className="mb-6">
@@ -198,207 +168,7 @@ export function PremiumSaucesSlideshow({
         <p className="text-lg text-stone-700 max-w-2xl mx-auto px-4 font-medium">
           Authentische Grillsaucen aus der Räucherkammer - Handwerklich geräuchert & perfekt gewürzt
         </p>
-        <div
-          className={`w-32 h-2 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 mx-auto mt-6 rounded-full transition-all duration-1000 shadow-lg`}
-        ></div>
-      </div>
-
-      {/* Main Slideshow */}
-      <div className="relative max-w-6xl mx-auto px-4">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-stone-50 to-amber-50 shadow-2xl border border-stone-200">
-          {/* Slide Content */}
-          <div
-            className="flex transition-transform duration-700 ease-in-out"
-            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-          >
-            {sauces.map((sauce, index) => (
-              <div key={sauce.id} className="w-full flex-shrink-0">
-                <div className="grid md:grid-cols-2 gap-8 p-8 md:p-12 items-center min-h-[500px]">
-                  {/* Image Side */}
-                  <div className="relative flex justify-center items-center">
-                    <div className="relative group">
-                      {/* Badges */}
-                      <Badge className="absolute -top-2 -left-2 z-20 bg-gradient-to-r from-amber-600 to-orange-700 text-white font-bold px-3 py-1 rounded-full shadow-lg border border-amber-200">
-                        {sauce.badge}
-                      </Badge>
-                      <Badge className="absolute -top-2 -right-2 z-20 bg-stone-100 text-stone-800 font-semibold px-2 py-1 rounded-full shadow-md text-sm border border-stone-300">
-                        {sauce.origin}
-                      </Badge>
-
-                      {/* Glow Effect */}
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${sauce.color} opacity-15 blur-3xl scale-110 group-hover:scale-125 transition-transform duration-500`}
-                      ></div>
-
-                      {/* Main Image */}
-                      <img
-                        src={sauce.image || "/placeholder.svg"}
-                        alt={sauce.name}
-                        className="relative z-10 w-80 h-80 object-contain drop-shadow-2xl transform group-hover:scale-105 transition-transform duration-500"
-                      />
-
-                      {/* Floating Elements */}
-                      <div
-                        className={`absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full opacity-60 animate-bounce shadow-lg`}
-                      ></div>
-                      <div
-                        className={`absolute -bottom-4 -left-4 w-6 h-6 bg-gradient-to-br from-stone-500 to-amber-600 rounded-full opacity-40 animate-pulse shadow-lg`}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Content Side */}
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-4xl md:text-5xl font-bold text-stone-800 mb-3 leading-tight">{sauce.name}</h2>
-                      <p
-                        className={`text-xl font-semibold bg-gradient-to-r ${sauce.color} bg-clip-text text-transparent mb-4`}
-                      >
-                        {sauce.flavor}
-                      </p>
-                    </div>
-
-                    <p className="text-stone-600 text-lg leading-relaxed">{sauce.description}</p>
-
-                    {/* Heat Level & Rating */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="flex space-x-1 mb-1">{renderHeatLevel(sauce.heatLevel)}</div>
-                        <span className="text-xs text-stone-500 font-medium">Schärfe-Level</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex justify-end space-x-1 mb-1">{renderStars(sauce.rating)}</div>
-                        <span className="text-xs text-stone-500 font-medium">{sauce.rating.toFixed(1)}</span>
-                      </div>
-                    </div>
-
-                    {/* Price */}
-                    <div className="text-4xl font-extrabold text-amber-700 mb-4 drop-shadow-sm">
-                      {(sauce.price * getQty(sauce.id)).toFixed(2)} CHF
-                    </div>
-
-                    {/* Quantity Selector */}
-                    <div className="flex items-center border-2 border-stone-300 rounded-lg overflow-hidden w-max mb-6 bg-white shadow-sm">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => updateQty(sauce.id, -1)}
-                        className="px-3 hover:bg-stone-100 text-stone-600"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="px-4 font-bold text-lg text-stone-700">{getQty(sauce.id)}</span>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => updateQty(sauce.id, 1)}
-                        className="px-3 hover:bg-stone-100 text-stone-600"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex space-x-4 pt-4">
-                      <Button
-                        onClick={() => {
-                          const product: Product = {
-                            id: sauce.id,
-                            name: sauce.name,
-                            price: sauce.price,
-                            image: sauce.image,
-                            description: sauce.description,
-                            heatLevel: sauce.heatLevel,
-                            rating: sauce.rating,
-                            badge: sauce.badge,
-                            origin: sauce.origin,
-                          }
-                          onAddToCart(product, getQty(sauce.id))
-                          onMarkAsPurchased(sauce.id)
-                        }}
-                        disabled={purchasedItems.has(sauce.id)}
-                        className={`px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-700 text-white font-bold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500 shadow-lg`}
-                      >
-                        <ShoppingCart className="w-5 h-5 mr-2" />
-                        {purchasedItems.has(sauce.id) ? "✓ Hinzugefügt" : "Jetzt kaufen"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="px-8 py-3 border-2 border-stone-400 text-stone-700 font-semibold rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all duration-300 bg-white shadow-sm"
-                      >
-                        Mehr Infos
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Navigation Arrows */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-stone-100/90 backdrop-blur-sm rounded-full shadow-xl flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300 z-10 border border-stone-300"
-        >
-          <svg className="w-6 h-6 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <button
-          onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-stone-100/90 backdrop-blur-sm rounded-full shadow-xl flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300 z-10 border border-stone-300"
-        >
-          <svg className="w-6 h-6 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Slide Indicators */}
-      <div className="flex justify-center space-x-3 mt-8 pb-8">
-        {sauces.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-4 h-4 rounded-full transition-all duration-300 border-2 ${
-              index === currentSlide
-                ? `bg-gradient-to-r from-amber-600 to-orange-700 scale-125 border-amber-400 shadow-lg`
-                : "bg-stone-300 hover:bg-stone-400 border-stone-400"
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* Auto-play Control */}
-      <div className="fixed bottom-6 right-6">
-        <button
-          onClick={() => setIsAutoPlay(!isAutoPlay)}
-          className={`w-12 h-12 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 border-2 ${
-            isAutoPlay
-              ? "bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white border-amber-500"
-              : "bg-stone-200 hover:bg-stone-300 text-stone-600 border-stone-400"
-          }`}
-        >
-          {isAutoPlay ? (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-        </button>
+        <div className="w-32 h-2 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 mx-auto mt-6 rounded-full transition-all duration-1000 shadow-lg"></div>
       </div>
 
       {/* GRID DE SALSAS PREMIUM */}
@@ -424,7 +194,7 @@ export function PremiumSaucesSlideshow({
                   <img
                     src={sauce.image || "/placeholder.svg"}
                     alt={sauce.name}
-                    className="w-full h-68 object-cover hover:scale-105 transition-transform duration-700"
+                    className="w-full h-64 object-cover hover:scale-105 transition-transform duration-700"
                   />
                   <Badge className="absolute top-4 left-4 bg-gradient-to-r from-amber-600 to-orange-700 text-white font-bold px-3 py-1 rounded-full shadow-lg border border-amber-200">
                     {sauce.badge}
@@ -456,30 +226,30 @@ export function PremiumSaucesSlideshow({
                     </div>
                   </div>
 
-                  {/* Price */}
-                  <div className="text-2xl font-extrabold text-amber-700 mb-4 drop-shadow-sm">
-                    {(sauce.price * getQty(sauce.id)).toFixed(2)} CHF
-                  </div>
-
-                  {/* Quantity Selector */}
-                  <div className="flex items-center border-2 border-stone-300 rounded-lg overflow-hidden w-max mb-4 bg-white shadow-sm">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => updateQty(sauce.id, -1)}
-                      className="px-2 hover:bg-stone-100 text-stone-600"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span className="px-3 font-bold text-stone-700">{getQty(sauce.id)}</span>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => updateQty(sauce.id, 1)}
-                      className="px-2 hover:bg-stone-100 text-stone-600"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
+                  {/* Quantity and Price in same row */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center border-2 border-stone-300 rounded-lg overflow-hidden bg-white shadow-sm">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => updateQty(sauce.id, -1)}
+                        className="px-2 hover:bg-stone-100 text-stone-600"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="px-3 font-bold text-stone-700">{getQty(sauce.id)}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => updateQty(sauce.id, 1)}
+                        className="px-2 hover:bg-stone-100 text-stone-600"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="text-2xl font-extrabold text-amber-700 drop-shadow-sm">
+                      {(sauce.price * getQty(sauce.id)).toFixed(2)} CHF
+                    </div>
                   </div>
 
                   {/* Footer with Button */}
@@ -512,7 +282,7 @@ export function PremiumSaucesSlideshow({
 
           {/* Scroll Indicators */}
           <div className="flex justify-center mt-6 space-x-2">
-            <div className="text-sm text-stone-500 bg-stone-100 px-3 py-1 rounded-full border border-stone-300">
+            <div className="text-sm text-stone-500 bg-white/70 px-3 py-1 rounded-full border border-stone-300">
               ← Scrollen Sie horizontal für mehr Produkte →
             </div>
           </div>

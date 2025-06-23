@@ -37,7 +37,7 @@ const products: Product[] = [
   {
     id: 1,
     name: "Big Red's Hot Sauce - Big Yella",
-    price: 14.90,
+    price: 14.9,
     image: "/images/big-yella.webp",
     description: "Goldgelbe Schärfe mit sonnigem Geschmack und intensivem Kick",
     heatLevel: 4,
@@ -78,7 +78,17 @@ const products: Product[] = [
     badge: "Klassiker",
     origin: "Original",
   },
-
+  {
+    id: 5,
+    name: "A La Diabla Hot Sauce",
+    price: 15.73,
+    image: "/images/a-la-diabla.webp",
+    description: "Teuflisch scharfe Familienrezeptur mit reichem, würzigem Geschmack",
+    heatLevel: 5,
+    rating: 4.9,
+    badge: "Teuflisch",
+    origin: "Familienrezept",
+  },
   {
     id: 6,
     name: "Big Red's Hot Sauce - Habanero",
@@ -92,7 +102,6 @@ const products: Product[] = [
   },
 ]
 
-
 const comboOffers: ComboOffer[] = [
   {
     id: "combo1",
@@ -102,7 +111,7 @@ const comboOffers: ComboOffer[] = [
     offerPrice: 29.9,
     discount: 22,
     products: ["Big Red's Big Yella", "Big Red's Heat Wave", "Big Red's Green Chili"],
-    image: "/placeholder.svg?height=400&width=300&text=Combo+1",
+    image: "/R-IND-SMOKEYHAB.png",
     heatLevel: 4,
     rating: 4.8,
     badge: "COMBO DEAL",
@@ -116,7 +125,7 @@ const comboOffers: ComboOffer[] = [
     offerPrice: 34.9,
     discount: 20,
     products: ["Big Red's Heat Wave", "A La Diabla", "Big Red's Habanero"],
-    image: "/placeholder.svg?height=400&width=300&text=Combo+2",
+    image: "/R-IND-GREENCHILI.png",
     heatLevel: 5,
     rating: 4.9,
     badge: "EXTREME",
@@ -130,7 +139,7 @@ const comboOffers: ComboOffer[] = [
     offerPrice: 33.9,
     discount: 21,
     products: ["Big Red's Original", "A La Diabla", "Big Red's Big Yella"],
-    image: "/placeholder.svg?height=400&width=300&text=Combo+3",
+    image: "/R-IND-BIGYELLA.png",
     heatLevel: 4,
     rating: 4.7,
     badge: "GOURMET",
@@ -216,7 +225,7 @@ export default function ProductsGrid({
           <img
             src={product.image || "/placeholder.svg"}
             alt={product.name}
-            className="w-full h-68 object-cover hover:scale-105 transition-transform duration-700"
+            className="w-full h-60 object-cover hover:scale-105 transition-transform duration-700"
           />
         </div>
         <Badge className="absolute top-4 left-4 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold px-3 py-1 rounded-full shadow-md">
@@ -239,17 +248,19 @@ export default function ProductsGrid({
             <span className="text-xs text-gray-500">{product.rating.toFixed(1)}</span>
           </div>
         </div>
-        <div className="text-2xl font-extrabold text-red-600 mb-4">
-          {(product.price * getQty(product.id)).toFixed(2)} CHF
-        </div>
-        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden w-max mb-4 bg-white">
-          <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, -1)} className="px-2">
-            <Minus className="w-4 h-4" />
-          </Button>
-          <span className="px-3 font-medium">{getQty(product.id)}</span>
-          <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, 1)} className="px-2">
-            <Plus className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
+            <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, -1)} className="px-2">
+              <Minus className="w-4 h-4" />
+            </Button>
+            <span className="px-3 font-medium">{getQty(product.id)}</span>
+            <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, 1)} className="px-2">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="text-2xl font-extrabold text-red-600">
+            {(product.price * getQty(product.id)).toFixed(2)} CHF
+          </div>
         </div>
       </CardContent>
       <CardFooter className="px-6 pb-6 pt-0">
@@ -277,7 +288,11 @@ export default function ProductsGrid({
       <CardContent className="p-0 overflow-hidden rounded-t-3xl relative">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-500/10 to-orange-500/10 z-10"></div>
         <div className="cursor-pointer" onClick={() => openImageModal(offer.image || "/placeholder.svg", offer.name)}>
-
+          <img
+            src={offer.image || "/placeholder.svg"}
+            alt={offer.name}
+            className="w-full h-56 object-cover hover:scale-105 transition-transform duration-700"
+          />
         </div>
         <Badge className="absolute top-4 left-4 bg-red-600 text-white font-bold px-3 py-1 text-sm animate-pulse z-20">
           -{offer.discount}% SPAREN
@@ -318,27 +333,31 @@ export default function ProductsGrid({
         </div>
 
         <div className="mb-4">
-          <div className="flex justify-center items-center space-x-2 mb-2">
-            <span className="text-2xl font-bold text-red-600">
-              {(offer.offerPrice * getComboQty(offer.id)).toFixed(2)} CHF
-            </span>
-            <span className="text-sm text-gray-400 line-through">
-              {(offer.originalPrice * getComboQty(offer.id)).toFixed(2)} CHF
-            </span>
-          </div>
-          <p className="text-green-600 font-bold text-center text-sm">
+          <p className="text-green-600 font-bold text-center text-sm mb-3">
             Sie sparen {((offer.originalPrice - offer.offerPrice) * getComboQty(offer.id)).toFixed(2)} CHF!
           </p>
         </div>
 
-        <div className="flex items-center justify-center border border-gray-300 rounded-lg overflow-hidden w-max mx-auto mb-4 bg-white">
-          <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, -1)} className="px-2">
-            <Minus className="w-4 h-4" />
-          </Button>
-          <span className="px-3 font-medium">{getComboQty(offer.id)}</span>
-          <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, 1)} className="px-2">
-            <Plus className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
+            <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, -1)} className="px-2">
+              <Minus className="w-4 h-4" />
+            </Button>
+            <span className="px-3 font-medium">{getComboQty(offer.id)}</span>
+            <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, 1)} className="px-2">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-red-600">
+                {(offer.offerPrice * getComboQty(offer.id)).toFixed(2)} CHF
+              </span>
+              <span className="text-sm text-gray-400 line-through">
+                {(offer.originalPrice * getComboQty(offer.id)).toFixed(2)} CHF
+              </span>
+            </div>
+          </div>
         </div>
       </CardContent>
       <CardFooter className="px-6 pb-6 pt-0">
@@ -372,23 +391,14 @@ export default function ProductsGrid({
 
         {/* Special Offers Section */}
         <div className="mb-16">
-          <div className="text-center mb-8">
-            <Gift className="inline-block w-8 h-8 text-orange-500 animate-bounce mr-2" />
-            <h4 className="inline-block text-3xl font-bold text-orange-600">🔥 Spezial Angebote 🔥</h4>
-            <p className="mt-2 text-gray-600">Sparen Sie mit unseren exklusiven 3er-Paketen!</p>
-          </div>
+ 
 
           {/* SCROLL LATERAL DE OFERTAS ESPECIALES */}
           <div className="relative">
-            <div className="flex overflow-x-auto scrollbar-hide gap-6 pb-4 px-4 snap-x snap-mandatory">
-              {comboOffers.map(renderComboCard)}
-            </div>
-
+     
             {/* Scroll Indicator */}
             <div className="flex justify-center mt-6 space-x-2">
-              <div className="text-sm text-gray-500 bg-white/70 px-3 py-1 rounded-full border border-gray-300">
-                ← Scrollen Sie horizontal für mehr Angebote →
-              </div>
+      
             </div>
           </div>
         </div>
@@ -408,9 +418,7 @@ export default function ProductsGrid({
 
             {/* Scroll Indicator */}
             <div className="flex justify-center mt-6 space-x-2">
-              <div className="text-sm text-gray-500 bg-white/70 px-3 py-1 rounded-full border border-gray-300">
-                ← Scrollen Sie horizontal für mehr Produkte →
-              </div>
+     
             </div>
           </div>
         </div>
