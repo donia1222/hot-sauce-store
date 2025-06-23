@@ -44,12 +44,6 @@ interface CustomerInfo {
   notes: string
 }
 
-declare global {
-  interface Window {
-    paypal: any
-  }
-}
-
 export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: "",
@@ -67,9 +61,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string>("")
 
-  // API Base URL - cambiar según tu configuración
-  const API_BASE_URL = "https://web.lweb.ch/shop/"
+  // API Base URL - URL CORRECTA
+  const API_BASE_URL = "https://web.lweb.ch/shop"
 
   // Load user data from localStorage on start
   useEffect(() => {
@@ -86,7 +81,6 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   // Save user data to localStorage whenever it changes
   useEffect(() => {
-    // Only save if at least one field is completed
     const hasData = Object.values(customerInfo).some((value) => value.trim() !== "")
     if (hasData) {
       localStorage.setItem("cantina-customer-info", JSON.stringify(customerInfo))
@@ -99,45 +93,81 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const getShippingCost = () => {
     const total = getTotalPrice()
-    return total >= 0 ? 0 : 8.5 // Envío gratis a partir de 50 CHF
+    return total >= 50 ? 0 : 8.5
   }
 
   const getFinalTotal = () => {
     return getTotalPrice() + getShippingCost()
   }
 
-  // Función para guardar el pedido en la base de datos
-  const saveOrderToDatabase = async (orderData: any) => {
+  // Función para probar la conexión PHP
+  const testPHPConnection = async () => {
     try {
+      const response = await fetch(`${API_BASE_URL}/test.php`)
+      const result = await response.json()
+      setDebugInfo(`PHP Test: ${JSON.stringify(result, null, 2)}`)
+      console.log("PHP Test Result:", result)
+    } catch (error) {
+      setDebugInfo(`PHP Test Error: ${error}`)
+      console.error("PHP Test Error:", error)
+    }
+  }
+
+  // Función para guardar el pedido en la base de datos
+  const saveOrderToDatabase = async () => {
+    try {
+      setDebugInfo("Enviando pedido a la base de datos...")
+
+      const orderData = {
+        customerInfo: customerInfo,
+        cart: cart,
+        totalAmount: getFinalTotal(),
+        shippingCost: getShippingCost(),
+        paymentMethod: "paypal",
+        paymentStatus: "completed",
+      }
+
+      console.log("Sending order data:", orderData)
+
       const response = await fetch(`${API_BASE_URL}/add_order.php`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          customerInfo: customerInfo,
-          cart: cart,
-          totalAmount: getFinalTotal(),
-          shippingCost: getShippingCost(),
-          paymentMethod: "paypal",
-          paymentStatus: "completed",
-        }),
+        body: JSON.stringify(orderData),
       })
 
-      const result = await response.json()
+      console.log("Response status:", response.status)
+      console.log("Response headers:", response.headers)
+
+      const responseText = await response.text()
+      console.log("Raw response:", responseText)
+
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch (parseError) {
+        throw new Error(`Invalid JSON response: ${responseText}`)
+      }
 
       if (!result.success) {
         throw new Error(result.error || "Error saving order")
       }
 
+      setDebugInfo(`Pedido guardado exitosamente: ${result.orderNumber}`)
       return result.data
-    } catch (error) {
-      console.error("Error saving order to database:", error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error saving order to database:", error.message)
+        setDebugInfo(`Error: ${error.message}`)
+      } else {
+        console.error("Error saving order to database:", error)
+        setDebugInfo("An unknown error occurred")
+      }
       throw error
     }
   }
 
-  // Simple PayPal method - without SDK
   const handlePayPalPayment = () => {
     if (!validateForm()) {
       return
@@ -155,12 +185,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
       setIsSubmitting(true)
 
       try {
-        // Guardar pedido en la base de datos
-        const savedOrder = await saveOrderToDatabase({
-          customerInfo,
-          cart,
-          total: getFinalTotal(),
-        })
+        const savedOrder = await saveOrderToDatabase()
 
         setOrderStatus("completed")
         setOrderDetails({
@@ -172,16 +197,14 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
           createdAt: savedOrder.createdAt,
         })
 
-        // Clear cart after successful payment
         if (onClearCart) {
           onClearCart()
         }
 
-        // Also clear localStorage cart to ensure
         localStorage.removeItem("cantina-cart")
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error saving order:", error)
-        alert("Error al guardar el pedido. Por favor contacte con soporte.")
+        alert(`Error al guardar el pedido: ${error.message}`)
         setOrderStatus("error")
       } finally {
         setIsSubmitting(false)
@@ -203,13 +226,11 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     if (!customerInfo.postalCode.trim()) errors.postalCode = "PLZ ist erforderlich"
     if (!customerInfo.canton.trim()) errors.canton = "Kanton ist erforderlich"
 
-    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (customerInfo.email && !emailRegex.test(customerInfo.email)) {
       errors.email = "Ungültige E-Mail-Adresse"
     }
 
-    // Validate Swiss postal code
     const postalCodeRegex = /^\d{4}$/
     if (customerInfo.postalCode && !postalCodeRegex.test(customerInfo.postalCode)) {
       errors.postalCode = "PLZ muss 4 Ziffern haben"
@@ -221,7 +242,6 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const handleInputChange = (field: keyof CustomerInfo, value: string) => {
     setCustomerInfo((prev) => ({ ...prev, [field]: value }))
-    // Clear field error when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: undefined }))
     }
@@ -268,6 +288,14 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             <p className="text-xl text-gray-600 mb-6">
               Es gab ein Problem beim Verarbeiten Ihrer Zahlung. Bitte versuchen Sie es erneut.
             </p>
+
+            {debugInfo && (
+              <div className="bg-red-50 rounded-lg p-4 mb-6 text-left">
+                <h4 className="font-semibold text-red-700 mb-2">Debug Info:</h4>
+                <pre className="text-xs text-red-600 whitespace-pre-wrap">{debugInfo}</pre>
+              </div>
+            )}
+
             <div className="space-y-4">
               <Button onClick={() => setOrderStatus("pending")} className="bg-orange-600 hover:bg-orange-700">
                 Erneut versuchen
@@ -295,7 +323,26 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             <ArrowLeft className="w-4 h-4 mr-2" />
             Zurück zum Shop
           </Button>
+
+          {/* Debug button */}
+          <Button
+            onClick={testPHPConnection}
+            variant="outline"
+            className="ml-4 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-700"
+          >
+            🔧 Test PHP
+          </Button>
         </div>
+
+        {/* Debug info */}
+        {debugInfo && (
+          <Card className="mb-6 bg-blue-50 border-blue-200">
+            <CardContent className="p-4">
+              <h4 className="font-semibold text-blue-700 mb-2">Debug Info:</h4>
+              <pre className="text-xs text-blue-600 whitespace-pre-wrap">{debugInfo}</pre>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Customer form */}
@@ -507,7 +554,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               </CardContent>
             </Card>
 
-            {/* PayPal Payment - Simple Method */}
+            {/* PayPal Payment */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
