@@ -1,9 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, CheckCircle, AlertCircle, User } from "lucide-react"
+import { ArrowLeft, Package, CreditCard, Shield, CheckCircle, AlertCircle, MapPin, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 
 interface Product {
   id: number
@@ -97,7 +102,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   // Función para probar la conexión PHP
   const testPHPConnection = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/test_db.php`)
+      const response = await fetch(`${API_BASE_URL}/test.php`)
       const result = await response.json()
       setDebugInfo(`PHP Test: ${JSON.stringify(result, null, 2)}`)
       console.log("PHP Test Result:", result)
@@ -132,10 +137,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
       })
 
       console.log("Response status:", response.status)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
+      console.log("Response headers:", response.headers)
 
       const responseText = await response.text()
       console.log("Raw response:", responseText)
@@ -153,9 +155,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
       setDebugInfo(`Pedido guardado exitosamente: ${result.orderNumber}`)
       return result.data
-    } catch (error: any) {
+    } catch (unknownError) {
+      const error = unknownError instanceof Error ? unknownError : new Error(String(unknownError))
       console.error("Error saving order to database:", error)
-      setDebugInfo(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setDebugInfo(`Error: ${error.message}`)
       throw error
     }
   }
@@ -194,9 +197,9 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
         }
 
         localStorage.removeItem("cantina-cart")
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error saving order:", error)
-        alert(`Error al guardar el pedido: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        alert(`Error al guardar el pedido: ${error.message}`)
         setOrderStatus("error")
       } finally {
         setIsSubmitting(false)
@@ -352,6 +355,258 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   </div>
                 </CardTitle>
               </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">Vorname *</Label>
+                    <Input
+                      id="firstName"
+                      value={customerInfo.firstName}
+                      onChange={(e) => handleInputChange("firstName", e.target.value)}
+                      className={`bg-white ${formErrors.firstName ? "border-red-500" : ""}`}
+                    />
+                    {formErrors.firstName && <p className="text-red-500 text-sm mt-1">{formErrors.firstName}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Nachname *</Label>
+                    <Input
+                      id="lastName"
+                      value={customerInfo.lastName}
+                      onChange={(e) => handleInputChange("lastName", e.target.value)}
+                      className={`bg-white ${formErrors.lastName ? "border-red-500" : ""}`}
+                    />
+                    {formErrors.lastName && <p className="text-red-500 text-sm mt-1">{formErrors.lastName}</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="email">E-Mail *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={customerInfo.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className={`bg-white ${formErrors.email ? "border-red-500" : ""}`}
+                  />
+                  {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="phone">Telefon *</Label>
+                  <Input
+                    id="phone"
+                    value={customerInfo.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    className={`bg-white ${formErrors.phone ? "border-red-500" : ""}`}
+                    placeholder="+41 XX XXX XX XX"
+                  />
+                  {formErrors.phone && <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl">
+                  <MapPin className="w-5 h-5 mr-2 text-orange-600" />
+                  Lieferadresse
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="address">Straße und Hausnummer *</Label>
+                  <Input
+                    id="address"
+                    value={customerInfo.address}
+                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    className={`bg-white ${formErrors.address ? "border-red-500" : ""}`}
+                  />
+                  {formErrors.address && <p className="text-red-500 text-sm mt-1">{formErrors.address}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="postalCode">PLZ *</Label>
+                    <Input
+                      id="postalCode"
+                      value={customerInfo.postalCode}
+                      onChange={(e) => handleInputChange("postalCode", e.target.value)}
+                      className={`bg-white ${formErrors.postalCode ? "border-red-500" : ""}`}
+                      placeholder="1234"
+                    />
+                    {formErrors.postalCode && <p className="text-red-500 text-sm mt-1">{formErrors.postalCode}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="city">Stadt *</Label>
+                    <Input
+                      id="city"
+                      value={customerInfo.city}
+                      onChange={(e) => handleInputChange("city", e.target.value)}
+                      className={`bg-white ${formErrors.city ? "border-red-500" : ""}`}
+                    />
+                    {formErrors.city && <p className="text-red-500 text-sm mt-1">{formErrors.city}</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="canton">Kanton *</Label>
+                  <Input
+                    id="canton"
+                    value={customerInfo.canton}
+                    onChange={(e) => handleInputChange("canton", e.target.value)}
+                    className={`bg-white ${formErrors.canton ? "border-red-500" : ""}`}
+                    placeholder="z.B. Zürich, Bern, Basel..."
+                  />
+                  {formErrors.canton && <p className="text-red-500 text-sm mt-1">{formErrors.canton}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Anmerkungen (optional)</Label>
+                  <Textarea
+                    id="notes"
+                    value={customerInfo.notes}
+                    onChange={(e) => handleInputChange("notes", e.target.value)}
+                    placeholder="Besondere Lieferhinweise..."
+                    rows={3}
+                    className="bg-white"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Order summary */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl">
+                  <Package className="w-5 h-5 mr-2 text-orange-600" />
+                  Ihre Bestellung
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                      <img
+                        src={item.image || "/placeholder.svg?height=64&width=64&query=product"}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm line-clamp-2">{item.name}</h4>
+                        <p className="text-gray-600 text-sm">Menge: {item.quantity}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-orange-600">{(item.price * item.quantity).toFixed(2)} CHF</p>
+                        <p className="text-xs text-gray-500">{item.price.toFixed(2)} CHF/Stück</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator className="my-6" />
+
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Zwischensumme:</span>
+                    <span>{getTotalPrice().toFixed(2)} CHF</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Versand:</span>
+                    <span>
+                      <Badge className="bg-green-100 text-green-700">Kostenlos</Badge>
+                    </span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-xl font-bold">
+                    <span>Gesamt:</span>
+                    <span className="text-orange-600">{getFinalTotal().toFixed(2)} CHF</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Shipping information */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-6">
+                <h3 className="font-semibold text-blue-800 mb-2">📦 Versandinformationen</h3>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Versand nur innerhalb der Schweiz</li>
+                  <li>• Lieferzeit: 2-3 Werktage</li>
+                  <li>• Kostenloser Versand für alle Bestellungen</li>
+                  <li>• Versand aus 9745 Sevelen</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* PayPal Payment */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl">
+                  <CreditCard className="w-5 h-5 mr-2 text-orange-600" />
+                  Zahlung
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Shield className="w-5 h-5 text-green-600" />
+                    <span className="text-sm text-gray-600">Sichere Zahlung mit PayPal</span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Sie werden zu PayPal weitergeleitet um die Zahlung abzuschließen.
+                  </p>
+                </div>
+
+                {orderStatus === "processing" ? (
+                  <div className="text-center py-8 space-y-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 font-semibold">Warten auf PayPal Zahlung...</p>
+                    <p className="text-sm text-gray-500">Bitte schließen Sie die Zahlung in dem PayPal-Fenster ab</p>
+
+                    <div className="flex gap-4 justify-center mt-6">
+                      <Button
+                        onClick={() => handlePaymentConfirmation(true)}
+                        disabled={isSubmitting}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Speichere...
+                          </>
+                        ) : (
+                          "✅ Zahlung abgeschlossen"
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => handlePaymentConfirmation(false)}
+                        disabled={isSubmitting}
+                        variant="outline"
+                        className="border-red-500 text-red-600 hover:bg-red-50"
+                      >
+                        ❌ Zahlung fehlgeschlagen
+                      </Button>
+                    </div>
+
+                    <p className="text-xs text-gray-400 mt-4">
+                      Klicken Sie auf "Zahlung abgeschlossen" nur wenn PayPal die Zahlung bestätigt hat
+                    </p>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handlePayPalPayment}
+                    className="w-full h-16 text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black shadow-xl hover:shadow-2xl transition-all duration-300"
+                  >
+                    💳 PayPal - {getFinalTotal().toFixed(2)} CHF
+                  </Button>
+                )}
+
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  Mit dem Klick auf "Mit PayPal bezahlen" akzeptieren Sie unsere AGB und Datenschutzbestimmungen.
+                </p>
+              </CardContent>
             </Card>
           </div>
         </div>
