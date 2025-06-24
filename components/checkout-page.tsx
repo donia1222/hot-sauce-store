@@ -13,6 +13,8 @@ import {
   UserPlus,
   Eye,
   EyeOff,
+  Mail,
+  KeyRound,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { UserProfile } from "./user-profile"
 
 interface Product {
@@ -118,6 +121,14 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [loginStatus, setLoginStatus] = useState<"idle" | "success" | "error">("idle")
   const [loginMessage, setLoginMessage] = useState("")
+
+  // Password Reset states
+  const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [resetEmail, setResetEmail] = useState("")
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [resetStatus, setResetStatus] = useState<"idle" | "success" | "error">("idle")
+  const [resetMessage, setResetMessage] = useState("")
+  const [resetErrors, setResetErrors] = useState<any>({})
 
   const API_BASE_URL = "https://web.lweb.ch/shop"
 
@@ -650,6 +661,104 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     }
   }
 
+  // Password Reset Functions
+  const handlePasswordReset = async () => {
+    try {
+      setIsResettingPassword(true)
+      setResetStatus("idle")
+      setResetErrors({})
+
+      console.log("🔄 Iniciando reset de contraseña...")
+
+      // Validación básica
+      const errors: any = {}
+      if (!resetEmail.trim()) {
+        errors.email = "E-Mail-Adresse ist erforderlich"
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (resetEmail && !emailRegex.test(resetEmail)) {
+        errors.email = "Ungültige E-Mail-Adresse"
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setResetErrors(errors)
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/reset_password.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          email: resetEmail.trim().toLowerCase(),
+        }),
+      })
+
+      console.log("📡 Respuesta de reset:", response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("❌ Error HTTP:", response.status, errorText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log("✅ Respuesta de reset:", result)
+
+      if (result.success) {
+        setResetStatus("success")
+        setResetMessage(result.message || "Ein neues Passwort wurde an Ihre E-Mail-Adresse gesendet.")
+
+        // Limpiar el formulario
+        setResetEmail("")
+
+        console.log("✅ Reset de contraseña exitoso")
+      } else {
+        throw new Error(result.error || "Password reset failed")
+      }
+    } catch (error: unknown) {
+      console.error("❌ Error en reset de contraseña:", error)
+      setResetStatus("error")
+
+      let errorMessage = "Error desconocido"
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === "string") {
+        errorMessage = error
+      }
+
+      // Mensajes más específicos
+      if (errorMessage.includes("Load failed") || errorMessage.includes("Failed to fetch")) {
+        errorMessage = "Verbindungsfehler. Bitte versuchen Sie es erneut."
+      } else if (errorMessage.includes("CORS")) {
+        errorMessage = "Serverfehler. Bitte kontaktieren Sie den Support."
+      }
+
+      setResetMessage(errorMessage)
+    } finally {
+      setIsResettingPassword(false)
+    }
+  }
+
+  const openPasswordReset = () => {
+    setShowPasswordReset(true)
+    setResetEmail(loginData.email) // Pre-fill with login email if available
+    setResetStatus("idle")
+    setResetMessage("")
+    setResetErrors({})
+  }
+
+  const closePasswordReset = () => {
+    setShowPasswordReset(false)
+    setResetEmail("")
+    setResetStatus("idle")
+    setResetMessage("")
+    setResetErrors({})
+  }
+
   if (orderStatus === "completed") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
@@ -738,7 +847,12 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   <User className="w-4 h-4 mr-2" />
                   Mein Profil
                 </Button>
-                <Button onClick={handleLogout} variant="outline" size="sm">
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                >
                   Abmelden
                 </Button>
               </div>
@@ -819,6 +933,21 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   {formErrors.phone && <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>}
                 </div>
 
+                {/* Show success message when logged in */}
+                {isLoggedIn && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                      <div>
+                        <p className="text-green-700 font-medium">Sie sind angemeldet!</p>
+                        <p className="text-green-600 text-sm">
+                          Ihre Daten werden automatisch für zukünftige Bestellungen gespeichert.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Login Section - ONLY show if NOT logged in */}
                 {!isLoggedIn && (
                   <div className="border-t pt-4">
@@ -855,7 +984,18 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                         </div>
 
                         <div>
-                          <Label htmlFor="loginPassword">Passwort *</Label>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="loginPassword">Passwort *</Label>
+                            <Button
+                              type="button"
+                              variant="link"
+                              size="sm"
+                              onClick={openPasswordReset}
+                              className="text-xs text-blue-600 hover:text-blue-800 p-0 h-auto"
+                            >
+                              Passwort vergessen?
+                            </Button>
+                          </div>
                           <div className="relative">
                             <Input
                               id="loginPassword"
@@ -924,169 +1064,6 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* Create Account Section - ONLY show if NOT logged in */}
-                {!isLoggedIn && (
-                  <div className="border-t pt-4">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <Checkbox
-                        id="createAccount"
-                        checked={showCreateAccount}
-                        onCheckedChange={(checked) => {
-                          setShowCreateAccount(checked as boolean)
-                          if (checked) {
-                            setShowLogin(false) // Close login if create account is opened
-                          }
-                        }}
-                      />
-                      <Label htmlFor="createAccount" className="flex items-center cursor-pointer">
-                        <UserPlus className="w-4 h-4 mr-2 text-orange-600" />
-                        Konto erstellen und Daten für zukünftige Bestellungen speichern
-                      </Label>
-                    </div>
-
-                    {showCreateAccount && (
-                      <div className="space-y-4 bg-orange-50 p-4 rounded-lg">
-                        <div>
-                          <Label htmlFor="password">Passwort *</Label>
-                          <div className="relative">
-                            <Input
-                              id="password"
-                              type={showPassword ? "text" : "password"}
-                              value={createAccountData.password}
-                              onChange={(e) => setCreateAccountData((prev) => ({ ...prev, password: e.target.value }))}
-                              className={`bg-white pr-10 ${accountErrors.password ? "border-red-500" : ""}`}
-                              placeholder="Mindestens 6 Zeichen"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </Button>
-                          </div>
-                          {accountErrors.password && (
-                            <p className="text-red-500 text-sm mt-1">{accountErrors.password}</p>
-                          )}
-                        </div>
-
-                        <div>
-                          <Label htmlFor="confirmPassword">Passwort bestätigen *</Label>
-                          <div className="relative">
-                            <Input
-                              id="confirmPassword"
-                              type={showConfirmPassword ? "text" : "password"}
-                              value={createAccountData.confirmPassword}
-                              onChange={(e) =>
-                                setCreateAccountData((prev) => ({ ...prev, confirmPassword: e.target.value }))
-                              }
-                              className={`bg-white pr-10 ${accountErrors.confirmPassword ? "border-red-500" : ""}`}
-                              placeholder="Passwort wiederholen"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            >
-                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </Button>
-                          </div>
-                          {accountErrors.confirmPassword && (
-                            <p className="text-red-500 text-sm mt-1">{accountErrors.confirmPassword}</p>
-                          )}
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="saveData"
-                            checked={createAccountData.saveData}
-                            onCheckedChange={(checked) =>
-                              setCreateAccountData((prev) => ({ ...prev, saveData: checked as boolean }))
-                            }
-                          />
-                          <Label htmlFor="saveData" className="text-sm cursor-pointer">
-                            Ich möchte ein Konto erstellen und meine Daten für zukünftige Bestellungen speichern
-                          </Label>
-                        </div>
-                        {accountErrors.saveData && (
-                          <p className="text-red-500 text-sm mt-1">{accountErrors.saveData}</p>
-                        )}
-
-                        {/* Create Account Button */}
-                        <div className="pt-4 border-t">
-                          <Button
-                            onClick={handleCreateAccountOnly}
-                            disabled={
-                              isCreatingAccount || !createAccountData.password || !createAccountData.confirmPassword
-                            }
-                            className="w-full bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            {isCreatingAccount ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Konto wird erstellt...
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="w-4 h-4 mr-2" />
-                                Konto jetzt erstellen
-                              </>
-                            )}
-                          </Button>
-
-                          <p className="text-xs text-gray-500 mt-2 text-center">
-                            Sie können Ihr Konto jetzt erstellen oder später beim Bezahlen
-                          </p>
-                        </div>
-
-                        {/* Account Creation Status Messages */}
-                        {accountCreationStatus === "error" && (
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div className="flex items-center">
-                              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-                              <div>
-                                <p className="text-red-700 font-medium">Error al crear la cuenta</p>
-                                <p className="text-red-600 text-sm mt-1">{accountCreationMessage}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="bg-blue-50 p-3 rounded-lg">
-                          <p className="text-sm text-blue-700">
-                            <strong>Vorteile eines Kontos:</strong>
-                          </p>
-                          <ul className="text-sm text-blue-600 mt-1 space-y-1">
-                            <li>• Automatisches Ausfüllen bei zukünftigen Bestellungen</li>
-                            <li>• Bestellhistorie einsehen</li>
-                            <li>• Adressdaten verwalten</li>
-                            <li>• Schnellerer Checkout</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Show success message when logged in */}
-                {isLoggedIn && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                      <div>
-                        <p className="text-green-700 font-medium">Sie sind angemeldet!</p>
-                        <p className="text-green-600 text-sm">
-                          Ihre Daten werden automatisch für zukünftige Bestellungen gespeichert.
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 )}
               </CardContent>
@@ -1160,6 +1137,154 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                 </div>
               </CardContent>
             </Card>
+
+            {/* Create Account Section - ONLY show if NOT logged in */}
+            {!isLoggedIn && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox
+                      id="createAccount"
+                      checked={showCreateAccount}
+                      onCheckedChange={(checked) => {
+                        setShowCreateAccount(checked as boolean)
+                        if (checked) {
+                          setShowLogin(false) // Close login if create account is opened
+                        }
+                      }}
+                    />
+                    <Label htmlFor="createAccount" className="flex items-center cursor-pointer">
+                      <UserPlus className="w-4 h-4 mr-2 text-orange-600" />
+                      Konto erstellen und Daten für zukünftige Bestellungen speichern
+                    </Label>
+                  </div>
+
+                  {showCreateAccount && (
+                    <div className="space-y-4 bg-orange-50 p-4 rounded-lg">
+                      <div>
+                        <Label htmlFor="password">Passwort *</Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={createAccountData.password}
+                            onChange={(e) => setCreateAccountData((prev) => ({ ...prev, password: e.target.value }))}
+                            className={`bg-white pr-10 ${accountErrors.password ? "border-red-500" : ""}`}
+                            placeholder="Mindestens 6 Zeichen"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        {accountErrors.password && (
+                          <p className="text-red-500 text-sm mt-1">{accountErrors.password}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="confirmPassword">Passwort bestätigen *</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={createAccountData.confirmPassword}
+                            onChange={(e) =>
+                              setCreateAccountData((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                            }
+                            className={`bg-white pr-10 ${accountErrors.confirmPassword ? "border-red-500" : ""}`}
+                            placeholder="Passwort wiederholen"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        {accountErrors.confirmPassword && (
+                          <p className="text-red-500 text-sm mt-1">{accountErrors.confirmPassword}</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="saveData"
+                          checked={createAccountData.saveData}
+                          onCheckedChange={(checked) =>
+                            setCreateAccountData((prev) => ({ ...prev, saveData: checked as boolean }))
+                          }
+                        />
+                        <Label htmlFor="saveData" className="text-sm cursor-pointer">
+                          Ich möchte ein Konto erstellen und meine Daten für zukünftige Bestellungen speichern
+                        </Label>
+                      </div>
+                      {accountErrors.saveData && <p className="text-red-500 text-sm mt-1">{accountErrors.saveData}</p>}
+
+                      {/* Create Account Button */}
+                      <div className="pt-4 border-t">
+                        <Button
+                          onClick={handleCreateAccountOnly}
+                          disabled={
+                            isCreatingAccount || !createAccountData.password || !createAccountData.confirmPassword
+                          }
+                          className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {isCreatingAccount ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Konto wird erstellt...
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="w-4 h-4 mr-2" />
+                              Konto jetzt erstellen
+                            </>
+                          )}
+                        </Button>
+
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          Sie können Ihr Konto jetzt erstellen oder später beim Bezahlen
+                        </p>
+                      </div>
+
+                      {/* Account Creation Status Messages */}
+                      {accountCreationStatus === "error" && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                          <div className="flex items-center">
+                            <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                            <div>
+                              <p className="text-red-700 font-medium">Error al crear la cuenta</p>
+                              <p className="text-red-600 text-sm mt-1">{accountCreationMessage}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm text-blue-700">
+                          <strong>Vorteile eines Kontos:</strong>
+                        </p>
+                        <ul className="text-sm text-blue-600 mt-1 space-y-1">
+                          <li>• Automatisches Ausfüllen bei zukünftigen Bestellungen</li>
+                          <li>• Bestellhistorie einsehen</li>
+                          <li>• Adressdaten verwalten</li>
+                          <li>• Schnellerer Checkout</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Order summary */}
@@ -1298,19 +1423,116 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
           </div>
         </div>
 
+        {/* Password Reset Modal */}
+        <Dialog open={showPasswordReset} onOpenChange={setShowPasswordReset}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <KeyRound className="w-5 h-5 mr-2 text-orange-600" />
+                Passwort zurücksetzen
+              </DialogTitle>
+              <DialogDescription>
+                Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen ein neues temporäres Passwort.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="resetEmail">E-Mail-Adresse *</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    id="resetEmail"
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className={`pl-10 ${resetErrors.email ? "border-red-500" : ""}`}
+                    placeholder="ihre@email.com"
+                    disabled={isResettingPassword}
+                  />
+                </div>
+                {resetErrors.email && <p className="text-red-500 text-sm mt-1">{resetErrors.email}</p>}
+              </div>
+
+              {/* Status Messages */}
+              {resetStatus === "success" && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                    <div>
+                      <p className="text-green-700 font-medium">E-Mail gesendet!</p>
+                      <p className="text-green-600 text-sm mt-1">{resetMessage}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {resetStatus === "error" && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                    <div>
+                      <p className="text-red-700 font-medium">Fehler</p>
+                      <p className="text-red-600 text-sm mt-1">{resetMessage}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Info Box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-blue-800 font-medium mb-2">ℹ️ Wichtige Hinweise:</h4>
+                <ul className="text-blue-700 text-sm space-y-1">
+                  <li>• Sie erhalten ein neues 8-stelliges Passwort per E-Mail</li>
+                  <li>• Melden Sie sich sofort mit dem neuen Passwort an</li>
+                  <li>• Ändern Sie das Passwort nach der Anmeldung in Ihrem Profil</li>
+                  <li>• Alle bestehenden Sitzungen werden aus Sicherheitsgründen beendet</li>
+                </ul>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={handlePasswordReset}
+                  disabled={isResettingPassword || !resetEmail.trim() || resetStatus === "success"}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  {isResettingPassword ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Wird gesendet...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Neues Passwort anfordern
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={closePasswordReset}
+                  variant="outline"
+                  disabled={isResettingPassword}
+                  className="flex-1"
+                >
+                  {resetStatus === "success" ? "Schließen" : "Abbrechen"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* User Profile Modal */}
         {showUserProfile && (
-          <div className="fixed inset-0 z-50">
-            <UserProfile
-              onClose={() => {
-                setShowUserProfile(false)
-                // Recargar datos del usuario después de cerrar el perfil
-                setTimeout(() => {
-                  reloadUserData()
-                }, 100)
-              }}
-            />
-          </div>
+          <UserProfile
+            onClose={() => {
+              setShowUserProfile(false)
+              // Recargar datos del usuario después de cerrar el perfil
+              setTimeout(() => {
+                reloadUserData()
+              }, 100)
+            }}
+          />
         )}
       </div>
     </div>
