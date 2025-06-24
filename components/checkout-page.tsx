@@ -1,7 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Package, CreditCard, Shield, CheckCircle, AlertCircle, MapPin, User } from "lucide-react"
+import {
+  ArrowLeft,
+  Package,
+  CreditCard,
+  Shield,
+  CheckCircle,
+  AlertCircle,
+  MapPin,
+  User,
+  UserPlus,
+  Eye,
+  EyeOff,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,6 +21,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Checkbox } from "@/components/ui/checkbox"
+import { UserProfile } from "./user-profile"
 
 interface Product {
   id: number
@@ -44,10 +58,17 @@ interface CustomerInfo {
   notes: string
 }
 
-declare global {
-  interface Window {
-    paypal: any
-  }
+interface UserData {
+  id?: number
+  email: string
+  firstName: string
+  lastName: string
+  phone: string
+  address: string
+  city: string
+  postalCode: string
+  canton: string
+  notes: string
 }
 
 export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageProps) {
@@ -68,60 +89,308 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // API Base URL - cambiar según tu configuración
-  const API_BASE_URL = "https://web.lweb.ch/shop/"
+  // User account states
+  const [showCreateAccount, setShowCreateAccount] = useState(false)
+  const [createAccountData, setCreateAccountData] = useState({
+    password: "",
+    confirmPassword: "",
+    saveData: false,
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [accountErrors, setAccountErrors] = useState<any>({})
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
+  const [showUserProfile, setShowUserProfile] = useState(false)
 
-  // Load user data from localStorage on start
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false)
+  const [accountCreationStatus, setAccountCreationStatus] = useState<"idle" | "success" | "error">("idle")
+  const [accountCreationMessage, setAccountCreationMessage] = useState("")
+
+  // Login states
+  const [showLogin, setShowLogin] = useState(false)
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  })
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
+  const [loginErrors, setLoginErrors] = useState<any>({})
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [loginStatus, setLoginStatus] = useState<"idle" | "success" | "error">("idle")
+  const [loginMessage, setLoginMessage] = useState("")
+
+  const API_BASE_URL = "https://web.lweb.ch/shop"
+
+  // Check if user is logged in on component mount
   useEffect(() => {
+    const initializeAuth = async () => {
+      console.log("🔍 CheckoutPage: Inicializando autenticación...")
+      const sessionToken = localStorage.getItem("user-session-token")
+
+      if (sessionToken) {
+        console.log("🎫 Token encontrado:", sessionToken.substring(0, 20) + "...")
+
+        const isValid = await verifyAndLoadUser(sessionToken)
+        if (!isValid) {
+          console.log("❌ Token inválido, limpiando...")
+          localStorage.removeItem("user-session-token")
+          loadSavedCustomerInfo()
+        }
+      } else {
+        console.log("❌ No hay token, cargando info guardada...")
+        loadSavedCustomerInfo()
+      }
+    }
+
+    initializeAuth()
+  }, [])
+
+  const verifyAndLoadUser = async (sessionToken: string): Promise<boolean> => {
+    try {
+      console.log("🔄 Verificando token con el servidor...")
+
+      const response = await fetch(`${API_BASE_URL}/get_user.php`, {
+        method: "POST",
+        mode: "cors",
+        credentials: "omit",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "Cache-Control": "no-cache",
+        },
+        body: JSON.stringify({
+          sessionToken: sessionToken,
+        }),
+      })
+
+      console.log("📡 Respuesta del servidor:", response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("❌ Error HTTP:", response.status, errorText)
+        return false
+      }
+
+      const data = await response.json()
+      console.log("✅ Datos del usuario recibidos:", data)
+
+      if (data.success && data.user) {
+        setIsLoggedIn(true)
+        setCurrentUser({
+          id: data.user.user_id || data.user.id,
+          email: data.user.email,
+          firstName: data.user.first_name || "",
+          lastName: data.user.last_name || "",
+          phone: data.user.phone || "",
+          address: data.user.address || "",
+          city: data.user.city || "",
+          postalCode: data.user.postal_code || "",
+          canton: data.user.canton || "",
+          notes: data.user.notes || "",
+        })
+
+        // Auto-fill form with user data
+        setCustomerInfo({
+          firstName: data.user.first_name || "",
+          lastName: data.user.last_name || "",
+          email: data.user.email || "",
+          phone: data.user.phone || "",
+          address: data.user.address || "",
+          city: data.user.city || "",
+          postalCode: data.user.postal_code || "",
+          canton: data.user.canton || "",
+          notes: data.user.notes || "",
+        })
+
+        setShowCreateAccount(false)
+        setAccountCreationStatus("idle")
+
+        console.log("✅ Usuario logueado exitosamente")
+        return true
+      } else {
+        console.error("❌ Respuesta inválida del servidor:", data)
+        return false
+      }
+    } catch (error) {
+      console.error("❌ Error verificando token:", error)
+      return false
+    }
+  }
+
+  const reloadUserData = async () => {
+    console.log("🔄 Recargando datos del usuario...")
+    const sessionToken = localStorage.getItem("user-session-token")
+
+    if (sessionToken && isLoggedIn) {
+      const isValid = await verifyAndLoadUser(sessionToken)
+      if (isValid) {
+        console.log("✅ Datos del usuario recargados exitosamente")
+      }
+    }
+  }
+
+  const loadSavedCustomerInfo = () => {
     const savedCustomerInfo = localStorage.getItem("cantina-customer-info")
     if (savedCustomerInfo) {
       try {
         const parsedInfo = JSON.parse(savedCustomerInfo)
         setCustomerInfo(parsedInfo)
+        console.log("✅ Info del cliente cargada desde localStorage")
       } catch (error) {
-        console.error("Error loading customer info from localStorage:", error)
+        console.error("❌ Error cargando info del cliente:", error)
       }
     }
-  }, [])
+  }
 
-  // Save user data to localStorage whenever it changes
+  // Save user data to localStorage whenever it changes (only if not logged in)
   useEffect(() => {
-    // Only save if at least one field is completed
-    const hasData = Object.values(customerInfo).some((value) => value.trim() !== "")
-    if (hasData) {
-      localStorage.setItem("cantina-customer-info", JSON.stringify(customerInfo))
+    if (!isLoggedIn) {
+      const hasData = Object.values(customerInfo).some((value) => value.trim() !== "")
+      if (hasData) {
+        localStorage.setItem("cantina-customer-info", JSON.stringify(customerInfo))
+      }
     }
-  }, [customerInfo])
+  }, [customerInfo, isLoggedIn])
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
   const getShippingCost = () => {
-    const total = getTotalPrice()
-    return total >= 0 ? 0 : 8.5 // Envío gratis a partir de 50 CHF
+    return 0 // Free shipping
   }
 
   const getFinalTotal = () => {
     return getTotalPrice() + getShippingCost()
   }
 
-  // Función para guardar el pedido en la base de datos
-  const saveOrderToDatabase = async (orderData: any) => {
+  const createUserAccount = async () => {
     try {
+      setIsCreatingAccount(true)
+      setAccountCreationStatus("idle")
+
+      console.log("🔄 Creando cuenta de usuario...")
+
+      const requestData = {
+        email: customerInfo.email,
+        password: createAccountData.password,
+        firstName: customerInfo.firstName,
+        lastName: customerInfo.lastName,
+        phone: customerInfo.phone,
+        address: customerInfo.address,
+        city: customerInfo.city,
+        postalCode: customerInfo.postalCode,
+        canton: customerInfo.canton,
+        notes: customerInfo.notes,
+      }
+
+      console.log("📤 Enviando datos:", requestData)
+
+      const response = await fetch(`${API_BASE_URL}/create_user.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(requestData),
+      })
+
+      console.log("📡 Respuesta recibida:", response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("❌ Error HTTP:", response.status, errorText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log("✅ Respuesta de creación de cuenta:", result)
+
+      if (result.success && result.sessionToken) {
+        const sessionToken = result.sessionToken
+        console.log("💾 Guardando token:", sessionToken.substring(0, 20) + "...")
+        localStorage.setItem("user-session-token", sessionToken)
+
+        // Configurar directamente el estado del usuario
+        setIsLoggedIn(true)
+        setCurrentUser({
+          id: result.user.id,
+          email: result.user.email,
+          firstName: result.user.firstName || "",
+          lastName: result.user.lastName || "",
+          phone: result.user.phone || "",
+          address: result.user.address || "",
+          city: result.user.city || "",
+          postalCode: result.user.postalCode || "",
+          canton: result.user.canton || "",
+          notes: result.user.notes || "",
+        })
+
+        setAccountCreationStatus("success")
+        setAccountCreationMessage("¡Cuenta creada exitosamente! Ahora estás conectado.")
+        setShowCreateAccount(false)
+
+        setCreateAccountData({
+          password: "",
+          confirmPassword: "",
+          saveData: false,
+        })
+
+        return result.user.id
+      } else {
+        throw new Error(result.error || "Error creating account")
+      }
+    } catch (error: unknown) {
+      console.error("❌ Error creando cuenta:", error)
+      setAccountCreationStatus("error")
+
+      let errorMessage = "Error desconocido"
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === "string") {
+        errorMessage = error
+      }
+
+      // Mensajes más específicos para errores comunes
+      if (errorMessage.includes("Load failed") || errorMessage.includes("Failed to fetch")) {
+        errorMessage = "Error de conexión. Verifique su conexión a internet y que el servidor esté disponible."
+      } else if (errorMessage.includes("CORS")) {
+        errorMessage = "Error de configuración del servidor (CORS). Contacte al administrador."
+      }
+
+      setAccountCreationMessage(`Error al crear la cuenta: ${errorMessage}`)
+      throw error
+    } finally {
+      setIsCreatingAccount(false)
+    }
+  }
+
+  const saveOrderToDatabase = async () => {
+    try {
+      let userId = null
+
+      // Create user account if requested
+      if (showCreateAccount && createAccountData.saveData && !isLoggedIn) {
+        userId = await createUserAccount()
+      }
+
+      const orderData = {
+        customerInfo: customerInfo,
+        cart: cart,
+        totalAmount: getFinalTotal(),
+        shippingCost: getShippingCost(),
+        paymentMethod: "paypal",
+        paymentStatus: "completed",
+        userId: userId || currentUser?.id || null,
+      }
+
       const response = await fetch(`${API_BASE_URL}/add_order.php`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          customerInfo: customerInfo,
-          cart: cart,
-          totalAmount: getFinalTotal(),
-          shippingCost: getShippingCost(),
-          paymentMethod: "paypal",
-          paymentStatus: "completed",
-        }),
+        body: JSON.stringify(orderData),
       })
 
       const result = await response.json()
@@ -137,9 +406,12 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     }
   }
 
-  // Simple PayPal method - without SDK
   const handlePayPalPayment = () => {
     if (!validateForm()) {
+      return
+    }
+
+    if (showCreateAccount && !validateAccountCreation()) {
       return
     }
 
@@ -155,12 +427,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
       setIsSubmitting(true)
 
       try {
-        // Guardar pedido en la base de datos
-        const savedOrder = await saveOrderToDatabase({
-          customerInfo,
-          cart,
-          total: getFinalTotal(),
-        })
+        const savedOrder = await saveOrderToDatabase()
 
         setOrderStatus("completed")
         setOrderDetails({
@@ -172,16 +439,14 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
           createdAt: savedOrder.createdAt,
         })
 
-        // Clear cart after successful payment
         if (onClearCart) {
           onClearCart()
         }
 
-        // Also clear localStorage cart to ensure
         localStorage.removeItem("cantina-cart")
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error saving order:", error)
-        alert("Error al guardar el pedido. Por favor contacte con soporte.")
+        alert(`Error al guardar el pedido: ${error.message}`)
         setOrderStatus("error")
       } finally {
         setIsSubmitting(false)
@@ -203,13 +468,11 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     if (!customerInfo.postalCode.trim()) errors.postalCode = "PLZ ist erforderlich"
     if (!customerInfo.canton.trim()) errors.canton = "Kanton ist erforderlich"
 
-    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (customerInfo.email && !emailRegex.test(customerInfo.email)) {
       errors.email = "Ungültige E-Mail-Adresse"
     }
 
-    // Validate Swiss postal code
     const postalCodeRegex = /^\d{4}$/
     if (customerInfo.postalCode && !postalCodeRegex.test(customerInfo.postalCode)) {
       errors.postalCode = "PLZ muss 4 Ziffern haben"
@@ -219,11 +482,171 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     return Object.keys(errors).length === 0
   }
 
+  const validateAccountCreation = () => {
+    const errors: any = {}
+
+    if (createAccountData.password.length < 6) {
+      errors.password = "Passwort muss mindestens 6 Zeichen haben"
+    }
+
+    if (createAccountData.password !== createAccountData.confirmPassword) {
+      errors.confirmPassword = "Passwörter stimmen nicht überein"
+    }
+
+    if (!createAccountData.saveData) {
+      errors.saveData = "Bitte bestätigen Sie, dass Sie ein Konto erstellen möchten"
+    }
+
+    setAccountErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleInputChange = (field: keyof CustomerInfo, value: string) => {
     setCustomerInfo((prev) => ({ ...prev, [field]: value }))
-    // Clear field error when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  const handleLogout = () => {
+    console.log("🚪 Cerrando sesión...")
+    localStorage.removeItem("user-session-token")
+    setIsLoggedIn(false)
+    setCurrentUser(null)
+    setShowCreateAccount(false)
+    setAccountCreationStatus("idle")
+  }
+
+  const handleCreateAccountOnly = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    if (!validateAccountCreation()) {
+      return
+    }
+
+    try {
+      await createUserAccount()
+    } catch (error) {
+      // Error already handled in createUserAccount
+    }
+  }
+
+  const handleLogin = async () => {
+    try {
+      setIsLoggingIn(true)
+      setLoginStatus("idle")
+      setLoginErrors({})
+
+      console.log("🔄 Iniciando sesión...")
+
+      // Validación básica
+      const errors: any = {}
+      if (!loginData.email.trim()) errors.email = "E-Mail ist erforderlich"
+      if (!loginData.password.trim()) errors.password = "Passwort ist erforderlich"
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (loginData.email && !emailRegex.test(loginData.email)) {
+        errors.email = "Ungültige E-Mail-Adresse"
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setLoginErrors(errors)
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/login_user.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          email: loginData.email,
+          password: loginData.password,
+        }),
+      })
+
+      console.log("📡 Respuesta de login:", response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("❌ Error HTTP:", response.status, errorText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log("✅ Respuesta de login:", result)
+
+      if (result.success && result.sessionToken) {
+        const sessionToken = result.sessionToken
+        console.log("💾 Guardando token de login:", sessionToken.substring(0, 20) + "...")
+        localStorage.setItem("user-session-token", sessionToken)
+
+        // Configurar estado del usuario
+        setIsLoggedIn(true)
+        setCurrentUser({
+          id: result.user.id,
+          email: result.user.email,
+          firstName: result.user.firstName || "",
+          lastName: result.user.lastName || "",
+          phone: result.user.phone || "",
+          address: result.user.address || "",
+          city: result.user.city || "",
+          postalCode: result.user.postal_code || "",
+          canton: result.user.canton || "",
+          notes: result.user.notes || "",
+        })
+
+        // Auto-llenar formulario con datos del usuario
+        setCustomerInfo({
+          firstName: result.user.firstName || "",
+          lastName: result.user.lastName || "",
+          email: result.user.email || "",
+          phone: result.user.phone || "",
+          address: result.user.address || "",
+          city: result.user.city || "",
+          postalCode: result.user.postal_code || "",
+          canton: result.user.canton || "",
+          notes: result.user.notes || "",
+        })
+
+        setLoginStatus("success")
+        setLoginMessage("¡Anmeldung erfolgreich!")
+        setShowLogin(false)
+
+        // Limpiar datos de login
+        setLoginData({
+          email: "",
+          password: "",
+        })
+
+        console.log("✅ Login exitoso")
+      } else {
+        throw new Error(result.error || "Login failed")
+      }
+    } catch (error: unknown) {
+      console.error("❌ Error en login:", error)
+      setLoginStatus("error")
+
+      let errorMessage = "Error desconocido"
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === "string") {
+        errorMessage = error
+      }
+
+      // Mensajes más específicos
+      if (errorMessage.includes("Invalid email or password")) {
+        errorMessage = "E-Mail oder Passwort ist falsch"
+      } else if (errorMessage.includes("Load failed") || errorMessage.includes("Failed to fetch")) {
+        errorMessage = "Verbindungsfehler. Bitte versuchen Sie es erneut."
+      }
+
+      setLoginMessage(errorMessage)
+    } finally {
+      setIsLoggingIn(false)
     }
   }
 
@@ -243,7 +666,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               <p className="text-green-600">Bestellnummer: {orderDetails?.id}</p>
               <p className="text-green-600">Betrag: {getFinalTotal().toFixed(2)} CHF</p>
               <p className="text-green-600">Status: Bezahlt</p>
-              <p className="text-green-600">Gespeichert in Datenbank: ✅</p>
+              {isLoggedIn && <p className="text-green-600">Konto: Gespeichert ✅</p>}
             </div>
 
             <div className="space-y-4">
@@ -286,15 +709,41 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center mb-8">
+        <div className="flex items-center justify-between mb-8">
           <Button
             onClick={onBackToStore}
             variant="outline"
-            className="mr-4 bg-white hover:bg-gray-50 border border-gray-300"
+            className="bg-white hover:bg-gray-50 border border-gray-300"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Zurück zum Shop
           </Button>
+
+          {isLoggedIn && currentUser && (
+            <div className="flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border">
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Angemeldet als</p>
+                <p className="font-semibold text-lg text-green-700">
+                  {currentUser.firstName} {currentUser.lastName}
+                </p>
+                <p className="text-sm text-gray-500">{currentUser.email}</p>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Button
+                  onClick={() => setShowUserProfile(true)}
+                  variant="outline"
+                  size="sm"
+                  className="bg-blue-50 hover:bg-blue-100 border-blue-300 text-blue-700"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Mein Profil
+                </Button>
+                <Button onClick={handleLogout} variant="outline" size="sm">
+                  Abmelden
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -307,10 +756,18 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     <User className="w-5 h-5 mr-2 text-orange-600" />
                     Persönliche Daten
                   </div>
-                  <div className="flex items-center text-xs text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
-                    Automatisch gespeichert
-                  </div>
+                  {!isLoggedIn && (
+                    <div className="flex items-center text-xs text-green-600">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+                      Automatisch gespeichert
+                    </div>
+                  )}
+                  {isLoggedIn && (
+                    <div className="flex items-center text-xs text-blue-600">
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Aus Ihrem Konto geladen
+                    </div>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -345,6 +802,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     value={customerInfo.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     className={`bg-white ${formErrors.email ? "border-red-500" : ""}`}
+                    disabled={isLoggedIn}
                   />
                   {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
                 </div>
@@ -360,6 +818,277 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   />
                   {formErrors.phone && <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>}
                 </div>
+
+                {/* Login Section - ONLY show if NOT logged in */}
+                {!isLoggedIn && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Checkbox
+                        id="showLogin"
+                        checked={showLogin}
+                        onCheckedChange={(checked) => {
+                          setShowLogin(checked as boolean)
+                          if (checked) {
+                            setShowCreateAccount(false) // Close create account if login is opened
+                          }
+                        }}
+                      />
+                      <Label htmlFor="showLogin" className="flex items-center cursor-pointer">
+                        <User className="w-4 h-4 mr-2 text-blue-600" />
+                        Ich habe bereits ein Konto - Anmelden
+                      </Label>
+                    </div>
+
+                    {showLogin && (
+                      <div className="space-y-4 bg-blue-50 p-4 rounded-lg">
+                        <div>
+                          <Label htmlFor="loginEmail">E-Mail *</Label>
+                          <Input
+                            id="loginEmail"
+                            type="email"
+                            value={loginData.email}
+                            onChange={(e) => setLoginData((prev) => ({ ...prev, email: e.target.value }))}
+                            className={`bg-white ${loginErrors.email ? "border-red-500" : ""}`}
+                            placeholder="ihre@email.com"
+                          />
+                          {loginErrors.email && <p className="text-red-500 text-sm mt-1">{loginErrors.email}</p>}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="loginPassword">Passwort *</Label>
+                          <div className="relative">
+                            <Input
+                              id="loginPassword"
+                              type={showLoginPassword ? "text" : "password"}
+                              value={loginData.password}
+                              onChange={(e) => setLoginData((prev) => ({ ...prev, password: e.target.value }))}
+                              className={`bg-white pr-10 ${loginErrors.password ? "border-red-500" : ""}`}
+                              placeholder="Ihr Passwort"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowLoginPassword(!showLoginPassword)}
+                            >
+                              {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                          {loginErrors.password && <p className="text-red-500 text-sm mt-1">{loginErrors.password}</p>}
+                        </div>
+
+                        {/* Login Button */}
+                        <div className="pt-4 border-t">
+                          <Button
+                            onClick={handleLogin}
+                            disabled={isLoggingIn || !loginData.email || !loginData.password}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            {isLoggingIn ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Anmeldung läuft...
+                              </>
+                            ) : (
+                              <>
+                                <User className="w-4 h-4 mr-2" />
+                                Anmelden
+                              </>
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Login Status Messages */}
+                        {loginStatus === "error" && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div className="flex items-center">
+                              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                              <div>
+                                <p className="text-red-700 font-medium">Anmeldung fehlgeschlagen</p>
+                                <p className="text-red-600 text-sm mt-1">{loginMessage}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm text-blue-700">
+                            <strong>Nach der Anmeldung:</strong>
+                          </p>
+                          <ul className="text-sm text-blue-600 mt-1 space-y-1">
+                            <li>• Ihre Daten werden automatisch ausgefüllt</li>
+                            <li>• Schnellerer Checkout-Prozess</li>
+                            <li>• Zugriff auf Ihr Profil und Bestellhistorie</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Create Account Section - ONLY show if NOT logged in */}
+                {!isLoggedIn && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Checkbox
+                        id="createAccount"
+                        checked={showCreateAccount}
+                        onCheckedChange={(checked) => {
+                          setShowCreateAccount(checked as boolean)
+                          if (checked) {
+                            setShowLogin(false) // Close login if create account is opened
+                          }
+                        }}
+                      />
+                      <Label htmlFor="createAccount" className="flex items-center cursor-pointer">
+                        <UserPlus className="w-4 h-4 mr-2 text-orange-600" />
+                        Konto erstellen und Daten für zukünftige Bestellungen speichern
+                      </Label>
+                    </div>
+
+                    {showCreateAccount && (
+                      <div className="space-y-4 bg-orange-50 p-4 rounded-lg">
+                        <div>
+                          <Label htmlFor="password">Passwort *</Label>
+                          <div className="relative">
+                            <Input
+                              id="password"
+                              type={showPassword ? "text" : "password"}
+                              value={createAccountData.password}
+                              onChange={(e) => setCreateAccountData((prev) => ({ ...prev, password: e.target.value }))}
+                              className={`bg-white pr-10 ${accountErrors.password ? "border-red-500" : ""}`}
+                              placeholder="Mindestens 6 Zeichen"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                          {accountErrors.password && (
+                            <p className="text-red-500 text-sm mt-1">{accountErrors.password}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="confirmPassword">Passwort bestätigen *</Label>
+                          <div className="relative">
+                            <Input
+                              id="confirmPassword"
+                              type={showConfirmPassword ? "text" : "password"}
+                              value={createAccountData.confirmPassword}
+                              onChange={(e) =>
+                                setCreateAccountData((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                              }
+                              className={`bg-white pr-10 ${accountErrors.confirmPassword ? "border-red-500" : ""}`}
+                              placeholder="Passwort wiederholen"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                          {accountErrors.confirmPassword && (
+                            <p className="text-red-500 text-sm mt-1">{accountErrors.confirmPassword}</p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="saveData"
+                            checked={createAccountData.saveData}
+                            onCheckedChange={(checked) =>
+                              setCreateAccountData((prev) => ({ ...prev, saveData: checked as boolean }))
+                            }
+                          />
+                          <Label htmlFor="saveData" className="text-sm cursor-pointer">
+                            Ich möchte ein Konto erstellen und meine Daten für zukünftige Bestellungen speichern
+                          </Label>
+                        </div>
+                        {accountErrors.saveData && (
+                          <p className="text-red-500 text-sm mt-1">{accountErrors.saveData}</p>
+                        )}
+
+                        {/* Create Account Button */}
+                        <div className="pt-4 border-t">
+                          <Button
+                            onClick={handleCreateAccountOnly}
+                            disabled={
+                              isCreatingAccount || !createAccountData.password || !createAccountData.confirmPassword
+                            }
+                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            {isCreatingAccount ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Konto wird erstellt...
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="w-4 h-4 mr-2" />
+                                Konto jetzt erstellen
+                              </>
+                            )}
+                          </Button>
+
+                          <p className="text-xs text-gray-500 mt-2 text-center">
+                            Sie können Ihr Konto jetzt erstellen oder später beim Bezahlen
+                          </p>
+                        </div>
+
+                        {/* Account Creation Status Messages */}
+                        {accountCreationStatus === "error" && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div className="flex items-center">
+                              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                              <div>
+                                <p className="text-red-700 font-medium">Error al crear la cuenta</p>
+                                <p className="text-red-600 text-sm mt-1">{accountCreationMessage}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm text-blue-700">
+                            <strong>Vorteile eines Kontos:</strong>
+                          </p>
+                          <ul className="text-sm text-blue-600 mt-1 space-y-1">
+                            <li>• Automatisches Ausfüllen bei zukünftigen Bestellungen</li>
+                            <li>• Bestellhistorie einsehen</li>
+                            <li>• Adressdaten verwalten</li>
+                            <li>• Schnellerer Checkout</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Show success message when logged in */}
+                {isLoggedIn && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                      <div>
+                        <p className="text-green-700 font-medium">Sie sind angemeldet!</p>
+                        <p className="text-green-600 text-sm">
+                          Ihre Daten werden automatisch für zukünftige Bestellungen gespeichert.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -473,18 +1202,9 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                   <div className="flex justify-between">
                     <span>Versand:</span>
                     <span>
-                      {getShippingCost() === 0 ? (
-                        <Badge className="bg-green-100 text-green-700">Kostenlos</Badge>
-                      ) : (
-                        `${getShippingCost().toFixed(2)} CHF`
-                      )}
+                      <Badge className="bg-green-100 text-green-700">Kostenlos</Badge>
                     </span>
                   </div>
-                  {getTotalPrice() < 50 && (
-                    <p className="text-sm text-gray-600">
-                      Noch {(50 - getTotalPrice()).toFixed(2)} CHF für kostenlosen Versand!
-                    </p>
-                  )}
                   <Separator />
                   <div className="flex justify-between text-xl font-bold">
                     <span>Gesamt:</span>
@@ -501,13 +1221,13 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                 <ul className="text-sm text-blue-700 space-y-1">
                   <li>• Versand nur innerhalb der Schweiz</li>
                   <li>• Lieferzeit: 2-3 Werktage</li>
-                  <li>• Kostenloser Versand ab 50 CHF</li>
+                  <li>• Kostenloser Versand für alle Bestellungen</li>
                   <li>• Versand aus 9745 Sevelen</li>
                 </ul>
               </CardContent>
             </Card>
 
-            {/* PayPal Payment - Simple Method */}
+            {/* PayPal Payment */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
@@ -577,6 +1297,21 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             </Card>
           </div>
         </div>
+
+        {/* User Profile Modal */}
+        {showUserProfile && (
+          <div className="fixed inset-0 z-50">
+            <UserProfile
+              onClose={() => {
+                setShowUserProfile(false)
+                // Recargar datos del usuario después de cerrar el perfil
+                setTimeout(() => {
+                  reloadUserData()
+                }, 100)
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
