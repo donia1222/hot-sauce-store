@@ -380,8 +380,13 @@ export default function ProductsGridCombined({
 
         {/* Tabs para filtrar productos */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-12">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-white shadow-lg rounded-xl p-1">
-
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 bg-white shadow-lg rounded-xl p-1">
+        <TabsTrigger
+              value="all"
+              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300"
+            >
+              Alle
+            </TabsTrigger>
             <TabsTrigger
               value="hot-sauce"
               className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300"
