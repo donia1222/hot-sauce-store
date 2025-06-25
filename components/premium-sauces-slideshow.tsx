@@ -156,8 +156,8 @@ export function PremiumSaucesSlideshow({
       {/* Header */}
       <div className="text-center pt-12 pb-8">
         <div className="mb-6">
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-800 via-stone-700 to-amber-900 bg-clip-text text-transparent mb-4 drop-shadow-lg">
-            🔥 SMOKEHOUSE BBQ 🔥
+          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-amber-800 via-stone-700 to-amber-900 bg-clip-text text-transparent mb-4 drop-shadow-lg">
+            SMOKEHOUSE BBQ 🔥
           </h1>
           <div className="flex items-center justify-center space-x-4 mb-4">
             <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent flex-1 max-w-32"></div>
