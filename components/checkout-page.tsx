@@ -828,8 +828,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             Zurück zum Shop
           </Button>
 
+        </div>
+
           {isLoggedIn && currentUser && (
-            <div className="flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border mb-8">
               <div className="text-right">
                 <p className="text-sm text-gray-600">Angemeldet als</p>
                 <p className="font-semibold text-lg text-green-700">
@@ -858,8 +860,6 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               </div>
             </div>
           )}
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Customer form */}
           <div className="space-y-6">

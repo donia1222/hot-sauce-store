@@ -11,6 +11,7 @@ import { CheckoutPage } from "@/components/checkout-page"
 import { Footer } from "@/components/footer"
 import { PremiumSaucesSlideshow } from "@/components/premium-sauces-slideshow"
 import { Admin } from "@/components/admin"
+import { ConstructionNotice } from "./construction-notice" 
 
 interface Product {
   id: number
@@ -217,6 +218,9 @@ export default function PremiumHotSauceStore() {
   // 🏪 Renderizar página principal del store
   return (
     <div className="bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Construction Notice Modal */}
+      <ConstructionNotice />
+
       <Header cartItemsCount={getTotalItems()} onCartOpen={() => setIsCartOpen(true)} onAdminOpen={goToAdmin} />
 
       <HeroSection />
