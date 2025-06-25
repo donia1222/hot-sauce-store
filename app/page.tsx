@@ -4,12 +4,11 @@ import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { CulinaryInspiration } from "@/components/culinary-inspiration"
-import ProductsGrid from "@/components/products-grid"
+import ProductsGridCombined from "@/components/products-grid"
 import { PairingSuggestions } from "@/components/pairing-suggestions"
 import { ShoppingCartComponent } from "@/components/shopping-cart"
 import { CheckoutPage } from "@/components/checkout-page"
 import { Footer } from "@/components/footer"
-import { PremiumSaucesSlideshow } from "@/components/premium-sauces-slideshow"
 import { Admin } from "@/components/admin"
 import { ConstructionNotice } from "./construction-notice" 
 
@@ -225,24 +224,9 @@ export default function PremiumHotSauceStore() {
 
       <HeroSection />
 
-      {/* 🔥 PREMIUM SAUCES SLIDESHOW SECTION */}
-      <section id="premium-showcase" className="6">
-        <PremiumSaucesSlideshow
-          onAddToCart={addToCart}
-          purchasedItems={purchasedItems}
-          onMarkAsPurchased={markAsPurchased}
-        />
-      </section>
 
       <section id="offers">
-        <ProductsGrid
-          onAddToCart={addToCart}
-          onAddComboToCart={addComboToCart}
-          purchasedItems={purchasedItems}
-          purchasedCombos={purchasedCombos}
-          onMarkAsPurchased={markAsPurchased}
-          onMarkComboAsPurchased={markComboAsPurchased}
-        />
+  <ProductsGridCombined />
       </section>
 
       <CulinaryInspiration />

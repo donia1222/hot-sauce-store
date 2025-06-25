@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Flame, Star, ShoppingCart, Minus, Plus } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Flame, Star, ShoppingCart, Minus, Plus, Award, MapPin } from "lucide-react"
 
 interface Product {
   id: number
@@ -135,9 +136,7 @@ export function PremiumSaucesSlideshow({
     Array.from({ length: 5 }, (_, i) => (
       <Flame
         key={i}
-        className={`w-5 h-5 transition-transform transform-gpu duration-300 ${
-          i < level ? "text-orange-600 animate-pulse" : "text-stone-400"
-        } hover:scale-110`}
+        className={`w-4 h-4 transition-all duration-300 ${i < level ? "text-red-500 fill-red-500" : "text-gray-300"}`}
       />
     ))
 
@@ -145,172 +144,162 @@ export function PremiumSaucesSlideshow({
     Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-5 h-5 transition-colors duration-300 ${
-          i < Math.floor(rating) ? "text-amber-500 drop-shadow-lg" : "text-stone-300"
+        className={`w-4 h-4 transition-colors duration-300 ${
+          i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
         }`}
       />
     ))
 
   return (
-    <div className="min-h-screen transition-all duration-1000 bg-gradient-to-br from-red-50/30 via-rose-50/20 to-pink-50/30">
-      {/* Header */}
-      <div className="text-center pt-12 pb-8">
-        <div className="mb-6">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-amber-800 via-stone-700 to-amber-900 bg-clip-text text-transparent mb-4 drop-shadow-lg">
-            SMOKEHOUSE BBQ 🔥
-          </h1>
-          <div className="flex items-center justify-center space-x-4 mb-4">
-            <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent flex-1 max-w-32"></div>
-            <span className="text-2xl font-bold text-amber-800">PREMIUM SAUCEN</span>
-            <div className="h-px bg-gradient-to-r from-transparent via-amber-600 to-transparent flex-1 max-w-32"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+      {/* Modern Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 via-red-600/5 to-yellow-600/10"></div>
+        <div className="relative max-w-7xl mx-auto px-4 py-16 text-center">
+          <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <Award className="w-4 h-4" />
+            Premium BBQ Collection
           </div>
-        </div>
-        <p className="text-lg text-stone-700 max-w-2xl mx-auto px-4 font-medium">
-          Authentische Grillsaucen aus der Räucherkammer - Handwerklich geräuchert & perfekt gewürzt
-        </p>
-        <div className="w-32 h-2 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 mx-auto mt-6 rounded-full transition-all duration-1000 shadow-lg"></div>
-      </div>
-
-      {/* GRID DE SALSAS PREMIUM */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h3 className="text-4xl font-bold text-stone-800 mb-4">🍖 Unsere komplette BBQ-Kollektion</h3>
-          <p className="text-lg text-stone-600">
-            Entdecken Sie alle handwerklich geräucherten Saucen aus unserer Smokehouse
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 tracking-tight">
+            SMOKEHOUSE
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
+              BBQ SAUCEN
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Handwerklich geräucherte Premium-Saucen für den perfekten Grillgenuss
           </p>
         </div>
+      </div>
 
-        {/* SCROLL LATERAL DE SALSAS PREMIUM */}
-        <div className="relative">
-          {/* Contenedor con scroll horizontal */}
-          <div className="flex overflow-x-auto scrollbar-hide gap-6 pb-4 px-4 snap-x snap-mandatory">
-            {sauces.map((sauce) => (
-              <div
-                key={sauce.id}
-                className="flex-shrink-0 w-80 bg-gradient-to-br from-white via-stone-50 to-amber-50 border-2 border-stone-200 rounded-3xl shadow-xl hover:shadow-2xl transform transition-all duration-500 hover:-translate-y-2 overflow-hidden snap-center"
-              >
-                {/* Image Section */}
-                <div className="relative p-0 overflow-hidden rounded-t-3xl">
-                  <img
-                    src={sauce.image || "/placeholder.svg"}
-                    alt={sauce.name}
-                    className="w-full h-64 object-cover hover:scale-105 transition-transform duration-700"
-                  />
-                  <Badge className="absolute top-4 left-4 bg-gradient-to-r from-amber-600 to-orange-700 text-white font-bold px-3 py-1 rounded-full shadow-lg border border-amber-200">
+      {/* Products Grid */}
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {sauces.map((sauce) => (
+            <Card
+              key={sauce.id}
+              className="group overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white"
+            >
+              <div className="relative overflow-hidden">
+                <img
+                  src={sauce.image || "/placeholder.svg"}
+                  alt={sauce.name}
+                  className="w-full h-48 sm:h-56 object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                {/* Badges */}
+                <div className="absolute top-4 left-4 right-4 flex justify-between">
+                  <Badge className="bg-white/90 text-gray-800 hover:bg-white font-semibold shadow-sm">
                     {sauce.badge}
                   </Badge>
-                  <Badge className="absolute top-4 right-4 bg-stone-100 text-stone-800 font-semibold px-2 py-1 rounded-full shadow-md text-sm border border-stone-300">
+                  <Badge variant="outline" className="bg-white/90 border-gray-200 text-gray-700 font-medium">
+                    <MapPin className="w-3 h-3 mr-1" />
                     {sauce.origin}
                   </Badge>
                 </div>
-
-                {/* Content Section */}
-                <div className="px-6 py-4">
-                  <h4 className="text-xl font-bold text-stone-800 mb-2 line-clamp-1">{sauce.name}</h4>
-                  <p
-                    className={`text-base font-semibold bg-gradient-to-r ${sauce.color} bg-clip-text text-transparent mb-3`}
-                  >
-                    {sauce.flavor}
-                  </p>
-                  <p className="text-stone-600 text-sm mb-4 line-clamp-2">{sauce.description}</p>
-
-                  {/* Heat Level & Rating */}
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <div className="flex space-x-1 mb-1">{renderHeatLevel(sauce.heatLevel)}</div>
-                      <span className="text-xs text-stone-500 font-medium">Schärfe</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex justify-end space-x-1 mb-1">{renderStars(sauce.rating)}</div>
-                      <span className="text-xs text-stone-500 font-medium">{sauce.rating.toFixed(1)}</span>
-                    </div>
-                  </div>
-
-                  {/* Quantity and Price in same row */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center border-2 border-stone-300 rounded-lg overflow-hidden bg-white shadow-sm">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => updateQty(sauce.id, -1)}
-                        className="px-2 hover:bg-stone-100 text-stone-600"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="px-3 font-bold text-stone-700">{getQty(sauce.id)}</span>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => updateQty(sauce.id, 1)}
-                        className="px-2 hover:bg-stone-100 text-stone-600"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div className="text-2xl font-extrabold text-amber-700 drop-shadow-sm">
-                      {(sauce.price * getQty(sauce.id)).toFixed(2)} CHF
-                    </div>
-                  </div>
-
-                  {/* Footer with Button */}
-                  <Button
-                    onClick={() => {
-                      const product: Product = {
-                        id: sauce.id,
-                        name: sauce.name,
-                        price: sauce.price,
-                        image: sauce.image,
-                        description: sauce.description,
-                        heatLevel: sauce.heatLevel,
-                        rating: sauce.rating,
-                        badge: sauce.badge,
-                        origin: sauce.origin,
-                      }
-                      onAddToCart(product, getQty(sauce.id))
-                      onMarkAsPurchased(sauce.id)
-                    }}
-                    disabled={purchasedItems.has(sauce.id)}
-                    className="w-full py-2 font-bold rounded-full text-white bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500 shadow-lg text-sm"
-                  >
-                    <ShoppingCart className="w-4 h-4 inline-block mr-2" />
-                    {purchasedItems.has(sauce.id) ? "✓ Hinzugefügt" : "In Warenkorb"}
-                  </Button>
-                </div>
               </div>
-            ))}
-          </div>
 
+              <CardContent className="p-6">
+                {/* Product Info */}
+                <div className="mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{sauce.name}</h3>
+                  <p className="text-orange-600 font-semibold text-sm mb-2">{sauce.flavor}</p>
+                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">{sauce.description}</p>
+                </div>
+
+                {/* Rating and Heat Level */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <div className="flex">{renderStars(sauce.rating)}</div>
+                    <span className="text-sm font-medium text-gray-700">{sauce.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-1">{renderHeatLevel(sauce.heatLevel)}</div>
+                </div>
+
+                {/* Price and Quantity */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-2xl font-bold text-gray-900">
+                    {(sauce.price * getQty(sauce.id)).toFixed(2)} CHF
+                  </div>
+                  <div className="flex items-center bg-gray-100 rounded-lg overflow-hidden">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => updateQty(sauce.id, -1)}
+                      className="px-3 hover:bg-gray-200 text-gray-600"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <span className="px-4 py-2 font-semibold text-gray-800 min-w-[3rem] text-center">
+                      {getQty(sauce.id)}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => updateQty(sauce.id, 1)}
+                      className="px-3 hover:bg-gray-200 text-gray-600"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Add to Cart Button */}
+                <Button
+                  onClick={() => {
+                    const product: Product = {
+                      id: sauce.id,
+                      name: sauce.name,
+                      price: sauce.price,
+                      image: sauce.image,
+                      description: sauce.description,
+                      heatLevel: sauce.heatLevel,
+                      rating: sauce.rating,
+                      badge: sauce.badge,
+                      origin: sauce.origin,
+                    }
+                    onAddToCart(product, getQty(sauce.id))
+                    onMarkAsPurchased(sauce.id)
+                  }}
+                  disabled={purchasedItems.has(sauce.id)}
+                  className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  {purchasedItems.has(sauce.id) ? "✓ Hinzugefügt" : "In Warenkorb"}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Call to Action */}
-        <div className="text-center mt-12">
-          <div className="bg-gradient-to-r from-amber-100 via-stone-100 to-orange-100 rounded-2xl p-8 border-2 border-amber-200 shadow-lg">
-            <h4 className="text-2xl font-bold text-stone-800 mb-4">🔥 Finden Sie nicht Ihren BBQ-Favoriten?</h4>
-            <p className="text-stone-600 mb-6">
-              Entdecken Sie unsere komplette Smokehouse-Kollektion mit mehr Varianten und Grill-Spezialitäten
-            </p>
-            <Button
-              onClick={() => {
-                const offersSection = document.getElementById("offers")
-                if (offersSection) {
-                  offersSection.scrollIntoView({ behavior: "smooth" })
-                }
-              }}
-              className="px-8 py-3 bg-gradient-to-r from-amber-700 to-orange-800 text-white font-bold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300 border border-amber-600 shadow-lg"
-            >
-              Mehr BBQ-Produkte entdecken
-            </Button>
-          </div>
+        <div className="mt-16 text-center">
+          <Card className="max-w-2xl mx-auto bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+            <CardContent className="p-8">
+              <div className="text-4xl mb-4">🔥</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Noch nicht das Richtige gefunden?</h3>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Entdecken Sie unsere komplette Smokehouse-Kollektion mit noch mehr handwerklich geräucherten
+                Spezialitäten und Grill-Klassikern.
+              </p>
+              <Button
+                onClick={() => {
+                  const offersSection = document.getElementById("offers")
+                  if (offersSection) {
+                    offersSection.scrollIntoView({ behavior: "smooth" })
+                  }
+                }}
+                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                Mehr BBQ-Produkte entdecken
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
       <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
         .line-clamp-1 {
           display: -webkit-box;
           -webkit-line-clamp: 1;

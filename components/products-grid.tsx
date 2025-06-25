@@ -1,175 +1,159 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Flame, Star, ShoppingCart, Minus, Plus, Sparkles, Gift, Package } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Flame, Star, ShoppingCart, Minus, Plus, Sparkles, MapPin, Award } from "lucide-react"
 
+// Actualizar la interfaz para incluir category
 interface Product {
-  id: number
+  id?: number
   name: string
+  description: string
   price: number
-  image: string
-  description: string
-  heatLevel: number
+  image?: string
+  image_url?: string
+  heatLevel: number // Changed from heat_level to heatLevel for consistency
   rating: number
   badge: string
   origin: string
+  category?: string
+  created_at?: string
+  updated_at?: string
 }
 
-interface ComboOffer {
-  id: string
+// API Response interface (snake_case from API)
+interface ApiProduct {
+  id?: number
   name: string
   description: string
-  originalPrice: number
-  offerPrice: number
-  discount: number
-  products: string[]
-  image: string
-  heatLevel: number
+  price: number
+  image?: string
+  image_url?: string
+  heat_level: number // API uses snake_case
   rating: number
   badge: string
   origin: string
+  category?: string
+  created_at?: string
+  updated_at?: string
 }
 
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Big Red's Hot Sauce - Big Yella",
-    price: 14.9,
-    image: "/images/big-yella.webp",
-    description: "Goldgelbe Schärfe mit sonnigem Geschmack und intensivem Kick",
-    heatLevel: 4,
-    rating: 4.8,
-    badge: "Sonnig",
-    origin: "USA",
-  },
-  {
-    id: 2,
-    name: "Big Red's Hot Sauce - Heat Wave",
-    price: 12.84,
-    image: "/images/heat-wave.webp",
-    description: "Eine Hitzewelle aus roten Chilis für wahre Schärfe-Liebhaber",
-    heatLevel: 5,
-    rating: 4.9,
-    badge: "Hitzewelle",
-    origin: "Premium",
-  },
-  {
-    id: 3,
-    name: "Big Red's Hot Sauce - Green Chili",
-    price: 11.24,
-    image: "/images/green-chili.webp",
-    description: "Frische grüne Chilis mit authentischem mexikanischem Geschmack",
-    heatLevel: 3,
-    rating: 4.7,
-    badge: "Frisch",
-    origin: "Mexiko",
-  },
-  {
-    id: 4,
-    name: "Big Red's Hot Sauce - Original Sauce",
-    price: 1.10,
-    image: "/images/original-sauce.webp",
-    description: "Die legendäre Originalrezept seit Generationen unverändert",
-    heatLevel: 4,
-    rating: 4.6,
-    badge: "Klassiker",
-    origin: "Original",
-  },
-  
-
-  {
-    id: 6,
-    name: "Big Red's Hot Sauce - Habanero",
-    price: 14.93,
-    image: "/images/habanero.webp",
-    description: "Authentische Habanero-Chilis für den ultimativen Schärfe-Genuss",
-    heatLevel: 5,
-    rating: 4.8,
-    badge: "Habanero",
-    origin: "Karibik",
-  },
-]
-
-const comboOffers: ComboOffer[] = [
-  {
-    id: "combo1",
-    name: "🔥 Schärfe-Trio Klassik",
-    description: "Big Yella + Heat Wave + Green Chili",
-    originalPrice: 38.24,
-    offerPrice: 29.9,
-    discount: 22,
-    products: ["Big Red's Big Yella", "Big Red's Heat Wave", "Big Red's Green Chili"],
-    image: "/R-IND-SMOKEYHAB.png",
-    heatLevel: 4,
-    rating: 4.8,
-    badge: "COMBO DEAL",
-    origin: "3er-Pack",
-  },
-  {
-    id: "combo2",
-    name: "🌶️ Extreme Heat Pack",
-    description: "Heat Wave + A La Diabla + Habanero",
-    originalPrice: 43.5,
-    offerPrice: 34.9,
-    discount: 20,
-    products: ["Big Red's Heat Wave", "A La Diabla", "Big Red's Habanero"],
-    image: "/R-IND-GREENCHILI.png",
-    heatLevel: 5,
-    rating: 4.9,
-    badge: "EXTREME",
-    origin: "3er-Pack",
-  },
-  {
-    id: "combo3",
-    name: "🎁 Gourmet Selection",
-    description: "Original + A La Diabla + Big Yella",
-    originalPrice: 43.13,
-    offerPrice: 33.9,
-    discount: 21,
-    products: ["Big Red's Original", "A La Diabla", "Big Red's Big Yella"],
-    image: "/R-IND-BIGYELLA.png",
-    heatLevel: 4,
-    rating: 4.7,
-    badge: "GOURMET",
-    origin: "3er-Pack",
-  },
-]
+interface ApiResponse {
+  success: boolean
+  products: ApiProduct[]
+  total?: number
+  stats?: {
+    total_products: number
+    hot_sauces: number
+    bbq_sauces: number
+  }
+  error?: string
+}
 
 interface ProductsGridProps {
   onAddToCart?: (product: Product, quantity: number) => void
-  onAddComboToCart?: (offer: ComboOffer, quantity: number) => void
   purchasedItems?: Set<number>
-  purchasedCombos?: Set<string>
   onMarkAsPurchased?: (productId: number) => void
-  onMarkComboAsPurchased?: (comboId: string) => void
 }
 
-export default function ProductsGrid({
+export default function ProductsGridCombined({
   onAddToCart = () => {},
-  onAddComboToCart = () => {},
   purchasedItems = new Set(),
-  purchasedCombos = new Set(),
   onMarkAsPurchased = () => {},
-  onMarkComboAsPurchased = () => {},
 }: ProductsGridProps) {
+  const [products, setProducts] = useState<Product[]>([])
   const [quantities, setQuantities] = useState<Record<number, number>>({})
-  const [comboQuantities, setComboQuantities] = useState<Record<string, number>>({})
-  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>("")
+  const [visibleProducts, setVisibleProducts] = useState<Set<number>>(new Set())
+  const [addedItems, setAddedItems] = useState<Set<number>>(new Set())
+  const [activeTab, setActiveTab] = useState("all")
+  const [stats, setStats] = useState({ hot_sauces: 0, bbq_sauces: 0, total_products: 0 })
 
-  const openImageModal = (src: string, alt: string) => {
-    setSelectedImage({ src, alt })
+  const API_BASE_URL = "https://web.lweb.ch/shop"
+
+  // Cargar productos desde la API
+  useEffect(() => {
+    loadProducts()
+  }, [])
+
+  // Animación escalonada
+  useEffect(() => {
+    if (products.length > 0) {
+      setVisibleProducts(new Set()) // Reset visibility
+      const timer = setTimeout(() => {
+        const filteredProducts = getFilteredProducts()
+        filteredProducts.forEach((_, index) => {
+          setTimeout(() => {
+            setVisibleProducts((prev) => new Set([...prev, index]))
+          }, index * 100)
+        })
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [products, activeTab])
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true)
+      setError("")
+
+      // Usar el nuevo parámetro de categoría
+      const categoryParam = activeTab !== "all" ? `&category=${activeTab}` : ""
+      const response = await fetch(`${API_BASE_URL}/get_products.php?${categoryParam}`)
+      const data: ApiResponse = await response.json()
+
+      if (data.success) {
+        // Convert snake_case to camelCase for consistency
+        const normalizedProducts: Product[] = data.products.map((product: ApiProduct) => ({
+          ...product,
+          heatLevel: product.heat_level || 0,
+        }))
+        setProducts(normalizedProducts)
+        if (data.stats) {
+          setStats(data.stats)
+        }
+      } else {
+        throw new Error(data.error || "Error al cargar productos")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar productos")
+      console.error("Error loading products:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Filtrar productos por categoría usando la nueva columna category
+  const getFilteredProducts = () => {
+    switch (activeTab) {
+      case "hot-sauce":
+        return products.filter(
+          (product) =>
+            product.category === "hot-sauce" || (!product.category && product.name.toLowerCase().includes("hot sauce")), // Solo legacy hot sauces
+        )
+      case "bbq-sauce":
+        return products.filter(
+          (product) =>
+            product.category === "bbq-sauce" ||
+            (!product.category &&
+              (product.name.toLowerCase().includes("barbecue") || product.name.toLowerCase().includes("bbq"))),
+        )
+      default:
+        return products
+    }
   }
 
   const renderHeatLevel = (level: number) =>
     Array.from({ length: 5 }, (_, i) => (
       <Flame
         key={i}
-        className={`w-5 h-5 transition-transform transform-gpu duration-300 ${
-          i < level ? "text-red-500 animate-pulse" : "text-gray-500"
-        } hover:scale-110`}
+        className={`w-4 h-4 transition-colors duration-300 ${
+          i < level ? "text-red-500 fill-red-500" : "text-gray-300"
+        }`}
       />
     ))
 
@@ -177,9 +161,10 @@ export default function ProductsGrid({
     Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-5 h-5 transition-colors duration-300 ${
-          i < Math.floor(rating) ? "text-yellow-300 drop-shadow-lg" : "text-gray-400"
+        className={`w-4 h-4 transition-all duration-300 ${
+          i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400 animate-twinkle" : "text-gray-300"
         }`}
+        style={{ animationDelay: `${i * 100}ms` }}
       />
     ))
 
@@ -191,259 +176,399 @@ export default function ProductsGrid({
     })
   }
 
-  const updateComboQty = (id: string, delta: number) => {
-    setComboQuantities((prev) => {
-      const current = prev[id] ?? 1
-      const next = Math.min(10, Math.max(1, current + delta))
-      return { ...prev, [id]: next }
-    })
+  const getQty = (id: number) => quantities[id] ?? 1
+
+  const handleAddToCart = (product: Product) => {
+    onAddToCart(product, getQty(product.id!))
+    onMarkAsPurchased(product.id!)
+
+    setAddedItems((prev) => new Set([...prev, product.id!]))
+    setTimeout(() => {
+      setAddedItems((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(product.id!)
+        return newSet
+      })
+    }, 2000)
   }
 
-  const getQty = (id: number) => quantities[id] ?? 1
-  const getComboQty = (id: string) => comboQuantities[id] ?? 1
-
-  // Render individual product card
-  const renderProductCard = (product: Product) => (
+  const renderProductCard = (product: Product, index: number) => (
     <Card
       key={product.id}
-      className="flex-shrink-0 w-80 relative bg-white bg-opacity-60 backdrop-blur-md border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl transform transition-transform duration-500 hover:-translate-y-2 snap-center"
+      className={`group relative bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-700 rounded-2xl overflow-hidden ${
+        visibleProducts.has(index) ? "animate-slide-up opacity-100" : "opacity-0 translate-y-8"
+      } ${addedItems.has(product.id!) ? "animate-success-pulse" : "hover:-translate-y-3 hover:rotate-1"}`}
+      style={{ animationDelay: `${index * 100}ms` }}
     >
-      <CardContent className="p-0 overflow-hidden rounded-t-3xl">
-        <div
-          className="cursor-pointer"
-          onClick={() => openImageModal(product.image || "/placeholder.svg", product.name)}
-        >
+      {/* Efecto de brillo */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none"></div>
+
+      <CardContent className="p-0 overflow-hidden rounded-t-2xl">
+        <div className="relative">
           <img
-            src={product.image || "/placeholder.svg"}
+            src={product.image_url || "/placeholder.svg?height=200&width=300"}
             alt={product.name}
-            className="w-full h-68 object-cover hover:scale-105 transition-transform duration-700"
+            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = "/placeholder.svg?height=200&width=300"
+            }}
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
-        <Badge className="absolute top-4 left-4 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold px-3 py-1 rounded-full shadow-md">
+
+        {/* Badges con indicador de categoría */}
+        <Badge
+          className={`absolute top-4 left-4 font-semibold shadow-sm animate-bounce-in ${
+            product.category === "bbq-sauce"
+              ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+              : "bg-red-100 text-red-800 hover:bg-red-200"
+          }`}
+        >
           {product.badge}
         </Badge>
-        <Badge className="absolute top-4 right-4 bg-white text-sm font-semibold text-gray-800 px-2 py-1 rounded-full">
+        <Badge
+          variant="outline"
+          className="absolute top-4 right-4 bg-white/90 border-gray-200 text-gray-700 font-medium animate-bounce-in animation-delay-100"
+        >
+          <MapPin className="w-3 h-3 mr-1" />
           {product.origin}
         </Badge>
-      </CardContent>
-      <CardContent className="px-6 py-4">
-        <h4 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{product.name}</h4>
-        <p className="text-gray-700 text-sm mb-4 line-clamp-2">{product.description}</p>
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <div className="flex space-x-1">{renderHeatLevel(product.heatLevel)}</div>
-            <span className="text-xs text-gray-500">Schärfe</span>
-          </div>
-          <div className="text-right">
-            <div className="flex justify-end space-x-1">{renderStars(product.rating)}</div>
-            <span className="text-xs text-gray-500">{product.rating.toFixed(1)}</span>
-          </div>
+
+        {/* Indicador de categoría */}
+        <div className="absolute top-12 left-4">
+          <Badge
+            variant="outline"
+            className={`text-xs ${
+              product.category === "bbq-sauce"
+                ? "bg-amber-50 text-amber-700 border-amber-200"
+                : "bg-red-50 text-red-700 border-red-200"
+            }`}
+          >
+            {product.category === "bbq-sauce" ? "🔥 BBQ" : "🌶️ Hot Sauce"}
+          </Badge>
         </div>
+
+        {/* Indicador de nivel de picante flotante */}
+        <div className="absolute bottom-4 right-4 bg-white/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="flex">{renderHeatLevel(product.heatLevel)}</div>
+        </div>
+      </CardContent>
+
+      <CardContent className="px-6 py-4">
+        <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-red-600 transition-colors duration-300">
+          {product.name}
+        </h4>
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{product.description}</p>
+
+        {/* Rating y nivel de picante */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <div className="flex">{renderStars(product.rating)}</div>
+            <span className="text-sm font-medium text-gray-700">{product.rating}</span>
+          </div>
+          <div className="text-xs text-gray-500 font-medium">Schärfe-Level</div>
+        </div>
+
+        {/* Cantidad y precio */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-            <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, -1)} className="px-2">
+          <div className="text-xl font-bold text-gray-900 animate-price-update">
+            {(product.price * getQty(product.id!)).toFixed(2)} CHF
+          </div>
+          <div className="flex items-center bg-gray-100 rounded-lg overflow-hidden hover:bg-gray-200 transition-colors duration-300">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => updateQty(product.id!, -1)}
+              className="px-3 hover:bg-red-200 text-gray-600 hover:text-red-600 transition-all duration-300 hover:scale-110"
+            >
               <Minus className="w-4 h-4" />
             </Button>
-            <span className="px-3 font-medium">{getQty(product.id)}</span>
-            <Button size="icon" variant="ghost" onClick={() => updateQty(product.id, 1)} className="px-2">
+            <span className="px-4 py-2 font-semibold text-gray-800 min-w-[3rem] text-center animate-bounce-subtle">
+              {getQty(product.id!)}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => updateQty(product.id!, 1)}
+              className="px-3 hover:bg-red-200 text-gray-600 hover:text-red-600 transition-all duration-300 hover:scale-110"
+            >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          <div className="text-2xl font-extrabold text-red-600">
-            {(product.price * getQty(product.id)).toFixed(2)} CHF
-          </div>
         </div>
       </CardContent>
+
       <CardFooter className="px-6 pb-6 pt-0">
         <Button
-          onClick={() => {
-            onAddToCart(product, getQty(product.id))
-            onMarkAsPurchased(product.id)
-          }}
-          disabled={purchasedItems.has(product.id)}
-          className="w-full py-2 font-semibold rounded-full text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600 transition-colors duration-300 text-sm"
+          onClick={() => handleAddToCart(product)}
+          disabled={purchasedItems.has(product.id!)}
+          className={`w-full font-semibold py-3 rounded-lg transition-all duration-500 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+            purchasedItems.has(product.id!) || addedItems.has(product.id!)
+              ? "bg-green-600 hover:bg-green-700 animate-success"
+              : product.category === "bbq-sauce"
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 animate-gradient-shift"
+                : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600 animate-gradient-shift"
+          } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
         >
-          <ShoppingCart className="w-4 h-4 inline-block mr-2" />
-          {purchasedItems.has(product.id) ? "✓ Hinzugefügt" : "In Warenkorb"}
+          <ShoppingCart className={`w-4 h-4 mr-2 ${addedItems.has(product.id!) ? "animate-bounce" : ""}`} />
+          {purchasedItems.has(product.id!) || addedItems.has(product.id!) ? "✓ Hinzugefügt" : "In Warenkorb"}
         </Button>
       </CardFooter>
     </Card>
   )
 
-  // Render combo offer card
-  const renderComboCard = (offer: ComboOffer) => (
-    <Card
-      key={offer.id}
-      className="flex-shrink-0 w-96 relative bg-gradient-to-br from-orange-50 to-red-50 border-2 border-red-300 rounded-3xl shadow-xl hover:shadow-2xl transform transition-transform duration-500 hover:-translate-y-2 overflow-hidden snap-center"
-    >
-      <CardContent className="p-0 overflow-hidden rounded-t-3xl relative">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-500/10 to-orange-500/10 z-10"></div>
-        <div className="cursor-pointer" onClick={() => openImageModal(offer.image || "/placeholder.svg", offer.name)}>
-          <img
-            src={offer.image || "/placeholder.svg"}
-            alt={offer.name}
-            className="w-full h-56 object-cover hover:scale-105 transition-transform duration-700"
-          />
+  if (loading) {
+    return (
+      <section className="py-24 px-6 bg-gradient-to-br from-slate-50 via-white to-red-50">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando productos...</p>
         </div>
-        <Badge className="absolute top-4 left-4 bg-red-600 text-white font-bold px-3 py-1 text-sm animate-pulse z-20">
-          -{offer.discount}% SPAREN
-        </Badge>
-        <Badge className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold px-3 py-1 rounded-full z-20">
-          {offer.badge}
-        </Badge>
-        <div className="absolute bottom-4 left-4 right-4 z-20">
-          <Gift className="w-6 h-6 text-white mb-2 mx-auto animate-bounce" />
-        </div>
-      </CardContent>
-      <CardContent className="px-6 py-4">
-        <h4 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">{offer.name}</h4>
-        <p className="text-gray-700 text-sm mb-4 line-clamp-1">{offer.description}</p>
+      </section>
+    )
+  }
 
-        {/* Products included */}
-        <div className="space-y-1 mb-4">
-          {offer.products.slice(0, 2).map((product, index) => (
-            <div key={index} className="flex items-center space-x-2 text-xs text-gray-700">
-              <Package className="w-3 h-3 text-orange-500" />
-              <span className="font-medium truncate">{product}</span>
-            </div>
-          ))}
-          {offer.products.length > 2 && (
-            <div className="text-xs text-gray-500">+{offer.products.length - 2} weitere...</div>
-          )}
-        </div>
-
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <div className="flex space-x-1">{renderHeatLevel(offer.heatLevel)}</div>
-            <span className="text-xs text-gray-500">Ø Schärfe</span>
-          </div>
-          <div className="text-right">
-            <div className="flex justify-end space-x-1">{renderStars(offer.rating)}</div>
-            <span className="text-xs text-gray-500">{offer.rating.toFixed(1)}</span>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <p className="text-green-600 font-bold text-center text-sm mb-3">
-            Sie sparen {((offer.originalPrice - offer.offerPrice) * getComboQty(offer.id)).toFixed(2)} CHF!
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-            <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, -1)} className="px-2">
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="px-3 font-medium">{getComboQty(offer.id)}</span>
-            <Button size="icon" variant="ghost" onClick={() => updateComboQty(offer.id, 1)} className="px-2">
-              <Plus className="w-4 h-4" />
+  if (error) {
+    return (
+      <section className="py-24 px-6 bg-gradient-to-br from-slate-50 via-white to-red-50">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <p className="font-semibold">Error al cargar productos</p>
+            <p className="text-sm">{error}</p>
+            <Button onClick={loadProducts} className="mt-4" variant="outline">
+              Reintentar
             </Button>
           </div>
-          <div className="text-right">
-            <div className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-red-600">
-                {(offer.offerPrice * getComboQty(offer.id)).toFixed(2)} CHF
-              </span>
-              <span className="text-sm text-gray-400 line-through">
-                {(offer.originalPrice * getComboQty(offer.id)).toFixed(2)} CHF
-              </span>
-            </div>
-          </div>
         </div>
-      </CardContent>
-      <CardFooter className="px-6 pb-6 pt-0">
-        <Button
-          onClick={() => {
-            onAddComboToCart(offer, getComboQty(offer.id))
-            onMarkComboAsPurchased(offer.id)
-          }}
-          disabled={purchasedCombos.has(offer.id)}
-          className="w-full py-2 font-semibold rounded-full text-white bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 transition-colors duration-300 text-sm"
-        >
-          <Gift className="w-4 h-4 inline-block mr-2" />
-          {purchasedCombos.has(offer.id) ? "✓ Combo hinzugefügt" : "Combo sichern"}
-        </Button>
-      </CardFooter>
-    </Card>
-  )
+      </section>
+    )
+  }
+
+  const filteredProducts = getFilteredProducts()
 
   return (
-    <section className="py-24 px-6 bg-gradient-to-br from-red-50/30 via-rose-50/20 to-pink-50/30">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <Sparkles className="inline-block w-8 h-8 text-red-500 animate-bounce" />
-          <h3 className="inline-block mx-4 text-4xl font-extrabold text-gray-900 drop-shadow-lg">
-            Unsere Premium-Saucen & Angebote
-          </h3>
-          <p className="mt-4 text-lg text-gray-600">
-            Handverlesene Hot Sauces mit modernem Flair und exklusive Combo-Angebote.
-          </p>
-        </div>
-
-        {/* Special Offers Section */}
-        <div className="mb-16">
- 
-
-
-        </div>
-
-        {/* Individual Products Section */}
-        <div>
-          <div className="text-center mb-8">
-            <h4 className="text-3xl font-bold text-gray-900">Einzelne Produkte</h4>
-            <p className="mt-2 text-gray-600">Wählen Sie Ihre Lieblings-Hot-Sauce einzeln aus</p>
-          </div>
-
-          {/* SCROLL LATERAL DE PRODUCTOS INDIVIDUALES */}
-          <div className="relative">
-            <div className="flex overflow-x-auto scrollbar-hide gap-6 pb-4 px-4 snap-x snap-mandatory">
-              {products.map(renderProductCard)}
-            </div>
-
-            {/* Scroll Indicator */}
-            <div className="flex justify-center mt-6 space-x-2">
-     
-            </div>
-          </div>
-        </div>
+    <section className="py-24 px-6 bg-gradient-to-br from-slate-50 via-white to-red-50 relative overflow-hidden">
+      {/* Elementos flotantes de fondo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-32 left-16 w-3 h-3 bg-red-400 rounded-full animate-float opacity-60"></div>
+        <div className="absolute top-64 right-24 w-2 h-2 bg-orange-400 rounded-full animate-float-delayed opacity-50"></div>
+        <Sparkles className="absolute top-80 left-1/3 w-5 h-5 text-red-300 animate-spin-slow opacity-30" />
+        <Sparkles className="absolute bottom-80 right-1/3 w-4 h-4 text-orange-300 animate-spin-slow opacity-40" />
       </div>
 
-      {/* Image Modal */}
-      {selectedImage && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="relative max-w-4xl max-h-[90vh] w-full">
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition-colors z-10"
-            >
-              ✕
-            </button>
-            <img
-              src={selectedImage.src || "/placeholder.svg"}
-              alt={selectedImage.alt}
-              className="w-full h-full object-contain rounded-lg"
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-lg">
-              <h3 className="text-2xl font-bold text-white text-center">{selectedImage.alt}</h3>
-            </div>
+      <div className="max-w-7xl mx-auto relative">
+        {/* Header */}
+        <div className="text-center mb-16 animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <Award className="w-4 h-4" />
+            Premium Sauce Collection
           </div>
+          <h3 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+            SMOKEHOUSE
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">
+              HOT SAUCE & BBQ
+            </span>
+          </h3>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Handverlesene Hot Sauces und BBQ-Saucen aus unserer Premium-Kollektion
+          </p>
+          <div className="w-32 h-1 bg-gradient-to-r from-red-600 to-orange-600 mx-auto mt-6 rounded-full animate-expand"></div>
         </div>
-      )}
+
+
+
+        {/* Tabs para filtrar productos */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-12">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-white shadow-lg rounded-xl p-1">
+
+            <TabsTrigger
+              value="hot-sauce"
+              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300"
+            >
+              🌶️ Hot Sauce
+            </TabsTrigger>
+            <TabsTrigger
+              value="bbq-sauce"
+              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white font-semibold transition-all duration-300"
+            >
+              🔥 BBQ Sauce
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={activeTab} className="mt-8">
+            <div className="text-center mb-8">
+              <h4 className="text-2xl font-bold text-gray-900 mb-2">
+                {activeTab === "hot-sauce" && "🌶️ Hot Sauce Kollektion"}
+                {activeTab === "bbq-sauce" && "🔥 BBQ Sauce Kollektion"}
+                {activeTab === "all" && "🍖 Komplette Sauce Kollektion"}
+              </h4>
+              <p className="text-gray-600">
+                {filteredProducts.length} {filteredProducts.length === 1 ? "Produkt" : "Produkte"} verfügbar
+              </p>
+            </div>
+
+            {/* Products Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product, index) => renderProductCard(product, index))}
+            </div>
+
+            {filteredProducts.length === 0 && !loading && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">Keine Produkte in dieser Kategorie gefunden</p>
+                <Button onClick={() => setActiveTab("all")} className="mt-4" variant="outline">
+                  Alle Produkte anzeigen
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
       <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(180deg); }
         }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+        
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-12px) rotate(-180deg); }
         }
+        
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slide-up {
+          from {
+            opacity: 0;
+            transform: translateY(50px) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        @keyframes bounce-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.3);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.05);
+          }
+          70% {
+            transform: scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        @keyframes success-pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+          }
+        }
+        
+        @keyframes expand {
+          from { width: 0; }
+          to { width: 8rem; }
+        }
+        
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounce-subtle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-2px); }
+        }
+        
+        @keyframes twinkle {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        @keyframes gradient-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        
+        .animate-float-delayed {
+          animation: float-delayed 8s ease-in-out infinite;
+        }
+        
+        .animate-fade-in-up {
+          animation: fade-in-up 0.8s ease-out forwards;
+        }
+        
+        .animate-slide-up {
+          animation: slide-up 0.6s ease-out forwards;
+        }
+        
+        .animate-bounce-in {
+          animation: bounce-in 0.6s ease-out;
+        }
+        
+        .animate-success-pulse {
+          animation: success-pulse 1s ease-in-out;
+        }
+        
+        .animate-expand {
+          animation: expand 1s ease-out 0.8s forwards;
+          width: 0;
+        }
+        
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
+        }
+        
+        .animate-bounce-subtle {
+          animation: bounce-subtle 2s ease-in-out infinite;
+        }
+        
+        .animate-twinkle {
+          animation: twinkle 2s ease-in-out infinite;
+        }
+        
+        .animate-gradient-shift {
+          background-size: 200% 200%;
+          animation: gradient-shift 3s ease infinite;
+        }
+        
+        .animation-delay-100 {
+          animation-delay: 100ms;
+        }
+        
         .line-clamp-1 {
           display: -webkit-box;
           -webkit-line-clamp: 1;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
+        
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;

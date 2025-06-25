@@ -163,7 +163,7 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
     // Simular delay de autenticación
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    if (loginData.email === "info@lweb.ch" && loginData.password === "perritos56") {
+    if (loginData.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && loginData.password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
       console.log("Login successful, calling onAdminOpen")
       setIsLoggedIn(true)
       setIsLoginOpen(false)
@@ -201,12 +201,7 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
       icon: Home,
       description: "Zur Hauptseite",
     },
-    {
-      id: "premium-showcase",
-      label: "Premium BBQ",
-      icon: BBQIcon,
-      description: "Grillspezialitäten",
-    },
+
     {
       id: "offers",
       label: "Scharfe Saucen",
@@ -363,7 +358,10 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
                   <DialogHeader>
                     <DialogTitle className="flex items-center space-x-2">
                       <Shield className="w-5 h-5 text-orange-600" />
-                      <span>Admin Login</span>
+             
+           <h1 className="text-3xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent tracking-tight leading-none">
+           Admin Login
+              </h1>
                     </DialogTitle>
                   </DialogHeader>
 
