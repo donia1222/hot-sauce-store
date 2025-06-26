@@ -1,11 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Flame, Star, ShoppingCart, Minus, Plus, Sparkles, MapPin, Award } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Flame, Star, ShoppingCart, Minus, Plus, MapPin, Award, Info } from "lucide-react"
+import { ShoppingCartComponent } from "./shopping-cart"
+import { CheckoutPage } from "@/components/checkout-page"
 
 // Actualizar la interfaz para incluir category
 interface Product {
@@ -15,7 +20,7 @@ interface Product {
   price: number
   image?: string
   image_url?: string
-  heatLevel: number // Changed from heat_level to heatLevel for consistency
+  heatLevel: number
   rating: number
   badge: string
   origin: string
@@ -32,7 +37,7 @@ interface ApiProduct {
   price: number
   image?: string
   image_url?: string
-  heat_level: number // API uses snake_case
+  heat_level: number
   rating: number
   badge: string
   origin: string
@@ -53,13 +58,26 @@ interface ApiResponse {
   error?: string
 }
 
+interface CartItem {
+  id: number
+  name: string
+  price: number
+  image: string
+  description: string
+  heatLevel: number
+  rating: number
+  badge?: string
+  origin?: string
+  quantity: number
+}
+
 interface ProductsGridProps {
   onAddToCart?: (product: Product, quantity: number) => void
   purchasedItems?: Set<number>
   onMarkAsPurchased?: (productId: number) => void
 }
 
-export default function ProductsGridCombined({
+export default function ProductsGridCompact({
   onAddToCart = () => {},
   purchasedItems = new Set(),
   onMarkAsPurchased = () => {},
@@ -71,7 +89,15 @@ export default function ProductsGridCombined({
   const [visibleProducts, setVisibleProducts] = useState<Set<number>>(new Set())
   const [addedItems, setAddedItems] = useState<Set<number>>(new Set())
   const [activeTab, setActiveTab] = useState("all")
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [stats, setStats] = useState({ hot_sauces: 0, bbq_sauces: 0, total_products: 0 })
+  const [cartCount, setCartCount] = useState(0)
+  const [animatingProducts, setAnimatingProducts] = useState<Set<number>>(new Set())
+  const [cartBounce, setCartBounce] = useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [currentView, setCurrentView] = useState<"products" | "checkout" | "success">("products")
+  const cartRef = useRef<HTMLDivElement>(null)
 
   const API_BASE_URL = "https://web.lweb.ch/shop"
 
@@ -83,15 +109,15 @@ export default function ProductsGridCombined({
   // Animación escalonada
   useEffect(() => {
     if (products.length > 0) {
-      setVisibleProducts(new Set()) // Reset visibility
+      setVisibleProducts(new Set())
       const timer = setTimeout(() => {
         const filteredProducts = getFilteredProducts()
         filteredProducts.forEach((_, index) => {
           setTimeout(() => {
             setVisibleProducts((prev) => new Set([...prev, index]))
-          }, index * 100)
+          }, index * 50)
         })
-      }, 300)
+      }, 200)
       return () => clearTimeout(timer)
     }
   }, [products, activeTab])
@@ -101,13 +127,11 @@ export default function ProductsGridCombined({
       setLoading(true)
       setError("")
 
-      // Usar el nuevo parámetro de categoría
       const categoryParam = activeTab !== "all" ? `&category=${activeTab}` : ""
       const response = await fetch(`${API_BASE_URL}/get_products.php?${categoryParam}`)
       const data: ApiResponse = await response.json()
 
       if (data.success) {
-        // Convert snake_case to camelCase for consistency
         const normalizedProducts: Product[] = data.products.map((product: ApiProduct) => ({
           ...product,
           heatLevel: product.heat_level || 0,
@@ -127,13 +151,12 @@ export default function ProductsGridCombined({
     }
   }
 
-  // Filtrar productos por categoría usando la nueva columna category
   const getFilteredProducts = () => {
     switch (activeTab) {
       case "hot-sauce":
         return products.filter(
           (product) =>
-            product.category === "hot-sauce" || (!product.category && product.name.toLowerCase().includes("hot sauce")), // Solo legacy hot sauces
+            product.category === "hot-sauce" || (!product.category && product.name.toLowerCase().includes("hot sauce")),
         )
       case "bbq-sauce":
         return products.filter(
@@ -147,26 +170,29 @@ export default function ProductsGridCombined({
     }
   }
 
-  const renderHeatLevel = (level: number) =>
-    Array.from({ length: 5 }, (_, i) => (
+  const renderHeatLevel = (level: number, size: "sm" | "lg" = "sm") => {
+    const iconSize = size === "sm" ? "w-3 h-3" : "w-4 h-4"
+    return Array.from({ length: 5 }, (_, i) => (
       <Flame
         key={i}
-        className={`w-4 h-4 transition-colors duration-300 ${
+        className={`${iconSize} transition-colors duration-300 ${
           i < level ? "text-red-500 fill-red-500" : "text-gray-300"
         }`}
       />
     ))
+  }
 
-  const renderStars = (rating: number) =>
-    Array.from({ length: 5 }, (_, i) => (
+  const renderStars = (rating: number, size: "sm" | "lg" = "sm") => {
+    const iconSize = size === "sm" ? "w-3 h-3" : "w-4 h-4"
+    return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 transition-all duration-300 ${
-          i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400 animate-twinkle" : "text-gray-300"
+        className={`${iconSize} transition-all duration-300 ${
+          i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
         }`}
-        style={{ animationDelay: `${i * 100}ms` }}
       />
     ))
+  }
 
   const updateQty = (id: number, delta: number) => {
     setQuantities((prev) => {
@@ -178,152 +204,477 @@ export default function ProductsGridCombined({
 
   const getQty = (id: number) => quantities[id] ?? 1
 
-  const handleAddToCart = (product: Product) => {
-    onAddToCart(product, getQty(product.id!))
-    onMarkAsPurchased(product.id!)
+  // Funciones del carrito
+  const addToCartHandler = (product: any) => {
+    const cartItem: CartItem = {
+      id: product.id!,
+      name: product.name,
+      price: product.price,
+      image: product.image_url || "/placeholder.svg",
+      description: product.description,
+      heatLevel: product.heatLevel,
+      rating: product.rating,
+      badge: product.badge,
+      origin: product.origin,
+      quantity: 1,
+    }
 
-    setAddedItems((prev) => new Set([...prev, product.id!]))
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === cartItem.id)
+      if (existingItem) {
+        return prevCart.map((item) => (item.id === cartItem.id ? { ...item, quantity: item.quantity + 1 } : item))
+      }
+      return [...prevCart, cartItem]
+    })
+  }
+
+  const removeFromCartHandler = (productId: number) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === productId)
+      if (existingItem && existingItem.quantity > 1) {
+        return prevCart.map((item) => (item.id === productId ? { ...item, quantity: item.quantity - 1 } : item))
+      }
+      return prevCart.filter((item) => item.id !== productId)
+    })
+
+    // Actualizar contador del carrito
+    setCartCount((prev) => Math.max(0, prev - 1))
+  }
+
+  const clearCartHandler = () => {
+    setCart([])
+    setCartCount(0)
+  }
+
+  const goToCheckoutHandler = () => {
+    setIsCartOpen(false)
+    setCurrentView("checkout")
+  }
+
+  const handleOrderComplete = () => {
+    setCurrentView("success")
+    clearCartHandler()
+  }
+
+  const handleBackToProducts = () => {
+    setCurrentView("products")
+  }
+
+  const handlePurchase = (product: Product, event?: React.MouseEvent) => {
+    // Obtener la posición del elemento que se está animando
+    const target = event?.currentTarget as HTMLElement
+    const rect = target?.getBoundingClientRect()
+    const cartRect = cartRef.current?.getBoundingClientRect()
+
+    // Crear elemento de animación mejorado
+    if (rect && cartRect) {
+      const flyingElement = document.createElement("div")
+      flyingElement.className = "flying-product-enhanced"
+      flyingElement.innerHTML = `
+      <div style="
+        position: relative;
+        width: 80px; 
+        height: 80px; 
+        background: linear-gradient(135deg, #ef4444, #f97316);
+        border-radius: 16px;
+        padding: 8px;
+        box-shadow: 0 20px 40px rgba(239, 68, 68, 0.4);
+        border: 3px solid white;
+      ">
+        <img src="${product.image_url || "/placeholder.svg"}" alt="${product.name}" 
+             style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" />
+        <div style="
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          color: #7c2d12;
+          font-size: 12px;
+          font-weight: 900;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid white;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.5);
+        ">+1</div>
+        <div style="
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+          border-radius: 16px;
+          animation: shimmer 1s ease-in-out;
+        "></div>
+      </div>
+    `
+
+      // Posicionar el elemento
+      flyingElement.style.position = "fixed"
+      flyingElement.style.left = `${rect.left + rect.width / 2 - 40}px`
+      flyingElement.style.top = `${rect.top + rect.height / 2 - 40}px`
+      flyingElement.style.zIndex = "10000"
+      flyingElement.style.pointerEvents = "none"
+      flyingElement.style.transition = "all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+
+      document.body.appendChild(flyingElement)
+
+      // Crear efecto de trail/estela
+      const trail = document.createElement("div")
+      trail.className = "flying-trail"
+      trail.style.position = "fixed"
+      trail.style.left = `${rect.left + rect.width / 2 - 2}px`
+      trail.style.top = `${rect.top + rect.height / 2 - 2}px`
+      trail.style.width = "4px"
+      trail.style.height = "4px"
+      trail.style.background = "linear-gradient(45deg, #ef4444, #f97316)"
+      trail.style.borderRadius = "50%"
+      trail.style.zIndex = "9999"
+      trail.style.boxShadow = "0 0 20px #ef4444"
+      trail.style.transition = "all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+
+      document.body.appendChild(trail)
+
+      // Animar hacia el carrito con efecto más dramático
+      setTimeout(() => {
+        flyingElement.style.left = `${cartRect.left + cartRect.width / 2 - 40}px`
+        flyingElement.style.top = `${cartRect.top + cartRect.height / 2 - 40}px`
+        flyingElement.style.transform = "scale(0.2) rotate(360deg)"
+        flyingElement.style.opacity = "0"
+
+        trail.style.left = `${cartRect.left + cartRect.width / 2 - 2}px`
+        trail.style.top = `${cartRect.top + cartRect.height / 2 - 2}px`
+        trail.style.transform = "scale(3)"
+        trail.style.opacity = "0"
+      }, 100)
+
+      // Limpiar después de la animación
+      setTimeout(() => {
+        if (document.body.contains(flyingElement)) {
+          document.body.removeChild(flyingElement)
+        }
+        if (document.body.contains(trail)) {
+          document.body.removeChild(trail)
+        }
+      }, 1300)
+    }
+
+    // Resto de la función permanece igual...
+    setAnimatingProducts((prev) => new Set([...prev, product.id!]))
+
     setTimeout(() => {
-      setAddedItems((prev) => {
+      onAddToCart(product, getQty(product.id!))
+      onMarkAsPurchased(product.id!)
+      addToCartHandler(product)
+      setCartCount((prev) => prev + getQty(product.id!))
+      setCartBounce(true)
+      setTimeout(() => setCartBounce(false), 600)
+      setAddedItems((prev) => new Set([...prev, product.id!]))
+      setAnimatingProducts((prev) => {
         const newSet = new Set(prev)
         newSet.delete(product.id!)
         return newSet
       })
-    }, 2000)
+
+      setTimeout(() => {
+        setAddedItems((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(product.id!)
+          return newSet
+        })
+      }, 2000)
+    }, 200)
   }
 
-  const renderProductCard = (product: Product, index: number) => (
-    <Card
-      key={product.id}
-      className={`group relative bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-700 rounded-2xl overflow-hidden ${
-        visibleProducts.has(index) ? "animate-slide-up opacity-100" : "opacity-0 translate-y-8"
-      } ${addedItems.has(product.id!) ? "animate-success-pulse" : "hover:-translate-y-3 hover:rotate-1"}`}
-      style={{ animationDelay: `${index * 100}ms` }}
+  // Componente del carrito flotante mejorado
+  const FloatingCart = () => (
+    <div
+      ref={cartRef}
+      onClick={() => setIsCartOpen(true)}
+      className={`fixed top-4 right-8 z-50 group cursor-pointer transition-all duration-500 ${
+        cartBounce ? "animate-cart-bounce" : ""
+      }`}
     >
-      {/* Efecto de brillo */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none"></div>
+      {/* Glow effect background - más pequeño */}
+      <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-all duration-300 scale-110"></div>
 
-      <CardContent className="p-0 overflow-hidden rounded-t-2xl">
+      {/* Main cart button - más compacto */}
+      <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-orange-600 rounded-xl p-3 shadow-xl border border-red-400/30 group-hover:scale-105 transition-all duration-300">
+        {/* Inner glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
+
+        {/* Cart icon with pulse effect - más pequeño */}
         <div className="relative">
-          <img
-            src={product.image_url || "/placeholder.svg?height=200&width=300"}
-            alt={product.name}
-            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.src = "/placeholder.svg?height=200&width=300"
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <ShoppingCart className="w-5 h-5 text-white drop-shadow-lg" />
+
+          {/* Animated pulse ring when items are added */}
+          {cartCount > 0 && <div className="absolute inset-0 rounded-full border-2 border-white/50 animate-ping"></div>}
+
+          {/* Count badge - más pequeño */}
+          {cartCount > 0 && (
+            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-red-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-black shadow-lg border-2 border-white animate-pulse">
+              {cartCount > 99 ? "99+" : cartCount}
+            </div>
+          )}
         </div>
 
-        {/* Badges con indicador de categoría */}
-        <Badge
-          className={`absolute top-4 left-4 font-semibold shadow-sm animate-bounce-in ${
-            product.category === "bbq-sauce"
-              ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-              : "bg-red-100 text-red-800 hover:bg-red-200"
-          }`}
-        >
-          {product.badge}
-        </Badge>
-        <Badge
-          variant="outline"
-          className="absolute top-4 right-4 bg-white/90 border-gray-200 text-gray-700 font-medium animate-bounce-in animation-delay-100"
-        >
-          <MapPin className="w-3 h-3 mr-1" />
-          {product.origin}
-        </Badge>
+        {/* Floating particles effect - más pequeñas */}
+        <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-bounce opacity-80"></div>
+        <div
+          className="absolute -bottom-0.5 -left-0.5 w-1 h-1 bg-orange-300 rounded-full animate-bounce opacity-60"
+          style={{ animationDelay: "0.5s" }}
+        ></div>
+      </div>
 
-        {/* Indicador de categoría */}
-        <div className="absolute top-12 left-4">
+      {/* Tooltip */}
+      <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap backdrop-blur-sm">
+        {cartCount > 0 ? `${cartCount} Artikel im Warenkorb` : "Warenkorb öffnen"}
+        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-black/80 rotate-45"></div>
+      </div>
+    </div>
+  )
+
+  // Componente del modal de información detallada
+  const ProductDetailModal = ({ product }: { product: Product }) => (
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
+      <DialogHeader>
+        <DialogTitle className="text-2xl font-bold text-gray-900 bg-white">{product.name}</DialogTitle>
+      </DialogHeader>
+
+      <div className="grid md:grid-cols-2 gap-6 bg-white text-gray-900 p-4 rounded-lg">
+        {/* Imagen grande */}
+        <div className="relative">
+          <img
+            src={product.image_url || "/placeholder.svg?height=300&width=300"}
+            alt={product.name}
+            className="w-full h-64 md:h-80 object-cover rounded-lg shadow-lg"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = "/placeholder.svg?height=300&width=300"
+            }}
+          />
           <Badge
-            variant="outline"
-            className={`text-xs ${
-              product.category === "bbq-sauce"
-                ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-red-50 text-red-700 border-red-200"
+            className={`absolute top-3 left-3 text-sm px-3 py-1 font-medium shadow-lg ${
+              product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
             }`}
           >
-            {product.category === "bbq-sauce" ? "🔥 BBQ" : "🌶️ Hot Sauce"}
+            {product.badge}
           </Badge>
         </div>
 
-        {/* Indicador de nivel de picante flotante */}
-        <div className="absolute bottom-4 right-4 bg-white/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <div className="flex">{renderHeatLevel(product.heatLevel)}</div>
-        </div>
-      </CardContent>
-
-      <CardContent className="px-6 py-4">
-        <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-red-600 transition-colors duration-300">
-          {product.name}
-        </h4>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{product.description}</p>
-
-        {/* Rating y nivel de picante */}
-        <div className="flex justify-between items-center mb-4">
+        {/* Información detallada */}
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <div className="flex">{renderStars(product.rating)}</div>
-            <span className="text-sm font-medium text-gray-700">{product.rating}</span>
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span className="text-gray-600">Herkunft: {product.origin}</span>
           </div>
-          <div className="text-xs text-gray-500 font-medium">Schärfe-Level</div>
-        </div>
 
-        {/* Cantidad y precio */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-xl font-bold text-gray-900 animate-price-update">
-            {(product.price * getQty(product.id!)).toFixed(2)} CHF
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-2">Beschreibung</h4>
+            <p className="text-gray-600 leading-relaxed">{product.description}</p>
           </div>
-          <div className="flex items-center bg-gray-100 rounded-lg overflow-hidden hover:bg-gray-200 transition-colors duration-300">
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Bewertung</h4>
+              <div className="flex items-center gap-2">
+                <div className="flex">{renderStars(product.rating, "lg")}</div>
+                <span className="font-medium text-gray-700">{product.rating}/5</span>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-2">Schärfegrad</h4>
+              <div className="flex items-center gap-1">
+                <div className="flex">{renderHeatLevel(product.heatLevel, "lg")}</div>
+                <span className="text-sm text-gray-600 ml-2">{product.heatLevel}/5</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-3xl font-bold text-gray-900">
+                {(product.price * getQty(product.id!)).toFixed(2)} CHF
+              </div>
+              <div className="text-sm text-gray-500">Einzelpreis: {product.price.toFixed(2)} CHF</div>
+            </div>
+
+            {/* Controles de cantidad */}
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => updateQty(product.id!, -1)}
+                className="px-3 py-2 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900"
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <span className="px-4 py-2 font-semibold text-lg text-gray-900">{getQty(product.id!)}</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => updateQty(product.id!, 1)}
+                className="px-3 py-2 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Botón de compra */}
             <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => updateQty(product.id!, -1)}
-              className="px-3 hover:bg-red-200 text-gray-600 hover:text-red-600 transition-all duration-300 hover:scale-110"
+              onClick={(e) => handlePurchase(product, e)}
+              disabled={purchasedItems.has(product.id!)}
+              className={`w-full font-semibold py-3 rounded-lg transition-all duration-500 shadow-md hover:shadow-lg ${
+                purchasedItems.has(product.id!) || addedItems.has(product.id!)
+                  ? "bg-green-600 hover:bg-green-700"
+                  : product.category === "bbq-sauce"
+                    ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                    : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
+              } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
             >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="px-4 py-2 font-semibold text-gray-800 min-w-[3rem] text-center animate-bounce-subtle">
-              {getQty(product.id!)}
-            </span>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => updateQty(product.id!, 1)}
-              className="px-3 hover:bg-red-200 text-gray-600 hover:text-red-600 transition-all duration-300 hover:scale-110"
-            >
-              <Plus className="w-4 h-4" />
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              {purchasedItems.has(product.id!) || addedItems.has(product.id!) ? "Gekauft" : "In den Warenkorb"}
             </Button>
           </div>
         </div>
-      </CardContent>
-
-      <CardFooter className="px-6 pb-6 pt-0">
-        <Button
-          onClick={() => handleAddToCart(product)}
-          disabled={purchasedItems.has(product.id!)}
-          className={`w-full font-semibold py-3 rounded-lg transition-all duration-500 shadow-lg hover:shadow-xl transform hover:scale-105 ${
-            purchasedItems.has(product.id!) || addedItems.has(product.id!)
-              ? "bg-green-600 hover:bg-green-700 animate-success"
-              : product.category === "bbq-sauce"
-                ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 animate-gradient-shift"
-                : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600 animate-gradient-shift"
-          } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
-        >
-          <ShoppingCart className={`w-4 h-4 mr-2 ${addedItems.has(product.id!) ? "animate-bounce" : ""}`} />
-          {purchasedItems.has(product.id!) || addedItems.has(product.id!) ? "✓ Hinzugefügt" : "In Warenkorb"}
-        </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </DialogContent>
   )
+
+  // Tarjeta de producto compacta
+  const renderCompactProductCard = (product: Product, index: number) => {
+    return (
+      <Card
+        key={product.id}
+        className={`group relative bg-white border border-gray-200 hover:border-red-300 hover:shadow-lg transition-all duration-500 rounded-xl overflow-hidden ${
+          visibleProducts.has(index) ? "animate-slide-in opacity-100" : "opacity-0 translate-y-4"
+        } ${addedItems.has(product.id!) ? "animate-success-glow" : ""} ${
+          animatingProducts.has(product.id!) ? "animate-compress" : ""
+        }`}
+        style={{ animationDelay: `${index * 50}ms` }}
+      >
+        <CardContent className="p-4">
+          <div className="flex gap-4">
+            {/* Imagen más pequeña */}
+            <div className="relative w-20 h-20 flex-shrink-0">
+              <img
+                src={product.image_url || "/placeholder.svg?height=80&width=80"}
+                alt={product.name}
+                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = "/placeholder.svg?height=80&width=80"
+                }}
+              />
+              <Badge
+                className={`absolute -top-1 -right-1 text-xs px-1.5 py-0.5 font-medium shadow-sm ${
+                  product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
+                }`}
+              >
+                {product.badge}
+              </Badge>
+            </div>
+
+            {/* Contenido principal compacto */}
+            <div className="flex-1 min-w-0">
+                   <h4 className="text-lg font-bold text-red-800 line-clamp-1 group-hover:text-red-600 transition-colors duration-300 flex-1 mr-2">
+                  {product.name}
+                </h4>
+              <div className="flex items-start justify-between mb-2">
+           
+                <div className="text-lg font-bold text-gray-500 flex-shrink-0">{product.price.toFixed(2)} CHF</div>
+              </div>
+
+              {/* Rating y origen en una línea */}
+              <div className="flex items-center justify-between mb-3 text-sm">
+                <div className="flex items-center gap-1">
+                  <div className="flex">{renderStars(product.rating)}</div>
+                  <span className="text-gray-600 ml-1">{product.rating}</span>
+                </div>
+                <div className="flex items-center gap-1 text-gray-500">
+                  <MapPin className="w-3 h-3" />
+                  <span>{product.origin}</span>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex items-center gap-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900"
+                      onClick={() => setSelectedProduct(product)}
+                    >
+                      <Info className="w-4 h-4 mr-1" />
+                      Mehr Info
+                    </Button>
+                  </DialogTrigger>
+                  {selectedProduct && <ProductDetailModal product={selectedProduct} />}
+                </Dialog>
+
+                <Button
+                  onClick={(e) => handlePurchase(product, e)}
+                  disabled={purchasedItems.has(product.id!) || animatingProducts.has(product.id!)}
+                  size="sm"
+                  className={`flex-1 font-semibold transition-all duration-500 ${
+                    purchasedItems.has(product.id!) || addedItems.has(product.id!)
+                      ? "bg-green-600 hover:bg-green-700"
+                      : product.category === "bbq-sauce"
+                        ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                        : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
+                  } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
+                >
+                  <ShoppingCart className="w-4 h-4 mr-1" />
+                  {purchasedItems.has(product.id!) || addedItems.has(product.id!)
+                    ? "✓"
+                    : animatingProducts.has(product.id!)
+                      ? "..."
+                      : "Kaufen"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Página de éxito
+  const SuccessPage = () => (
+    <div className="min-h-screen bg-green-50 flex items-center justify-center px-4">
+      <div className="max-w-md mx-auto text-center">
+        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Bestellung erfolgreich!</h1>
+        <p className="text-gray-600 mb-6">Vielen Dank für Ihre Bestellung. Sie erhalten eine Bestätigungs-E-Mail.</p>
+        <Button onClick={handleBackToProducts} className="bg-red-500 hover:bg-red-600 text-white">
+          Weiter einkaufen
+        </Button>
+      </div>
+    </div>
+  )
+
+  if (currentView === "checkout") {
+    return <CheckoutPage cart={cart} onBackToStore={handleBackToProducts} onClearCart={clearCartHandler} />
+  }
+
+  if (currentView === "success") {
+    return <SuccessPage />
+  }
 
   if (loading) {
     return (
-      <section className="py-24 px-6 bg-gradient-to-br from-slate-50 via-white to-red-50">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="py-12 px-4 bg-white min-h-screen">
+        <div className="max-w-4xl mx-auto text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando productos...</p>
+          <p className="mt-4 text-gray-600">Produkte werden geladen...</p>
         </div>
       </section>
     )
@@ -331,13 +682,13 @@ export default function ProductsGridCombined({
 
   if (error) {
     return (
-      <section className="py-24 px-6 bg-gradient-to-br from-slate-50 via-white to-red-50">
-        <div className="max-w-7xl mx-auto text-center">
+      <section className="py-12 px-4 bg-white min-h-screen">
+        <div className="max-w-4xl mx-auto text-center">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <p className="font-semibold">Error al cargar productos</p>
+            <p className="font-semibold">Fehler beim Laden der Produkte</p>
             <p className="text-sm">{error}</p>
             <Button onClick={loadProducts} className="mt-4" variant="outline">
-              Reintentar
+              Erneut versuchen
             </Button>
           </div>
         </div>
@@ -348,239 +699,189 @@ export default function ProductsGridCombined({
   const filteredProducts = getFilteredProducts()
 
   return (
-    <section className="py-24 px-6 bg-gradient-to-br from-slate-50 via-white to-red-50 relative overflow-hidden">
-      {/* Elementos flotantes de fondo */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-32 left-16 w-3 h-3 bg-red-400 rounded-full animate-float opacity-60"></div>
-        <div className="absolute top-64 right-24 w-2 h-2 bg-orange-400 rounded-full animate-float-delayed opacity-50"></div>
-        <Sparkles className="absolute top-80 left-1/3 w-5 h-5 text-red-300 animate-spin-slow opacity-30" />
-        <Sparkles className="absolute bottom-80 right-1/3 w-4 h-4 text-orange-300 animate-spin-slow opacity-40" />
-      </div>
-
-      <div className="max-w-7xl mx-auto relative">
-        {/* Header */}
-        <div className="text-center mb-16 animate-fade-in-up">
-          <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <Award className="w-4 h-4" />
-            Premium Sauce Collection
+    <>
+      <FloatingCart />
+      <ShoppingCartComponent
+        isOpen={isCartOpen}
+        onOpenChange={setIsCartOpen}
+        cart={cart}
+        onAddToCart={addToCartHandler}
+        onRemoveFromCart={removeFromCartHandler}
+        onGoToCheckout={goToCheckoutHandler}
+        onClearCart={clearCartHandler}
+      />
+      <section className="py-12 px-4 bg-white min-h-screen">
+        <div className="max-w-4xl mx-auto">
+          {/* Header compacto */}
+          <div className="text-center mb-12 animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+              <Award className="w-4 h-4" />
+              Premium Kollektion
+            </div>
+            <h3 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
+              SMOKEHOUSE
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">
+                SAUCES
+              </span>
+            </h3>
+            <p className="text-gray-600 max-w-xl mx-auto">Premium Saucen für wahre Kenner ausgewählt</p>
           </div>
-          <h3 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
-            SMOKEHOUSE
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">
-              HOT SAUCE & BBQ
-            </span>
-          </h3>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Handverlesene Hot Sauces und BBQ-Saucen aus unserer Premium-Kollektion
-          </p>
-          <div className="w-32 h-1 bg-gradient-to-r from-red-600 to-orange-600 mx-auto mt-6 rounded-full animate-expand"></div>
+
+          {/* Tabs para filtrar productos */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 bg-white shadow-lg rounded-xl p-1">
+              <TabsTrigger
+                value="all"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300 text-sm"
+              >
+                Alle
+              </TabsTrigger>
+              <TabsTrigger
+                value="hot-sauce"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300 text-sm"
+              >
+                🌶️ Hot
+              </TabsTrigger>
+              <TabsTrigger
+                value="bbq-sauce"
+                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white font-semibold transition-all duration-300 text-sm"
+              >
+                🔥 BBQ
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={activeTab} className="mt-6">
+              <div className="text-center mb-6">
+                <p className="text-gray-600 text-sm">
+                  {filteredProducts.length} {filteredProducts.length === 1 ? "Produkt" : "Produkte"} verfügbar
+                </p>
+              </div>
+
+              {/* Products Grid - Más compacto y responsive */}
+              <div className="grid gap-4 md:grid-cols-2">
+                {filteredProducts.map((product, index) => renderCompactProductCard(product, index))}
+              </div>
+
+              {filteredProducts.length === 0 && !loading && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Keine Produkte in dieser Kategorie gefunden</p>
+                  <Button onClick={() => setActiveTab("all")} className="mt-4" variant="outline">
+                    Alle anzeigen
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
 
+        <style jsx>{`
+          @keyframes fade-in-up {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          @keyframes slide-in {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          @keyframes success-glow {
+            0%, 100% {
+              box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+            50% {
+              box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+            }
+          }
 
+          @keyframes compress {
+            0% {
+              transform: scale(1);
+            }
+            50% {
+              transform: scale(0.95);
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
 
-        {/* Tabs para filtrar productos */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-12">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 bg-white shadow-lg rounded-xl p-1">
-        <TabsTrigger
-              value="all"
-              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300"
-            >
-              Alle
-            </TabsTrigger>
-            <TabsTrigger
-              value="hot-sauce"
-              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300"
-            >
-              🌶️ Hot Sauce
-            </TabsTrigger>
-            <TabsTrigger
-              value="bbq-sauce"
-              className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white font-semibold transition-all duration-300"
-            >
-              🔥 BBQ Sauce
-            </TabsTrigger>
-          </TabsList>
+          @keyframes cart-bounce {
+            0%, 100% {
+              transform: scale(1) rotate(0deg);
+            }
+            25% {
+              transform: scale(1.1) rotate(-5deg);
+            }
+            50% {
+              transform: scale(1.2) rotate(5deg);
+            }
+            75% {
+              transform: scale(1.1) rotate(-2deg);
+            }
+          }
 
-          <TabsContent value={activeTab} className="mt-8">
-            <div className="text-center mb-8">
-              <h4 className="text-2xl font-bold text-gray-900 mb-2">
-                {activeTab === "hot-sauce" && "🌶️ Hot Sauce Kollektion"}
-                {activeTab === "bbq-sauce" && "🔥 BBQ Sauce Kollektion"}
-                {activeTab === "all" && "🍖 Komplette Sauce Kollektion"}
-              </h4>
-              <p className="text-gray-600">
-                {filteredProducts.length} {filteredProducts.length === 1 ? "Produkt" : "Produkte"} verfügbar
-              </p>
-            </div>
+          @keyframes shimmer {
+            0% {
+              opacity: 0;
+            }
+            50% {
+              opacity: 1;
+            }
+            100% {
+              opacity: 0;
+            }
+          }
+          
+          .animate-fade-in-up {
+            animation: fade-in-up 0.6s ease-out forwards;
+          }
+          
+          .animate-slide-in {
+            animation: slide-in 0.4s ease-out forwards;
+          }
+          
+          .animate-success-glow {
+            animation: success-glow 1s ease-in-out;
+          }
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product, index) => renderProductCard(product, index))}
-            </div>
+          .animate-compress {
+            animation: compress 0.3s ease-in-out;
+          }
 
-            {filteredProducts.length === 0 && !loading && (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">Keine Produkte in dieser Kategorie gefunden</p>
-                <Button onClick={() => setActiveTab("all")} className="mt-4" variant="outline">
-                  Alle Produkte anzeigen
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+          .animate-cart-bounce {
+            animation: cart-bounce 0.6s ease-in-out;
+          }
+          
+          .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(180deg); }
-        }
-        
-        @keyframes float-delayed {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-12px) rotate(-180deg); }
-        }
-        
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
+          .flying-product-enhanced {
+            transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            filter: drop-shadow(0 10px 30px rgba(239, 68, 68, 0.5));
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
+
+          .flying-trail {
+            transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
           }
-        }
-        
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(50px) scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        
-        @keyframes bounce-in {
-          0% {
-            opacity: 0;
-            transform: scale(0.3);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.05);
-          }
-          70% {
-            transform: scale(0.9);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        
-        @keyframes success-pulse {
-          0%, 100% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-          }
-          50% {
-            transform: scale(1.05);
-            box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
-          }
-        }
-        
-        @keyframes expand {
-          from { width: 0; }
-          to { width: 8rem; }
-        }
-        
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        @keyframes bounce-subtle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-2px); }
-        }
-        
-        @keyframes twinkle {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.1); }
-        }
-        
-        @keyframes gradient-shift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        
-        .animate-float-delayed {
-          animation: float-delayed 8s ease-in-out infinite;
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out forwards;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.6s ease-out forwards;
-        }
-        
-        .animate-bounce-in {
-          animation: bounce-in 0.6s ease-out;
-        }
-        
-        .animate-success-pulse {
-          animation: success-pulse 1s ease-in-out;
-        }
-        
-        .animate-expand {
-          animation: expand 1s ease-out 0.8s forwards;
-          width: 0;
-        }
-        
-        .animate-spin-slow {
-          animation: spin-slow 8s linear infinite;
-        }
-        
-        .animate-bounce-subtle {
-          animation: bounce-subtle 2s ease-in-out infinite;
-        }
-        
-        .animate-twinkle {
-          animation: twinkle 2s ease-in-out infinite;
-        }
-        
-        .animate-gradient-shift {
-          background-size: 200% 200%;
-          animation: gradient-shift 3s ease infinite;
-        }
-        
-        .animation-delay-100 {
-          animation-delay: 100ms;
-        }
-        
-        .line-clamp-1 {
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
-    </section>
+        `}</style>
+      </section>
+    </>
   )
 }

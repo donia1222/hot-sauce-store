@@ -511,7 +511,7 @@ export function Admin({ onClose }: AdminProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className=" space-x-4">
               <Button
                 onClick={activeTab === "orders" ? loadOrders : loadProducts}
                 disabled={ordersLoading || productsLoading}
@@ -520,13 +520,16 @@ export function Admin({ onClose }: AdminProps) {
                 <RefreshCw className={`w-4 h-4 mr-2 ${ordersLoading || productsLoading ? "animate-spin" : ""}`} />
                 Actualizar
               </Button>
-              <Button onClick={onClose} variant="outline" className="border-gray-300 bg-gray-200">
+              <Button onClick={onClose} variant="outline" className="border-gray-300 bg-gray-200 mt-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
               </Button>
             </div>
+            
           </div>
+          
         </div>
+        
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -690,13 +693,15 @@ export function Admin({ onClose }: AdminProps) {
               {orders.map((order) => (
                 <Card key={order.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
+                        <Badge className={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Package className="w-6 h-6 text-gray-600" />
                         <span>{order.order_number}</span>
                       </div>
-                      <Badge className={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge>
+                  
                     </CardTitle>
+                    
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

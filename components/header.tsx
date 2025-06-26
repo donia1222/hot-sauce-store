@@ -3,18 +3,15 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { ShoppingCart, Flame, Zap, Home, ChefHat, Heart, Menu, X, Shield, Eye, EyeOff } from "lucide-react"
+import { Flame, Zap, Home, ChefHat, Heart, Menu, X, Shield, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 interface HeaderProps {
-  cartItemsCount: number
-  onCartOpen: () => void
-  onAdminOpen: () => void // Remove the optional ?
+  onAdminOpen: () => void
 }
 
 // Componente personalizado para icono de chili
@@ -68,7 +65,7 @@ const BBQIcon = ({ className }: { className?: string }) => (
   </div>
 )
 
-export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps) {
+export function Header({ onAdminOpen }: HeaderProps) {
   const [showHeader, setShowHeader] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -163,7 +160,10 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
     // Simular delay de autenticación
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    if (loginData.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && loginData.password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
+    if (
+      loginData.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL &&
+      loginData.password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD
+    ) {
       console.log("Login successful, calling onAdminOpen")
       setIsLoggedIn(true)
       setIsLoginOpen(false)
@@ -271,15 +271,288 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
             </div>
           </div>
 
-          {/* Logo Mobile */}
-          <div className="lg:hidden">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-all duration-300"></div>
-              <div className="relative bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-xl shadow-xl border border-white/20">
-                <Flame className="w-6 h-6 text-white" />
-                <Zap className="w-2 h-2 text-yellow-200 absolute -top-0.5 -right-0.5 animate-pulse" />
+          {/* Mobile Layout - Todos los botones a la izquierda */}
+          <div className="lg:hidden flex items-center justify-between w-full">
+            {/* Logo + Admin Button + Menu Button (todos a la izquierda) */}
+            <div className="flex items-center space-x-3">
+              {/* Logo Mobile */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-all duration-300"></div>
+                <div className="relative bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-xl shadow-xl border border-white/20">
+                  <Flame className="w-6 h-6 text-white" />
+                  <Zap className="w-2 h-2 text-yellow-200 absolute -top-0.5 -right-0.5 animate-pulse" />
+                </div>
               </div>
+
+              {/* Admin Button - Al lado del logo */}
+              {isLoggedIn ? (
+                <Button
+                  onClick={handleLogout}
+                  variant="ghost"
+                  size="icon"
+                  className={`relative p-2.5 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
+                    isLightSection
+                      ? "bg-green-500/20 hover:bg-red-500/20 text-white border-green-400/50 hover:border-red-400/50"
+                      : "bg-green-500/10 hover:bg-red-500/10 text-white border-green-400/30 hover:border-red-400/30"
+                  }`}
+                  title="Admin Logout"
+                >
+                  <Shield className="w-4 h-4 text-green-400 hover:text-red-400 transition-colors" />
+                </Button>
+              ) : (
+                <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`relative p-2.5 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
+                        isLightSection
+                          ? "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-orange-400/50"
+                          : "bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-orange-400/30"
+                      }`}
+                      title="Admin Login"
+                    >
+                      <Shield className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center space-x-2">
+                        <Shield className="w-5 h-5 text-orange-600" />
+                        <h2 className="text-3xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent tracking-tight leading-none">
+                          Admin Login
+                        </h2>
+                      </DialogTitle>
+                    </DialogHeader>
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={loginData.email}
+                          onChange={(e) => setLoginData((prev) => ({ ...prev, email: e.target.value }))}
+                          placeholder="admin@example.com"
+                          required
+                          className="bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Contraseña</Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={loginData.password}
+                            onChange={(e) => setLoginData((prev) => ({ ...prev, password: e.target.value }))}
+                            placeholder="••••••••"
+                            required
+                            className="bg-white pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-4 h-4 text-gray-500" />
+                            ) : (
+                              <Eye className="w-4 h-4 text-gray-500" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="rememberMe"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                        />
+                        <Label htmlFor="rememberMe" className="text-sm text-gray-600">
+                          Recordar por 7 días
+                        </Label>
+                      </div>
+
+                      {loginError && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                          <p className="text-red-600 text-sm">{loginError}</p>
+                        </div>
+                      )}
+
+                      <Button
+                        type="submit"
+                        disabled={isLoggingIn}
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
+                      >
+                        {isLoggingIn ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Iniciando sesión...
+                          </>
+                        ) : (
+                          "Iniciar Sesión"
+                        )}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              {/* Menu Button - También a la izquierda, al lado del admin */}
+              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`relative p-2.5 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
+                      isLightSection
+                        ? "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-orange-400/50"
+                        : "bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-orange-400/30"
+                    }`}
+                  >
+                    <Menu className="w-4 h-4" />
+                    <span className="sr-only">Menü öffnen</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className={`w-80 ${menuStyles}`}>
+                  {/* Todo el contenido del menú permanece igual */}
+                  <div
+                    className={`absolute inset-0 pointer-events-none ${
+                      isLightSection
+                        ? "bg-gradient-to-b from-orange-500/10 via-transparent to-red-500/10"
+                        : "bg-gradient-to-b from-orange-500/5 via-transparent to-red-500/5"
+                    }`}
+                  ></div>
+
+                  <SheetHeader
+                    className={`relative pb-6 mb-8 ${
+                      isLightSection ? "border-b border-gray-700/50" : "border-b border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <div className="bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-xl shadow-xl">
+                            <Flame className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <SheetTitle className="text-xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent">
+                            HOT & BBQ
+                          </SheetTitle>
+                          <p className={`text-xs font-medium ${isLightSection ? "text-gray-300" : "text-gray-400"}`}>
+                            Authentische Grillkultur
+                          </p>
+                        </div>
+                      </div>
+                      <SheetClose asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`rounded-xl transition-all duration-300 ${
+                            isLightSection
+                              ? "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white"
+                              : "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </SheetClose>
+                    </div>
+                  </SheetHeader>
+
+                  <nav className="space-y-2 relative">
+                    {navItems.map((item, index) => {
+                      const IconComponent = item.icon
+                      const isActive = currentSection === item.id
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => scrollToSection(item.id)}
+                          className={`w-full group relative flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all duration-300 overflow-hidden ${
+                            isActive
+                              ? "text-white bg-gradient-to-r from-orange-500/20 to-red-500/20"
+                              : `${textColor} ${textColorHover}`
+                          }`}
+                          style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                          <div
+                            className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl ${
+                              isLightSection ? "bg-white/10" : "bg-white/5"
+                            }`}
+                          ></div>
+                          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl"></div>
+
+                          <div
+                            className={`relative z-10 p-2 rounded-xl transition-all duration-300 flex items-center justify-center w-10 h-10 ${
+                              isActive
+                                ? "bg-orange-500/30"
+                                : isLightSection
+                                  ? "bg-white/10 group-hover:bg-orange-500/20"
+                                  : "bg-white/5 group-hover:bg-orange-500/20"
+                            }`}
+                          >
+                            <div className="w-5 h-5 text-orange-400 group-hover:text-orange-300 transition-all duration-300">
+                              {typeof IconComponent === "function" && IconComponent.name === "ChiliIcon" ? (
+                                <ChiliIcon className="w-5 h-5" />
+                              ) : typeof IconComponent === "function" && IconComponent.name === "BBQIcon" ? (
+                                <BBQIcon className="w-5 h-5" />
+                              ) : (
+                                <IconComponent className="w-5 h-5" />
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="relative z-10 flex-1">
+                            <span className="font-semibold tracking-wide block">{item.label}</span>
+                            <span className={`text-xs block ${isLightSection ? "text-gray-300" : "text-gray-400"}`}>
+                              {item.description}
+                            </span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </nav>
+
+                  {/* Footer Info */}
+                  <div className="absolute bottom-8 left-6 right-6">
+                    <div
+                      className={`relative backdrop-blur-sm rounded-2xl p-5 border overflow-hidden ${
+                        isLightSection ? "bg-white/10 border-gray-700/50" : "bg-white/5 border-white/10"
+                      }`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10"></div>
+                      <div className="relative z-10 text-center">
+                        <div className="flex justify-center space-x-2 mb-3">
+                          <div className="w-6 h-6 text-orange-400">
+                            <BBQIcon />
+                          </div>
+                          <div className="w-6 h-6 text-red-400">
+                            <ChiliIcon />
+                          </div>
+                        </div>
+                        <p className={`text-sm font-medium ${isLightSection ? "text-gray-200" : "text-gray-300"}`}>
+                          Die besten scharfen Saucen
+                        </p>
+                        <p className={`text-xs mt-1 ${isLightSection ? "text-gray-300" : "text-gray-400"}`}>
+                          und Premium BBQ-Produkte
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
+
+            {/* Espacio vacío a la derecha para balance visual */}
+            <div></div>
           </div>
 
           {/* Navigation Desktop */}
@@ -321,22 +594,21 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
             })}
           </nav>
 
-          {/* Mobile Controls */}
-          <div className="flex items-center space-x-3">
-            {/* Login Button */}
+          {/* Desktop Admin Button */}
+          <div className="hidden lg:block">
             {isLoggedIn ? (
               <Button
                 onClick={handleLogout}
                 variant="ghost"
                 size="icon"
-                className={`relative p-3 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
+                className={`relative p-2.5 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
                   isLightSection
                     ? "bg-green-500/20 hover:bg-red-500/20 text-white border-green-400/50 hover:border-red-400/50"
                     : "bg-green-500/10 hover:bg-red-500/10 text-white border-green-400/30 hover:border-red-400/30"
                 }`}
                 title="Admin Logout"
               >
-                <Shield className="w-5 h-5 text-green-400 hover:text-red-400 transition-colors" />
+                <Shield className="w-4 h-4 text-green-400 hover:text-red-400 transition-colors" />
               </Button>
             ) : (
               <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
@@ -344,24 +616,24 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`relative p-3 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
+                    className={`relative p-2.5 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
                       isLightSection
                         ? "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-orange-400/50"
                         : "bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-orange-400/30"
                     }`}
                     title="Admin Login"
                   >
-                    <Shield className="w-5 h-5" />
+                    <Shield className="w-4 h-4" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle className="flex items-center space-x-2">
                       <Shield className="w-5 h-5 text-orange-600" />
-             
-           <h1 className="text-3xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent tracking-tight leading-none">
-           Admin Login
-              </h1>
+
+                      <h1 className="text-3xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent tracking-tight leading-none">
+                        Admin Login
+                      </h1>
                     </DialogTitle>
                   </DialogHeader>
 
@@ -444,167 +716,6 @@ export function Header({ cartItemsCount, onCartOpen, onAdminOpen }: HeaderProps)
                 </DialogContent>
               </Dialog>
             )}
-
-            {/* Menu Button Mobile */}
-            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`lg:hidden relative p-3 rounded-xl border transition-all duration-300 backdrop-blur-sm ${
-                    isLightSection
-                      ? "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-orange-400/50"
-                      : "bg-white/5 hover:bg-white/10 text-white border-white/10 hover:border-orange-400/30"
-                  }`}
-                >
-                  <Menu className="w-5 h-5" />
-                  <span className="sr-only">Menü öffnen</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className={`w-80 ${menuStyles}`}>
-                <div
-                  className={`absolute inset-0 pointer-events-none ${
-                    isLightSection
-                      ? "bg-gradient-to-b from-orange-500/10 via-transparent to-red-500/10"
-                      : "bg-gradient-to-b from-orange-500/5 via-transparent to-red-500/5"
-                  }`}
-                ></div>
-
-                <SheetHeader
-                  className={`relative pb-6 mb-8 ${
-                    isLightSection ? "border-b border-gray-700/50" : "border-b border-white/10"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <div className="bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-xl shadow-xl">
-                          <Flame className="w-6 h-6 text-white" />
-                        </div>
-                      </div>
-                      <div>
-                        <SheetTitle className="text-xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent">
-                          HOT & BBQ
-                        </SheetTitle>
-                        <p className={`text-xs font-medium ${isLightSection ? "text-gray-300" : "text-gray-400"}`}>
-                          Authentische Grillkultur
-                        </p>
-                      </div>
-                    </div>
-                    <SheetClose asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`rounded-xl transition-all duration-300 ${
-                          isLightSection
-                            ? "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white"
-                            : "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white"
-                        }`}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </SheetClose>
-                  </div>
-                </SheetHeader>
-
-                <nav className="space-y-2 relative">
-                  {navItems.map((item, index) => {
-                    const IconComponent = item.icon
-                    const isActive = currentSection === item.id
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => scrollToSection(item.id)}
-                        className={`w-full group relative flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all duration-300 overflow-hidden ${
-                          isActive
-                            ? "text-white bg-gradient-to-r from-orange-500/20 to-red-500/20"
-                            : `${textColor} ${textColorHover}`
-                        }`}
-                        style={{ animationDelay: `${index * 100}ms` }}
-                      >
-                        <div
-                          className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl ${
-                            isLightSection ? "bg-white/10" : "bg-white/5"
-                          }`}
-                        ></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl"></div>
-
-                        <div
-                          className={`relative z-10 p-2 rounded-xl transition-all duration-300 flex items-center justify-center w-10 h-10 ${
-                            isActive
-                              ? "bg-orange-500/30"
-                              : isLightSection
-                                ? "bg-white/10 group-hover:bg-orange-500/20"
-                                : "bg-white/5 group-hover:bg-orange-500/20"
-                          }`}
-                        >
-                          <div className="w-5 h-5 text-orange-400 group-hover:text-orange-300 transition-all duration-300">
-                            {typeof IconComponent === "function" && IconComponent.name === "ChiliIcon" ? (
-                              <ChiliIcon className="w-5 h-5" />
-                            ) : typeof IconComponent === "function" && IconComponent.name === "BBQIcon" ? (
-                              <BBQIcon className="w-5 h-5" />
-                            ) : (
-                              <IconComponent className="w-5 h-5" />
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="relative z-10 flex-1">
-                          <span className="font-semibold tracking-wide block">{item.label}</span>
-                          <span className={`text-xs block ${isLightSection ? "text-gray-300" : "text-gray-400"}`}>
-                            {item.description}
-                          </span>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </nav>
-
-                {/* Footer Info */}
-                <div className="absolute bottom-8 left-6 right-6">
-                  <div
-                    className={`relative backdrop-blur-sm rounded-2xl p-5 border overflow-hidden ${
-                      isLightSection ? "bg-white/10 border-gray-700/50" : "bg-white/5 border-white/10"
-                    }`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10"></div>
-                    <div className="relative z-10 text-center">
-                      <div className="flex justify-center space-x-2 mb-3">
-                        <div className="w-6 h-6 text-orange-400">
-                          <BBQIcon />
-                        </div>
-                        <div className="w-6 h-6 text-red-400">
-                          <ChiliIcon />
-                        </div>
-                      </div>
-                      <p className={`text-sm font-medium ${isLightSection ? "text-gray-200" : "text-gray-300"}`}>
-                        Die besten scharfen Saucen
-                      </p>
-                      <p className={`text-xs mt-1 ${isLightSection ? "text-gray-300" : "text-gray-400"}`}>
-                        und Premium BBQ-Produkte
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            {/* Cart Button */}
-            <Button
-              size="lg"
-              className="relative group bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 border-0 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 rounded-2xl px-6 py-3 font-semibold tracking-wide"
-              onClick={onCartOpen}
-            >
-              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
-              <ShoppingCart className="w-5 h-5 lg:mr-3 relative z-10" />
-              <span className="hidden lg:inline relative z-10">Warenkorb</span>
-
-              {cartItemsCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-black text-xs px-2.5 py-1 rounded-full animate-bounce shadow-xl border-2 border-white font-bold min-w-[24px] h-6 flex items-center justify-center">
-                  {cartItemsCount}
-                </Badge>
-              )}
-            </Button>
           </div>
         </div>
       </div>

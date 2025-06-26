@@ -220,7 +220,7 @@ export default function PremiumHotSauceStore() {
       {/* Construction Notice Modal */}
       <ConstructionNotice />
 
-      <Header cartItemsCount={getTotalItems()} onCartOpen={() => setIsCartOpen(true)} onAdminOpen={goToAdmin} />
+      <Header  onAdminOpen={goToAdmin} />
 
       <HeroSection />
 
