@@ -119,7 +119,7 @@ export function Footer() {
 
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-red-500">FEUER KÖNIGREICH</h3>
+            <h3 className="text-lg font-semibold text-red-500">HOT & BBQ</h3>
             <div className="space-y-2 text-sm text-gray-300">
               <p>Premium handwerkliche Saucen</p>
               <p>Direkt importiert</p>
