@@ -57,6 +57,23 @@ export function ShoppingCartComponent({
     return Math.max(0, MINIMUM_ORDER_AMOUNT - getTotalPrice())
   }
 
+  // Función mejorada para manejar el checkout con scroll
+  const handleGoToCheckout = () => {
+    // Primero hacer scroll a la sección de ofertas
+    const offersSection = document.getElementById('offers')
+    if (offersSection) {
+      offersSection.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      })
+    }
+    
+    // Pequeño delay para que el scroll termine antes de navegar
+    setTimeout(() => {
+      onGoToCheckout()
+    }, 500)
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="bg-slate-900 border-orange-500/20 w-full sm:w-[400px] flex flex-col p-0">
@@ -153,11 +170,11 @@ export function ShoppingCartComponent({
 
             <div className="space-y-2">
               <Button
-                onClick={onGoToCheckout}
+                onClick={handleGoToCheckout}
                 disabled={cart.length === 0 || !isMinimumOrderMet()}
-                className={`w-full font-bold py-2.5 sm:py-3 text-sm sm:text-lg ${
+                className={`w-full font-bold py-2.5 sm:py-3 text-sm sm:text-lg transition-all duration-300 ${
                   isMinimumOrderMet()
-                    ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+                    ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white transform hover:scale-105"
                     : "bg-gray-600 text-gray-300 cursor-not-allowed hover:bg-gray-600"
                 }`}
               >

@@ -568,6 +568,7 @@ export default function ProductsGridCompact({
                   target.src = "/placeholder.svg?height=80&width=80"
                 }}
               />
+              
               <Badge
                 className={`absolute -top-1 -right-1 text-xs px-1.5 py-0.5 font-medium shadow-sm ${
                   product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
