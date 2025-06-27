@@ -204,7 +204,7 @@ export default function ProductsGridCompact({
 
   const getQty = (id: number) => quantities[id] ?? 1
 
-  // Funciones del carrito
+  // Funciones del carrito - EXACTAMENTE COMO ESTABAN
   const addToCartHandler = (product: any) => {
     const cartItem: CartItem = {
       id: product.id!,
@@ -387,7 +387,7 @@ export default function ProductsGridCompact({
     }, 200)
   }
 
-  // Componente del carrito flotante mejorado
+  // Componente del carrito flotante - EXACTAMENTE IGUAL
   const FloatingCart = () => (
     <div
       ref={cartRef}
@@ -396,22 +396,22 @@ export default function ProductsGridCompact({
         cartBounce ? "animate-cart-bounce" : ""
       }`}
     >
-      {/* Glow effect background - más pequeño */}
+      {/* Glow effect background */}
       <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-all duration-300 scale-110"></div>
 
-      {/* Main cart button - más compacto */}
+      {/* Main cart button */}
       <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-orange-600 rounded-xl p-3 shadow-xl border border-red-400/30 group-hover:scale-105 transition-all duration-300">
         {/* Inner glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
 
-        {/* Cart icon with pulse effect - más pequeño */}
+        {/* Cart icon with pulse effect */}
         <div className="relative">
           <ShoppingCart className="w-5 h-5 text-white drop-shadow-lg" />
 
           {/* Animated pulse ring when items are added */}
           {cartCount > 0 && <div className="absolute inset-0 rounded-full border-2 border-white/50 animate-ping"></div>}
 
-          {/* Count badge - más pequeño */}
+          {/* Count badge */}
           {cartCount > 0 && (
             <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-red-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-black shadow-lg border-2 border-white animate-pulse">
               {cartCount > 99 ? "99+" : cartCount}
@@ -419,7 +419,7 @@ export default function ProductsGridCompact({
           )}
         </div>
 
-        {/* Floating particles effect - más pequeñas */}
+        {/* Floating particles effect */}
         <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-bounce opacity-80"></div>
         <div
           className="absolute -bottom-0.5 -left-0.5 w-1 h-1 bg-orange-300 rounded-full animate-bounce opacity-60"
@@ -543,34 +543,35 @@ export default function ProductsGridCompact({
     </DialogContent>
   )
 
-  // Tarjeta de producto compacta
-  const renderCompactProductCard = (product: Product, index: number) => {
+  // MEJORADO: Tarjeta de producto con mejor diseño para pantallas grandes
+  const renderEnhancedProductCard = (product: Product, index: number) => {
     return (
       <Card
         key={product.id}
-        className={`group relative bg-white border border-gray-200 hover:border-red-300 hover:shadow-lg transition-all duration-500 rounded-xl overflow-hidden ${
+        className={`group relative bg-white border border-gray-200 hover:border-red-300 hover:shadow-xl transition-all duration-500 rounded-xl overflow-hidden ${
           visibleProducts.has(index) ? "animate-slide-in opacity-100" : "opacity-0 translate-y-4"
         } ${addedItems.has(product.id!) ? "animate-success-glow" : ""} ${
           animatingProducts.has(product.id!) ? "animate-compress" : ""
         }`}
         style={{ animationDelay: `${index * 50}ms` }}
       >
-        <CardContent className="p-4">
-          <div className="flex gap-4">
-            {/* Imagen más pequeña */}
-            <div className="relative w-20 h-20 flex-shrink-0">
+        <CardContent className="p-4 lg:p-6">
+          {/* MEJORADO: Layout que cambia según el tamaño de pantalla */}
+          <div className="flex gap-4 lg:gap-6">
+            {/* MEJORADO: Imagen más grande en pantallas grandes */}
+            <div className="relative w-20 h-20 lg:w-32 lg:h-32 flex-shrink-0">
               <img
-                src={product.image_url || "/placeholder.svg?height=80&width=80"}
+                src={product.image_url || "/placeholder.svg?height=128&width=128"}
                 alt={product.name}
-                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 shadow-md"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
-                  target.src = "/placeholder.svg?height=80&width=80"
+                  target.src = "/placeholder.svg?height=128&width=128"
                 }}
               />
               
               <Badge
-                className={`absolute -top-1 -right-1 text-xs px-1.5 py-0.5 font-medium shadow-sm ${
+                className={`absolute -top-1 -right-1 lg:-top-2 lg:-right-2 text-xs px-1.5 py-0.5 lg:px-2 lg:py-1 font-medium shadow-sm ${
                   product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
                 }`}
               >
@@ -578,36 +579,46 @@ export default function ProductsGridCompact({
               </Badge>
             </div>
 
-            {/* Contenido principal compacto */}
+            {/* MEJORADO: Contenido principal con mejor espaciado */}
             <div className="flex-1 min-w-0">
-                   <h4 className="text-lg font-bold text-red-800 line-clamp-1 group-hover:text-red-600 transition-colors duration-300 flex-1 mr-2">
+              {/* MEJORADO: Header con título y precio mejor distribuidos */}
+              <div className="flex items-start justify-between mb-2 lg:mb-3">
+                <h4 className="text-lg lg:text-xl xl:text-2xl font-bold text-red-800 line-clamp-1 lg:line-clamp-2 group-hover:text-red-600 transition-colors duration-300 flex-1 mr-2">
                   {product.name}
                 </h4>
-              <div className="flex items-start justify-between mb-2">
-           
-                <div className="text-lg font-bold text-gray-500 flex-shrink-0">{product.price.toFixed(2)} CHF</div>
+                <div className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-600 flex-shrink-0">{product.price.toFixed(2)} CHF</div>
               </div>
 
-              {/* Rating y origen en una línea */}
-              <div className="flex items-center justify-between mb-3 text-sm">
-                <div className="flex items-center gap-1">
+              {/* MEJORADO: Descripción visible en pantallas grandes */}
+              <p className="hidden lg:block text-gray-600 text-sm xl:text-base mb-3 xl:mb-4 line-clamp-2 leading-relaxed">
+                {product.description}
+              </p>
+
+              {/* MEJORADO: Rating y origen con mejor espaciado */}
+              <div className="flex items-center justify-between mb-3 lg:mb-4 text-sm">
+                <div className="flex items-center gap-1 lg:gap-2">
                   <div className="flex">{renderStars(product.rating)}</div>
-                  <span className="text-gray-600 ml-1">{product.rating}</span>
+                  <span className="text-gray-600 ml-1 font-medium">{product.rating}</span>
+                  {/* MEJORADO: Heat level visible en pantallas grandes */}
+                  <div className="hidden lg:flex items-center gap-1 ml-3">
+                    <div className="flex">{renderHeatLevel(product.heatLevel)}</div>
+                    <span className="text-gray-600 ml-1 text-xs">{product.heatLevel}/5</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1 text-gray-500">
-                  <MapPin className="w-3 h-3" />
-                  <span>{product.origin}</span>
+                  <MapPin className="w-3 h-3 lg:w-4 lg:h-4" />
+                  <span className="font-medium text-xs lg:text-sm">{product.origin}</span>
                 </div>
               </div>
 
-              {/* Botones de acción */}
-              <div className="flex items-center gap-2">
+              {/* MEJORADO: Botones con ancho apropiado y mejor diseño */}
+              <div className="flex items-center gap-2 lg:gap-3">
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 text-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900"
+                      className="w-auto min-w-[100px] lg:min-w-[120px] text-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900 font-medium"
                       onClick={() => setSelectedProduct(product)}
                     >
                       <Info className="w-4 h-4 mr-1" />
@@ -621,7 +632,7 @@ export default function ProductsGridCompact({
                   onClick={(e) => handlePurchase(product, e)}
                   disabled={purchasedItems.has(product.id!) || animatingProducts.has(product.id!)}
                   size="sm"
-                  className={`flex-1 font-semibold transition-all duration-500 ${
+                  className={`w-auto min-w-[120px] lg:min-w-[150px] font-semibold transition-all duration-500 shadow-md hover:shadow-lg ${
                     purchasedItems.has(product.id!) || addedItems.has(product.id!)
                       ? "bg-green-600 hover:bg-green-700"
                       : product.category === "bbq-sauce"
@@ -631,10 +642,10 @@ export default function ProductsGridCompact({
                 >
                   <ShoppingCart className="w-4 h-4 mr-1" />
                   {purchasedItems.has(product.id!) || addedItems.has(product.id!)
-                    ? "✓"
+                    ? "✓ Gekauft"
                     : animatingProducts.has(product.id!)
-                      ? "..."
-                      : "Kaufen"}
+                      ? "Wird hinzugefügt..."
+                      : "In den Warenkorb"}
                 </Button>
               </div>
             </div>
@@ -644,7 +655,7 @@ export default function ProductsGridCompact({
     )
   }
 
-  // Página de éxito
+  // Página de éxito - EXACTAMENTE IGUAL
   const SuccessPage = () => (
     <div className="min-h-screen bg-green-50 flex items-center justify-center px-4">
       <div className="max-w-md mx-auto text-center">
@@ -662,6 +673,7 @@ export default function ProductsGridCompact({
     </div>
   )
 
+  // NAVEGACIÓN EXACTAMENTE IGUAL - NO CAMBIADA
   if (currentView === "checkout") {
     return <CheckoutPage cart={cart} onBackToStore={handleBackToProducts} onClearCart={clearCartHandler} />
   }
@@ -673,7 +685,7 @@ export default function ProductsGridCompact({
   if (loading) {
     return (
       <section className="py-12 px-4 bg-white min-h-screen">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl lg:max-w-7xl mx-auto text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Produkte werden geladen...</p>
         </div>
@@ -684,7 +696,7 @@ export default function ProductsGridCompact({
   if (error) {
     return (
       <section className="py-12 px-4 bg-white min-h-screen">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl lg:max-w-7xl mx-auto text-center">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             <p className="font-semibold">Fehler beim Laden der Produkte</p>
             <p className="text-sm">{error}</p>
@@ -712,61 +724,62 @@ export default function ProductsGridCompact({
         onClearCart={clearCartHandler}
       />
       <section className="py-12 px-4 bg-white min-h-screen">
-        <div className="max-w-4xl mx-auto">
-          {/* Header compacto */}
+        {/* MEJORADO: Container más ancho para pantallas grandes */}
+        <div className="max-w-4xl lg:max-w-7xl mx-auto">
+          {/* MEJORADO: Header con mejor tipografía */}
           <div className="text-center mb-12 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-3 py-1.5 lg:px-4 lg:py-2 rounded-full text-sm font-medium mb-4 lg:mb-6">
               <Award className="w-4 h-4" />
               Premium Kollektion
             </div>
-            <h3 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
+            <h3 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 mb-3 lg:mb-4">
               SMOKEHOUSE
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">
                 SAUCES
               </span>
             </h3>
-            <p className="text-gray-600 max-w-xl mx-auto">Premium Saucen für wahre Kenner ausgewählt</p>
+            <p className="text-gray-600 lg:text-lg xl:text-xl max-w-xl lg:max-w-2xl mx-auto">Premium Saucen für wahre Kenner ausgewählt</p>
           </div>
 
-          {/* Tabs para filtrar productos */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 bg-white shadow-lg rounded-xl p-1">
+          {/* MEJORADO: Tabs con mejor diseño */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8 lg:mb-10">
+            <TabsList className="grid w-full max-w-md lg:max-w-lg mx-auto grid-cols-3 bg-white shadow-lg lg:shadow-xl rounded-xl lg:rounded-2xl p-1 lg:p-2 lg:h-14">
               <TabsTrigger
                 value="all"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300 text-sm"
+                className="rounded-lg lg:rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold lg:font-bold transition-all duration-300 text-sm lg:text-base lg:h-10"
               >
                 Alle
               </TabsTrigger>
               <TabsTrigger
                 value="hot-sauce"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold transition-all duration-300 text-sm"
+                className="rounded-lg lg:rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white font-semibold lg:font-bold transition-all duration-300 text-sm lg:text-base lg:h-10"
               >
                 🌶️ Hot
               </TabsTrigger>
               <TabsTrigger
                 value="bbq-sauce"
-                className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white font-semibold transition-all duration-300 text-sm"
+                className="rounded-lg lg:rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white font-semibold lg:font-bold transition-all duration-300 text-sm lg:text-base lg:h-10"
               >
                 🔥 BBQ
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value={activeTab} className="mt-6">
-              <div className="text-center mb-6">
-                <p className="text-gray-600 text-sm">
+            <TabsContent value={activeTab} className="mt-6 lg:mt-8">
+              <div className="text-center mb-6 lg:mb-8">
+                <p className="text-gray-600 text-sm lg:text-lg">
                   {filteredProducts.length} {filteredProducts.length === 1 ? "Produkt" : "Produkte"} verfügbar
                 </p>
               </div>
 
-              {/* Products Grid - Más compacto y responsive */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {filteredProducts.map((product, index) => renderCompactProductCard(product, index))}
+              {/* MEJORADO: Grid con mejor espaciado pero manteniendo 2 columnas en tablet */}
+              <div className="grid gap-4 lg:gap-6 xl:gap-8 md:grid-cols-2">
+                {filteredProducts.map((product, index) => renderEnhancedProductCard(product, index))}
               </div>
 
               {filteredProducts.length === 0 && !loading && (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">Keine Produkte in dieser Kategorie gefunden</p>
-                  <Button onClick={() => setActiveTab("all")} className="mt-4" variant="outline">
+                <div className="text-center py-12 lg:py-16">
+                  <p className="text-gray-500 lg:text-lg mb-6">Keine Produkte in dieser Kategorie gefunden</p>
+                  <Button onClick={() => setActiveTab("all")} className="mt-4" variant="outline" size="lg">
                     Alle anzeigen
                   </Button>
                 </div>
@@ -775,6 +788,7 @@ export default function ProductsGridCompact({
           </Tabs>
         </div>
 
+        {/* MEJORADO: CSS con mejor responsividad */}
         <style jsx>{`
           @keyframes fade-in-up {
             from {
@@ -869,6 +883,13 @@ export default function ProductsGridCompact({
           .line-clamp-1 {
             display: -webkit-box;
             -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          
+          .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
           }
