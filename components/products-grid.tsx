@@ -581,11 +581,12 @@ export default function ProductsGridCompact({
 
             {/* MEJORADO: Contenido principal con mejor espaciado */}
             <div className="flex-1 min-w-0">
-              {/* MEJORADO: Header con título y precio mejor distribuidos */}
-              <div className="flex items-start justify-between mb-2 lg:mb-3">
-                <h4 className="text-lg lg:text-xl xl:text-2xl font-bold text-red-800 line-clamp-1 lg:line-clamp-2 group-hover:text-red-600 transition-colors duration-300 flex-1 mr-2">
+                   <h4 className="text-lg lg:text-xl xl:text-2xl font-bold text-red-800 line-clamp-1 lg:line-clamp-2 group-hover:text-red-600 transition-colors duration-300 flex-1 mr-2">
                   {product.name}
                 </h4>
+              {/* MEJORADO: Header con título y precio mejor distribuidos */}
+              <div className="flex items-start justify-between mb-2 lg:mb-3">
+           
                 <div className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-600 flex-shrink-0">{product.price.toFixed(2)} CHF</div>
               </div>
 
@@ -612,7 +613,7 @@ export default function ProductsGridCompact({
               </div>
 
               {/* MEJORADO: Botones con ancho apropiado y mejor diseño */}
-              <div className="flex items-center gap-2 lg:gap-3">
+              <div className="flex items-center gap-2 lg:gap-3 ">
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
@@ -632,7 +633,7 @@ export default function ProductsGridCompact({
                   onClick={(e) => handlePurchase(product, e)}
                   disabled={purchasedItems.has(product.id!) || animatingProducts.has(product.id!)}
                   size="sm"
-                  className={`w-auto min-w-[120px] lg:min-w-[150px] font-semibold transition-all duration-500 shadow-md hover:shadow-lg ${
+                  className={`w-auto min-w-[120px] lg:min-w-[150px] font-semibold transition-all  duration-500 shadow-md hover:shadow-lg ${
                     purchasedItems.has(product.id!) || addedItems.has(product.id!)
                       ? "bg-green-600 hover:bg-green-700"
                       : product.category === "bbq-sauce"
@@ -645,7 +646,7 @@ export default function ProductsGridCompact({
                     ? "✓ Gekauft"
                     : animatingProducts.has(product.id!)
                       ? "Wird hinzugefügt..."
-                      : "In den Warenkorb"}
+                      : "Kaufen"}
                 </Button>
               </div>
             </div>

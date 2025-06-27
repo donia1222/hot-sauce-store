@@ -19,7 +19,6 @@ import {
   Search,
   Star,
   X,
-  LogOut,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -105,14 +104,13 @@ interface ProductStats {
 
 interface AdminProps {
   onClose: () => void
-  onLogout?: () => void // Nueva prop para el callback de logout
 }
 
 export default function AdminPage() {
   return <Admin onClose={() => window.history.back()} />
 }
 
-export function Admin({ onClose, onLogout }: AdminProps) {
+export function Admin({ onClose }: AdminProps) {
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("orders")
 
@@ -513,7 +511,7 @@ export function Admin({ onClose, onLogout }: AdminProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className=" space-x-4">
               <Button
                 onClick={activeTab === "orders" ? loadOrders : loadProducts}
                 disabled={ordersLoading || productsLoading}
@@ -522,16 +520,16 @@ export function Admin({ onClose, onLogout }: AdminProps) {
                 <RefreshCw className={`w-4 h-4 mr-2 ${ordersLoading || productsLoading ? "animate-spin" : ""}`} />
                 Actualizar
               </Button>
-              
-        
-              
-              <Button onClick={onClose} variant="outline" className="border-gray-300 bg-gray-200">
+              <Button onClick={onClose} variant="outline" className="border-gray-300 bg-gray-200 mt-4">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
               </Button>
             </div>
+            
           </div>
+          
         </div>
+        
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -1303,4 +1301,3 @@ export function Admin({ onClose, onLogout }: AdminProps) {
   )
 }
 
-  // Nueva función para manejar logout
