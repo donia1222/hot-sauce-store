@@ -10,6 +10,7 @@ import { ShoppingCartComponent } from "@/components/shopping-cart"
 import { CheckoutPage } from "@/components/checkout-page"
 import { Footer } from "@/components/footer"
 import { Admin } from "@/components/admin"
+import  Bot  from "@/components/bot"
 import { ConstructionNotice } from "./construction-notice" 
 
 interface Product {
@@ -221,8 +222,11 @@ export default function PremiumHotSauceStore() {
       <ConstructionNotice />
 
       <Header  onAdminOpen={goToAdmin} />
-
+               <div id="Chat" className="w-full relative" data-aos="fade-up" data-aos-delay="1200">
+            <Bot />
+          </div>
       <HeroSection />
+
 
 
       <section id="offers">
