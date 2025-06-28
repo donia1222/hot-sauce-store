@@ -189,22 +189,22 @@ function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) 
   }
   
   return (
-    <div className="border-t border-gray-200 pt-2 sm:pt-3 mt-2 sm:mt-3">
-      <p className="text-xs text-gray-500 mb-1.5 sm:mb-2 font-medium">Erwähnte Produkte (klicken für Details):</p>
-      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+    <div className="border-t border-gray-200 pt-3 sm:pt-3 mt-3 sm:mt-3">
+      <p className="text-sm text-gray-500 mb-2 sm:mb-2 font-medium">Erwähnte Produkte (klicken für Details):</p>
+      <div className="flex flex-wrap gap-2 sm:gap-2">
         {products.map(product => (
           <div 
             key={product.id} 
             onClick={() => scrollToProducts(product.id)}
-            className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-1.5 sm:p-2 rounded-lg hover:from-red-100 hover:to-orange-100 transition-all duration-200 cursor-pointer group transform hover:scale-105 active:scale-95 mobile-product-card"
+            className="flex items-center gap-2 sm:gap-2 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-2 sm:p-2 rounded-lg hover:from-red-100 hover:to-orange-100 transition-all duration-200 cursor-pointer group transform hover:scale-105 active:scale-95 mobile-product-card"
             title={`Klicken um ${product.name} im Shop zu sehen`}
           >
-            {/* Imagen en miniatura con efecto hover - Más pequeña en móvil */}
+            {/* Imagen en miniatura con efecto hover */}
             <div className="relative flex-shrink-0">
               <img 
                 src={product.image} 
                 alt={product.name}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-cover shadow-sm group-hover:scale-105 transition-transform duration-200"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-md sm:rounded-lg object-cover shadow-sm group-hover:scale-105 transition-transform duration-200"
                 onError={(e) => {
                   // Fallback a placeholder si la imagen no carga
                   const target = e.target as HTMLImageElement
@@ -212,34 +212,34 @@ function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) 
                 }}
               />
               {/* Badge del producto superpuesto */}
-              <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-bold shadow-sm">
+              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-1 py-0.5 rounded text-[10px] sm:text-[11px] font-bold shadow-sm">
                 {product.badge}
               </div>
             </div>
             
-            {/* Información del producto - Más compacta en móvil */}
+            {/* Información del producto */}
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-xs font-semibold text-gray-800 line-clamp-1 group-hover:text-red-700 transition-colors duration-200">
+              <span className="text-sm font-semibold text-gray-800 line-clamp-1 group-hover:text-red-700 transition-colors duration-200">
                 {product.name}
               </span>
-              <div className="flex items-center gap-0.5 sm:gap-1">
-                <span className="text-xs text-gray-600 font-medium group-hover:text-red-600 transition-colors duration-200">
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-600 font-medium group-hover:text-red-600 transition-colors duration-200">
                   {product.price.toFixed(2)} CHF
                 </span>
-                {/* Indicador visual de nivel de picor - Más pequeño en móvil */}
+                {/* Indicador visual de nivel de picor */}
                 <div className="flex">
                   {Array.from({ length: Math.min(product.heatLevel, 3) }, (_, i) => (
-                    <Flame key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-red-500 fill-red-500 group-hover:text-red-600 transition-colors duration-200" />
+                    <Flame key={i} className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-red-500 fill-red-500 group-hover:text-red-600 transition-colors duration-200" />
                   ))}
                   {product.heatLevel > 3 && <span className="text-xs text-red-500 ml-0.5">+</span>}
                 </div>
               </div>
             </div>
             
-            {/* Indicador visual de que es clickeable - Oculto en móvil muy pequeño */}
+            {/* Indicador visual de que es clickeable */}
             <div className="hidden xs:block ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-red-500 flex items-center justify-center">
-                <svg className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center">
+                <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -248,8 +248,8 @@ function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) 
         ))}
       </div>
       
-      {/* Texto explicativo sutil - Más pequeño en móvil */}
-      <p className="text-xs text-gray-400 mt-1.5 sm:mt-2 italic">
+      {/* Texto explicativo sutil */}
+      <p className="text-xs text-gray-400 mt-2 italic">
         💡 Tipp: Klicken Sie auf ein Produkt, um es im Shop zu sehen
       </p>
     </div>
@@ -755,12 +755,12 @@ ${contactMessage}`
             <div className="h-[calc(100%-120px)] sm:h-[calc(100%-140px)] overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
               {messages.length === 0 ? (
                 <div className="space-y-3 sm:space-y-4">
-                  <p className="text-center text-gray-600 font-medium mb-4 sm:mb-6 text-sm sm:text-base">Wie kann ich Ihnen bei der Auswahl der perfekten Sauce helfen?</p>
-                  <div className="space-y-1.5 sm:space-y-2">
+                  <p className="text-center text-gray-600 font-medium mb-4 sm:mb-6 text-base sm:text-lg">Wie kann ich Ihnen bei der Auswahl der perfekten Sauce helfen?</p>
+                  <div className="space-y-2 sm:space-y-2">
                     {visibleQuestions.map((question, index) => (
                       <button
                         key={index}
-                        className="w-full text-left p-2 sm:p-3 bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 border border-red-200 rounded-lg transition-all duration-200 text-xs sm:text-sm text-gray-700 hover:text-gray-900 shadow-sm hover:shadow-md"
+                        className="w-full text-left p-3 sm:p-3 bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 border border-red-200 rounded-lg transition-all duration-200 text-sm sm:text-base text-gray-700 hover:text-gray-900 shadow-sm hover:shadow-md"
                         onClick={() => handleQuestionClick(question)}
                         disabled={isLoading}
                       >
@@ -776,13 +776,13 @@ ${contactMessage}`
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-2 sm:p-3 ${
+                      className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 ${
                         msg.role === "user" 
                           ? "bg-gradient-to-r from-red-500 to-orange-600 text-white" 
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      <div className={`text-xs font-medium mb-1 ${
+                      <div className={`text-sm font-medium mb-2 ${
                         msg.role === "user" ? "text-red-100" : "text-red-600"
                       }`}>
                         {msg.role === "user" ? "Sie" : "Smokehouse Experte"}
@@ -792,7 +792,7 @@ ${contactMessage}`
                       {msg.role === "assistant" ? (
                         <div className="space-y-2">
                           <div
-                            className="prose prose-xs sm:prose-sm max-w-none"
+                            className="prose prose-sm sm:prose-base max-w-none"
                             dangerouslySetInnerHTML={{ __html: msg.content }}
                           />
                           {/* Productos detectados */}
@@ -801,7 +801,7 @@ ${contactMessage}`
                           )}
                         </div>
                       ) : (
-                        <div className="text-xs sm:text-sm">{msg.content}</div>
+                        <div className="text-sm sm:text-base leading-relaxed">{msg.content}</div>
                       )}
                     </div>
                   </div>
@@ -819,11 +819,11 @@ ${contactMessage}`
                     name="message"
                     value={input}
                     onChange={autoResizeTextarea}
-                    className="w-full p-2 sm:p-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors duration-200 text-xs sm:text-sm"
+                    className="w-full p-3 sm:p-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors duration-200 text-sm sm:text-base"
                     placeholder="Fragen Sie nach Saucen..."
                     disabled={isLoading}
                     rows={1}
-                    style={{ minHeight: '40px', maxHeight: '100px' }}
+                    style={{ minHeight: '48px', maxHeight: '120px' }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault()
@@ -834,7 +834,7 @@ ${contactMessage}`
                 </div>
                 <button
                   onClick={() => sendMessage(input)}
-                  className={`p-2 sm:p-3 rounded-xl transition-all duration-200 ${
+                  className={`p-3 sm:p-3 rounded-xl transition-all duration-200 ${
                     !input.trim() && !isLoading
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg"
@@ -843,18 +843,18 @@ ${contactMessage}`
                   aria-label="Senden"
                 >
                   {isLoading ? (
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                    <Loader2 className="w-5 h-5 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
-                    <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <SendHorizontal className="w-5 h-5 sm:w-5 sm:h-5" />
                   )}
                 </button>
                 {showClearIcon && (
                   <button 
                     onClick={clearChat} 
-                    className="p-2 sm:p-3 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-xl transition-colors duration-200" 
+                    className="p-3 sm:p-3 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-xl transition-colors duration-200" 
                     aria-label="Chat löschen"
                   >
-                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Trash2 className="w-5 h-5 sm:w-5 sm:h-5" />
                   </button>
                 )}
               </div>
@@ -893,34 +893,34 @@ ${contactMessage}`
           }
           
           /* Hacer el texto más legible en pantallas pequeñas */
-          .prose-xs {
-            font-size: 0.75rem;
-            line-height: 1.4;
+          .prose-sm {
+            font-size: 0.875rem;
+            line-height: 1.5;
           }
           
-          .prose-xs p {
-            margin-bottom: 0.5rem;
+          .prose-sm p {
+            margin-bottom: 0.75rem;
           }
           
-          .prose-xs ul, .prose-xs ol {
-            margin-left: 1rem;
-            margin-bottom: 0.5rem;
+          .prose-sm ul, .prose-sm ol {
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
           }
           
-          .prose-xs li {
-            margin-bottom: 0.25rem;
+          .prose-sm li {
+            margin-bottom: 0.375rem;
           }
           
           /* Optimizar productos detectados para móvil */
           .mobile-product-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.375rem;
+            gap: 0.5rem;
           }
           
           .mobile-product-card {
-            min-width: calc(50% - 0.1875rem);
-            max-width: calc(50% - 0.1875rem);
+            min-width: calc(50% - 0.25rem);
+            max-width: calc(50% - 0.25rem);
           }
         }
         
@@ -945,7 +945,7 @@ ${contactMessage}`
         
         .prose p {
           color: #374151;
-          line-height: 1.5;
+          line-height: 1.6;
         }
         
         .prose ul, .prose ol {
