@@ -34,7 +34,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 1,
     name: "Honey BBQ",
-    image: "https://web.lweb.ch/shop/uploads/685d3bbfd4b29_1750940607.webp",
+    image: "https://web.lweb.ch/shop/images/honey_bbq.jpg",
     price: 14.00,
     badge: "Süß",
     heatLevel: 1
@@ -42,7 +42,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 2,
     name: "Garlic BBQ", 
-    image: "https://web.lweb.ch/shop/uploads/685c7cb9d36ea_1750891705.webp",
+    image: "https://web.lweb.ch/shop/images/garlic_bbq.jpg",
     price: 14.00,
     badge: "Intensiv",
     heatLevel: 2
@@ -50,7 +50,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 3,
     name: "Carolina-Style BBQ",
-    image: "https://web.lweb.ch/shop/uploads/685c7cc861e68_1750891720.webp", 
+    image: "https://web.lweb.ch/shop/images/carolina_bbq.jpg", 
     price: 14.00,
     badge: "Preisgekrönt",
     heatLevel: 2
@@ -58,7 +58,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 4,
     name: "Coffee BBQ",
-    image: "https://web.lweb.ch/shop/uploads/685c8b904c29e_1750895504.webp",
+    image: "https://web.lweb.ch/shop/images/coffee_bbq.jpg",
     price: 14.00,
     badge: "Gourmet", 
     heatLevel: 3
@@ -66,7 +66,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 5,
     name: "Chipotle BBQ",
-    image: "https://web.lweb.ch/shop/uploads/685c7cebd9c04_1750891755.webp",
+    image: "https://web.lweb.ch/shop/images/chipotle_bbq.jpg",
     price: 14.00,
     badge: "Scharf",
     heatLevel: 5
@@ -74,7 +74,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 6,
     name: "Pineapple Papaya BBQ",
-    image: "https://web.lweb.ch/shop/uploads/685c7cf6513bb_1750891766.webp",
+    image: "https://web.lweb.ch/shop/images/pineapple_bbq.jpg",
     price: 14.00,
     badge: "Tropisch",
     heatLevel: 2
@@ -82,7 +82,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 7,
     name: "Big Red's - Big Yella",
-    image: "https://web.lweb.ch/shop/uploads/685c7d335c170_1750891827.webp",
+    image: "https://web.lweb.ch/shop/images/big_yella.jpg",
     price: 14.90,
     badge: "Sonnig",
     heatLevel: 4
@@ -90,7 +90,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 8,
     name: "Big Red's - Heat Wave",
-    image: "https://web.lweb.ch/shop/uploads/685c7d48e63dd_1750891848.webp",
+    image: "https://web.lweb.ch/shop/images/heat_wave.jpg",
     price: 12.84,
     badge: "Hitzewelle",
     heatLevel: 5
@@ -98,7 +98,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 9,
     name: "Big Red's - Green Chili",
-    image: "https://web.lweb.ch/shop/uploads/685c7d5f1439a_1750891871.webp",
+    image: "https://web.lweb.ch/shop/images/green_chili.jpg",
     price: 11.24,
     badge: "Frisch",
     heatLevel: 3
@@ -106,7 +106,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 10,
     name: "Big Red's - Original Sauce",
-    image: "https://web.lweb.ch/shop/uploads/685c7d7713465_1750891895.webp",
+    image: "https://web.lweb.ch/shop/images/original_sauce.jpg",
     price: 1.10,
     badge: "Klassiker",
     heatLevel: 4
@@ -114,7 +114,7 @@ const productDatabase: DetectedProduct[] = [
   {
     id: 11,
     name: "Big Red's - Habanero",
-    image: "https://web.lweb.ch/shop/uploads/685c7d93043e7_1750891923.webp",
+    image: "https://web.lweb.ch/shop/images/habanero.jpg",
     price: 14.93,
     badge: "Habanero",
     heatLevel: 5
@@ -150,7 +150,7 @@ function detectProductsInText(responseText: string): DetectedProduct[] {
   return detectedProducts
 }
 
-// Componente visual para mostrar productos detectados con navegación
+// Componente visual para mostrar productos detectados con navegación - Versión responsiva
 function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) {
   if (products.length === 0) return null
   
@@ -189,56 +189,57 @@ function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) 
   }
   
   return (
-    <div className="border-t border-gray-200 pt-3 mt-3">
-      <p className="text-xs text-gray-500 mb-2 font-medium">Erwähnte Produkte (klicken für Details):</p>
-      <div className="flex flex-wrap gap-2">
+    <div className="border-t border-gray-200 pt-2 sm:pt-3 mt-2 sm:mt-3">
+      <p className="text-xs text-gray-500 mb-1.5 sm:mb-2 font-medium">Erwähnte Produkte (klicken für Details):</p>
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {products.map(product => (
           <div 
             key={product.id} 
             onClick={() => scrollToProducts(product.id)}
-            className="flex items-center gap-2 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-2 rounded-lg hover:from-red-100 hover:to-orange-100 transition-all duration-200 cursor-pointer group transform hover:scale-105 active:scale-95"
+            className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-1.5 sm:p-2 rounded-lg hover:from-red-100 hover:to-orange-100 transition-all duration-200 cursor-pointer group transform hover:scale-105 active:scale-95 mobile-product-card"
             title={`Klicken um ${product.name} im Shop zu sehen`}
           >
-            {/* Imagen en miniatura con efecto hover */}
-            <div className="relative">
+            {/* Imagen en miniatura con efecto hover - Más pequeña en móvil */}
+            <div className="relative flex-shrink-0">
               <img 
                 src={product.image} 
                 alt={product.name}
-                className="w-10 h-10 rounded-lg object-cover shadow-sm group-hover:scale-105 transition-transform duration-200"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-cover shadow-sm group-hover:scale-105 transition-transform duration-200"
                 onError={(e) => {
                   // Fallback a placeholder si la imagen no carga
                   const target = e.target as HTMLImageElement
-                  target.src = "/placeholder.svg?height=40&width=40"
+                  target.src = "/placeholder.svg?height=32&width=32"
                 }}
               />
               {/* Badge del producto superpuesto */}
-              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-1 py-0.5 rounded text-[10px] font-bold shadow-sm">
+              <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-bold shadow-sm">
                 {product.badge}
               </div>
             </div>
             
-            {/* Información del producto */}
-            <div className="flex flex-col">
+            {/* Información del producto - Más compacta en móvil */}
+            <div className="flex flex-col min-w-0 flex-1">
               <span className="text-xs font-semibold text-gray-800 line-clamp-1 group-hover:text-red-700 transition-colors duration-200">
                 {product.name}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 sm:gap-1">
                 <span className="text-xs text-gray-600 font-medium group-hover:text-red-600 transition-colors duration-200">
                   {product.price.toFixed(2)} CHF
                 </span>
-                {/* Indicador visual de nivel de picor */}
+                {/* Indicador visual de nivel de picor - Más pequeño en móvil */}
                 <div className="flex">
-                  {Array.from({ length: product.heatLevel }, (_, i) => (
-                    <Flame key={i} className="w-2 h-2 text-red-500 fill-red-500 group-hover:text-red-600 transition-colors duration-200" />
+                  {Array.from({ length: Math.min(product.heatLevel, 3) }, (_, i) => (
+                    <Flame key={i} className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-red-500 fill-red-500 group-hover:text-red-600 transition-colors duration-200" />
                   ))}
+                  {product.heatLevel > 3 && <span className="text-xs text-red-500 ml-0.5">+</span>}
                 </div>
               </div>
             </div>
             
-            {/* Indicador visual de que es clickeable */}
-            <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <div className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center">
-                <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Indicador visual de que es clickeable - Oculto en móvil muy pequeño */}
+            <div className="hidden xs:block ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-red-500 flex items-center justify-center">
+                <svg className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -247,8 +248,8 @@ function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) 
         ))}
       </div>
       
-      {/* Texto explicativo sutil */}
-      <p className="text-xs text-gray-400 mt-2 italic">
+      {/* Texto explicativo sutil - Más pequeño en móvil */}
+      <p className="text-xs text-gray-400 mt-1.5 sm:mt-2 italic">
         💡 Tipp: Klicken Sie auf ein Produkt, um es im Shop zu sehen
       </p>
     </div>
@@ -500,13 +501,13 @@ ${contactMessage}`
     }
   }, [])
 
-  // Renderiza formulario de contacto
+  // Renderiza formulario de contacto - Versión responsiva
   const renderContactFlow = () => {
     return (
-      <div className="p-6 space-y-4">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="p-3 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
           <button
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 font-medium text-sm"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 font-medium text-xs sm:text-sm"
             onClick={() => {
               setContactStep(0)
             }}
@@ -515,7 +516,7 @@ ${contactMessage}`
           </button>
           {contactStep > 1 && (
             <button 
-              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 font-medium text-sm"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 font-medium text-xs sm:text-sm"
               onClick={() => setContactStep(contactStep - 1)}
             >
               Zurück
@@ -524,17 +525,17 @@ ${contactMessage}`
         </div>
 
         {contactStep === 1 && (
-          <div className="text-center space-y-4">
-            <p className="text-gray-700 font-medium">Möchten Sie uns kontaktieren?</p>
-            <div className="flex gap-3 justify-center">
+          <div className="text-center space-y-3 sm:space-y-4">
+            <p className="text-gray-700 font-medium text-sm sm:text-base">Möchten Sie uns kontaktieren?</p>
+            <div className="flex gap-2 sm:gap-3 justify-center">
               <button 
-                className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
+                className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-sm sm:text-base"
                 onClick={() => setContactStep(2)}
               >
                 Ja
               </button>
               <button 
-                className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors duration-200 font-semibold"
+                className="px-4 py-2 sm:px-6 sm:py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition-colors duration-200 font-semibold text-sm sm:text-base"
                 onClick={() => setContactStep(0)}
               >
                 Nein
@@ -544,11 +545,11 @@ ${contactMessage}`
         )}
 
         {contactStep === 2 && (
-          <div className="space-y-4">
-            <p className="text-gray-700 font-medium text-center mb-4">Worum geht es in Ihrer Anfrage?</p>
-            <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-3 sm:space-y-4">
+            <p className="text-gray-700 font-medium text-center mb-3 sm:mb-4 text-sm sm:text-base">Worum geht es in Ihrer Anfrage?</p>
+            <div className="grid grid-cols-1 gap-2 sm:gap-3">
               <button
-                className="p-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left"
+                className="p-3 sm:p-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left text-sm sm:text-base"
                 onClick={() => {
                   setContactReason("Produktberatung und Empfehlungen")
                   setContactStep(3)
@@ -557,7 +558,7 @@ ${contactMessage}`
                 Produktberatung und Empfehlungen
               </button>
               <button
-                className="p-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left"
+                className="p-3 sm:p-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left text-sm sm:text-base"
                 onClick={() => {
                   setContactReason("Großhandel und Mengenrabatte")
                   setContactStep(3)
@@ -566,7 +567,7 @@ ${contactMessage}`
                 Großhandel und Mengenrabatte
               </button>
               <button
-                className="p-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left"
+                className="p-3 sm:p-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left text-sm sm:text-base"
                 onClick={() => {
                   setContactReason("Verkostung und Events")
                   setContactStep(3)
@@ -575,7 +576,7 @@ ${contactMessage}`
                 Verkostung und Events
               </button>
               <button
-                className="p-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left"
+                className="p-3 sm:p-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg text-left text-sm sm:text-base"
                 onClick={() => {
                   setContactReason("Allgemeine Fragen")
                   setContactStep(3)
@@ -588,17 +589,17 @@ ${contactMessage}`
         )}
 
         {contactStep === 3 && (
-          <div className="space-y-4">
-            <p className="text-gray-700 font-medium text-center">Wie ist Ihr Name?</p>
+          <div className="space-y-3 sm:space-y-4">
+            <p className="text-gray-700 font-medium text-center text-sm sm:text-base">Wie ist Ihr Name?</p>
             <input
               type="text"
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
               placeholder="Ihr vollständiger Name"
-              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors duration-200"
+              className="w-full p-2.5 sm:p-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
             />
             <button
-              className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               onClick={() => {
                 if (contactName.trim()) setContactStep(4)
               }}
@@ -610,17 +611,17 @@ ${contactMessage}`
         )}
 
         {contactStep === 4 && (
-          <div className="space-y-4">
-            <p className="text-gray-700 font-medium text-center">Ihre E-Mail-Adresse:</p>
+          <div className="space-y-3 sm:space-y-4">
+            <p className="text-gray-700 font-medium text-center text-sm sm:text-base">Ihre E-Mail-Adresse:</p>
             <input
               type="email"
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               placeholder="ihre.email@beispiel.ch"
-              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors duration-200"
+              className="w-full p-2.5 sm:p-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
             />
             <button
-              className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               onClick={() => {
                 if (contactEmail.trim() && contactEmail.includes('@')) setContactStep(5)
               }}
@@ -632,17 +633,17 @@ ${contactMessage}`
         )}
 
         {contactStep === 5 && (
-          <div className="space-y-4">
-            <p className="text-gray-700 font-medium text-center">Ihre Nachricht:</p>
+          <div className="space-y-3 sm:space-y-4">
+            <p className="text-gray-700 font-medium text-center text-sm sm:text-base">Ihre Nachricht:</p>
             <textarea
               value={contactMessage}
               onChange={(e) => setContactMessage(e.target.value)}
               placeholder="Beschreiben Sie Ihre Anfrage detailliert..."
-              rows={4}
-              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors duration-200 resize-none"
+              rows={3}
+              className="w-full p-2.5 sm:p-3 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors duration-200 resize-none text-sm sm:text-base"
             />
             <button
-              className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               onClick={() => {
                 if (contactMessage.trim()) setContactStep(6)
               }}
@@ -654,29 +655,29 @@ ${contactMessage}`
         )}
 
         {contactStep === 6 && (
-          <div className="space-y-4">
-            <p className="text-gray-700 font-medium text-center mb-4">Überprüfen Sie Ihre Angaben:</p>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
-              <div className="flex justify-between">
-                <span className="font-semibold text-gray-700">Betreff:</span>
-                <span className="text-gray-600 text-right">{contactReason}</span>
+          <div className="space-y-3 sm:space-y-4">
+            <p className="text-gray-700 font-medium text-center mb-3 sm:mb-4 text-sm sm:text-base">Überprüfen Sie Ihre Angaben:</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div className="flex justify-between items-start">
+                <span className="font-semibold text-gray-700 text-xs sm:text-sm">Betreff:</span>
+                <span className="text-gray-600 text-right text-xs sm:text-sm max-w-[60%]">{contactReason}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-semibold text-gray-700">Name:</span>
-                <span className="text-gray-600">{contactName}</span>
+                <span className="font-semibold text-gray-700 text-xs sm:text-sm">Name:</span>
+                <span className="text-gray-600 text-xs sm:text-sm">{contactName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-semibold text-gray-700">E-Mail:</span>
-                <span className="text-gray-600">{contactEmail}</span>
+                <span className="font-semibold text-gray-700 text-xs sm:text-sm">E-Mail:</span>
+                <span className="text-gray-600 text-xs sm:text-sm">{contactEmail}</span>
               </div>
-              <div className="border-t pt-3">
-                <span className="font-semibold text-gray-700">Nachricht:</span>
-                <p className="text-gray-600 mt-1 text-sm">{contactMessage}</p>
+              <div className="border-t pt-2 sm:pt-3">
+                <span className="font-semibold text-gray-700 text-xs sm:text-sm">Nachricht:</span>
+                <p className="text-gray-600 mt-1 text-xs sm:text-sm">{contactMessage}</p>
               </div>
             </div>
             <button 
               onClick={sendContactRequest}
-              className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-bold shadow-md hover:shadow-lg text-lg"
+              className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-bold shadow-md hover:shadow-lg text-sm sm:text-lg"
             >
               WhatsApp Nachricht senden
             </button>
@@ -688,77 +689,78 @@ ${contactMessage}`
 
   return (
     <>
-      {/* Botón flotante para abrir chat */}
+      {/* Botón flotante para abrir chat - Responsivo */}
       {!isOpen && showChatButton && (
         <button 
           onClick={() => setIsOpen(true)} 
-          className={`fixed bottom-6 right-6 z-50 group transition-all duration-500 ${
+          className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 group transition-all duration-500 ${
             showChatButton ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0'
           }`}
         >
           {/* Glow effect background */}
           <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-all duration-300 scale-110"></div>
           
-          {/* Main button */}
-          <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-orange-600 rounded-full p-4 shadow-xl border border-red-400/30 group-hover:scale-105 transition-all duration-300">
+          {/* Main button - Más pequeño en móvil */}
+          <div className="relative bg-gradient-to-br from-red-500 via-red-600 to-orange-600 rounded-full p-3 sm:p-4 shadow-xl border border-red-400/30 group-hover:scale-105 transition-all duration-300">
             {/* Inner glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
             
-            {/* Icon with flame effect */}
+            {/* Icon with flame effect - Tamaño adaptativo */}
             <div className="relative">
-              <Flame className="w-6 h-6 text-white drop-shadow-lg" />
+              <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-lg" />
               
               {/* Floating particles effect */}
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-bounce opacity-80"></div>
-              <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce opacity-60" style={{ animationDelay: "0.5s" }}></div>
+              <div className="absolute -top-1 -right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-yellow-300 rounded-full animate-bounce opacity-80"></div>
+              <div className="absolute -bottom-1 -left-1 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-orange-300 rounded-full animate-bounce opacity-60" style={{ animationDelay: "0.5s" }}></div>
             </div>
           </div>
           
-          {/* Tooltip */}
-          <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap backdrop-blur-sm">
+          {/* Tooltip - Oculto en móvil para ahorrar espacio */}
+          <div className="hidden sm:block absolute -top-14 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap backdrop-blur-sm">
             Saucen Chat öffnen
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-black/80 rotate-45 -mt-1"></div>
           </div>
         </button>
       )}
 
-      {/* Ventana del chat */}
-      <div className={`fixed bottom-6 right-6 z-40 w-96 h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 transition-all duration-500 ${
+      {/* Ventana del chat - Responsiva para pantallas pequeñas */}
+      <div className={`fixed bottom-2 right-2 left-2 sm:bottom-6 sm:right-6 sm:left-auto z-40 sm:w-96 h-[calc(100vh-100px)] sm:h-[600px] max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 transition-all duration-500 ${
         isOpen 
           ? 'translate-y-0 opacity-100 scale-100' 
           : 'translate-y-8 opacity-0 scale-95 pointer-events-none'
       }`}>
-        {/* Header del chat */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-600 rounded-t-2xl p-4 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-white font-bold text-lg">
-            <Flame className="w-5 h-5 text-yellow-300" />
-            HOT & BBQ Chat
+        {/* Header del chat - Más compacto en móvil */}
+        <div className="bg-gradient-to-r from-red-500 to-orange-600 rounded-t-2xl p-3 sm:p-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-1 sm:gap-2 text-white font-bold text-base sm:text-lg">
+            <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300" />
+            <span className="hidden xs:inline">Smokehouse Chat</span>
+            <span className="xs:hidden">Chat</span>
           </h2>
           <button 
             onClick={() => setIsOpen(false)} 
-            className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors duration-200" 
+            className="text-white hover:bg-white/20 rounded-lg p-1.5 sm:p-2 transition-colors duration-200" 
             aria-label="Chat schließen"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {contactStep > 0 ? (
-          <div className="h-[calc(100%-80px)] overflow-y-auto">
+          <div className="h-[calc(100%-60px)] sm:h-[calc(100%-80px)] overflow-y-auto">
             {renderContactFlow()}
           </div>
         ) : (
           <>
-            {/* Área de mensajes con productos detectados */}
-            <div className="h-[calc(100%-140px)] overflow-y-auto p-4 space-y-4">
+            {/* Área de mensajes con productos detectados - Responsiva */}
+            <div className="h-[calc(100%-120px)] sm:h-[calc(100%-140px)] overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
               {messages.length === 0 ? (
-                <div className="space-y-4">
-                  <p className="text-center text-gray-600 font-medium mb-6">Wie kann ich Ihnen bei der Auswahl der perfekten Sauce helfen?</p>
-                  <div className="space-y-2">
+                <div className="space-y-3 sm:space-y-4">
+                  <p className="text-center text-gray-600 font-medium mb-4 sm:mb-6 text-sm sm:text-base">Wie kann ich Ihnen bei der Auswahl der perfekten Sauce helfen?</p>
+                  <div className="space-y-1.5 sm:space-y-2">
                     {visibleQuestions.map((question, index) => (
                       <button
                         key={index}
-                        className="w-full text-left p-3 bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 border border-red-200 rounded-lg transition-all duration-200 text-sm text-gray-700 hover:text-gray-900 shadow-sm hover:shadow-md"
+                        className="w-full text-left p-2 sm:p-3 bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 border border-red-200 rounded-lg transition-all duration-200 text-xs sm:text-sm text-gray-700 hover:text-gray-900 shadow-sm hover:shadow-md"
                         onClick={() => handleQuestionClick(question)}
                         disabled={isLoading}
                       >
@@ -774,7 +776,7 @@ ${contactMessage}`
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-2xl p-3 ${
+                      className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-2 sm:p-3 ${
                         msg.role === "user" 
                           ? "bg-gradient-to-r from-red-500 to-orange-600 text-white" 
                           : "bg-gray-100 text-gray-800"
@@ -790,16 +792,16 @@ ${contactMessage}`
                       {msg.role === "assistant" ? (
                         <div className="space-y-2">
                           <div
-                            className="prose prose-sm max-w-none"
+                            className="prose prose-xs sm:prose-sm max-w-none"
                             dangerouslySetInnerHTML={{ __html: msg.content }}
                           />
-                          {/* ¡AQUÍ SE MUESTRAN LOS PRODUCTOS DETECTADOS! */}
+                          {/* Productos detectados */}
                           {msg.detectedProducts && msg.detectedProducts.length > 0 && (
                             <DetectedProductsDisplay products={msg.detectedProducts} />
                           )}
                         </div>
                       ) : (
-                        <div className="text-sm">{msg.content}</div>
+                        <div className="text-xs sm:text-sm">{msg.content}</div>
                       )}
                     </div>
                   </div>
@@ -808,20 +810,20 @@ ${contactMessage}`
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Área de entrada de mensajes */}
-            <div className="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
-              <div className="flex items-end gap-2">
+            {/* Área de entrada de mensajes - Más compacta en móvil */}
+            <div className="p-3 sm:p-4 border-t border-gray-200 bg-white rounded-b-2xl">
+              <div className="flex items-end gap-1.5 sm:gap-2">
                 <div className="flex-1 relative">
                   <textarea
                     ref={textareaRef}
                     name="message"
                     value={input}
                     onChange={autoResizeTextarea}
-                    className="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors duration-200 text-sm"
-                    placeholder="Fragen Sie nach Saucen, Schärfegraden, Rezepten..."
+                    className="w-full p-2 sm:p-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none resize-none transition-colors duration-200 text-xs sm:text-sm"
+                    placeholder="Fragen Sie nach Saucen..."
                     disabled={isLoading}
                     rows={1}
-                    style={{ minHeight: '44px', maxHeight: '120px' }}
+                    style={{ minHeight: '40px', maxHeight: '100px' }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault()
@@ -832,7 +834,7 @@ ${contactMessage}`
                 </div>
                 <button
                   onClick={() => sendMessage(input)}
-                  className={`p-3 rounded-xl transition-all duration-200 ${
+                  className={`p-2 sm:p-3 rounded-xl transition-all duration-200 ${
                     !input.trim() && !isLoading
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg"
@@ -841,18 +843,18 @@ ${contactMessage}`
                   aria-label="Senden"
                 >
                   {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
-                    <SendHorizontal className="w-5 h-5" />
+                    <SendHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </button>
                 {showClearIcon && (
                   <button 
                     onClick={clearChat} 
-                    className="p-3 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-xl transition-colors duration-200" 
+                    className="p-2 sm:p-3 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-xl transition-colors duration-200" 
                     aria-label="Chat löschen"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 )}
               </div>
@@ -863,6 +865,65 @@ ${contactMessage}`
 
       {/* Estilos para animaciones y efectos visuales */}
       <style jsx global>{`
+        /* Breakpoint personalizado para pantallas extra pequeñas */
+        @media (min-width: 475px) {
+          .xs\\:inline {
+            display: inline;
+          }
+          .xs\\:hidden {
+            display: none;
+          }
+        }
+        
+        @media (max-width: 474px) {
+          .xs\\:inline {
+            display: none;
+          }
+          .xs\\:hidden {
+            display: inline;
+          }
+        }
+        
+        /* Ajustes específicos para móviles */
+        @media (max-width: 640px) {
+          /* Asegurar que el chat no se salga de la pantalla */
+          .chat-mobile-fix {
+            max-width: calc(100vw - 16px);
+            max-height: calc(100vh - 100px);
+          }
+          
+          /* Hacer el texto más legible en pantallas pequeñas */
+          .prose-xs {
+            font-size: 0.75rem;
+            line-height: 1.4;
+          }
+          
+          .prose-xs p {
+            margin-bottom: 0.5rem;
+          }
+          
+          .prose-xs ul, .prose-xs ol {
+            margin-left: 1rem;
+            margin-bottom: 0.5rem;
+          }
+          
+          .prose-xs li {
+            margin-bottom: 0.25rem;
+          }
+          
+          /* Optimizar productos detectados para móvil */
+          .mobile-product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+          }
+          
+          .mobile-product-card {
+            min-width: calc(50% - 0.1875rem);
+            max-width: calc(50% - 0.1875rem);
+          }
+        }
+        
         .line-clamp-1 {
           display: -webkit-box;
           -webkit-line-clamp: 1;
@@ -979,6 +1040,15 @@ ${contactMessage}`
         
         .chat-product-card:hover {
           box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15);
+        }
+        
+        /* Evitar zoom en inputs en iOS */
+        @media screen and (max-width: 640px) {
+          input[type="text"],
+          input[type="email"],
+          textarea {
+            font-size: 16px !important;
+          }
         }
       `}</style>
     </>
