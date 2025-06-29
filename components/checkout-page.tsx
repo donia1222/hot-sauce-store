@@ -457,11 +457,65 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
       return
     }
 
+    // CRÍTICO: Asegurar que los datos estén guardados antes de ir a PayPal
+    const customerData = {
+      firstName: customerInfo.firstName,
+      lastName: customerInfo.lastName,
+      email: customerInfo.email,
+      phone: customerInfo.phone,
+      address: customerInfo.address,
+      city: customerInfo.city,
+      postalCode: customerInfo.postalCode,
+      canton: customerInfo.canton,
+      notes: customerInfo.notes,
+      accountPassword: showCreateAccount ? createAccountData.password : "",
+      billingAddress: useDifferentBillingAddress ? {
+        firstName: billingAddress.firstName,
+        lastName: billingAddress.lastName,
+        address: billingAddress.address,
+        city: billingAddress.city,
+        postalCode: billingAddress.postalCode,
+        canton: billingAddress.canton,
+      } : null,
+    }
+
+    // Guardar en localStorage Y sessionStorage para máxima seguridad
+    localStorage.setItem("cantina-customer-info", JSON.stringify(customerData))
+    sessionStorage.setItem("cantina-customer-info", JSON.stringify(customerData))
+    
+    // Asegurar que el carrito esté guardado también
+    localStorage.setItem("cantina-cart", JSON.stringify(cart))
+    sessionStorage.setItem("cantina-cart", JSON.stringify(cart))
+
+    // Crear un ID único para este pedido
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    // Guardar datos del pedido con ID único para recuperación garantizada
+    const orderData = {
+      orderId,
+      customerInfo: customerData,
+      cart: cart,
+      total: getFinalTotal(),
+      timestamp: new Date().toISOString()
+    }
+    
+    localStorage.setItem(`cantina-order-${orderId}`, JSON.stringify(orderData))
+    sessionStorage.setItem(`cantina-order-${orderId}`, JSON.stringify(orderData))
+    localStorage.setItem("cantina-current-order-id", orderId)
+    sessionStorage.setItem("cantina-current-order-id", orderId)
+
+    console.log("DEBUGGING: Data saved before PayPal:", {
+      customerData,
+      cart,
+      orderId
+    })
+
     const total = getFinalTotal()
-    const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=info@cantinatexmex.ch&amount=${total.toFixed(2)}&currency_code=CHF&item_name=FEUER KÖNIGREICH Order&return=${window.location.origin}/success&cancel_return=${window.location.origin}/cancel`
+    const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=info@cantinatexmex.ch&amount=${total.toFixed(2)}&currency_code=CHF&item_name=FEUER KÖNIGREICH Order&custom=${orderId}&return=${window.location.origin}/success&cancel_return=${window.location.origin}/cancel`
 
     setOrderStatus("processing")
-    window.open(paypalUrl, "_blank")
+    // USAR LA MISMA PESTAÑA para que localStorage esté disponible
+    window.location.href = paypalUrl
   }
 
   const handleInvoicePayment = async () => {

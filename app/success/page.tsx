@@ -41,41 +41,75 @@ export default function PayPalSuccessPage() {
 
   const processPayPalSuccess = async (payerIdFromUrl: string) => {
     try {
+      console.log("DEBUGGING Success Page - Starting process with PayerID:", payerIdFromUrl)
+      
       // Intentar obtener datos del pedido usando múltiples métodos
       let savedCustomerInfo = localStorage.getItem("cantina-customer-info")
       let savedCart = localStorage.getItem("cantina-cart")
       
+      console.log("DEBUGGING - Initial localStorage check:", {
+        hasCustomerInfo: !!savedCustomerInfo,
+        hasCart: !!savedCart,
+        customerInfoLength: savedCustomerInfo?.length,
+        cartLength: savedCart?.length
+      })
+      
       // Si no están en localStorage, intentar sessionStorage
       if (!savedCustomerInfo || !savedCart) {
+        console.log("DEBUGGING - Trying sessionStorage...")
         savedCustomerInfo = sessionStorage.getItem("cantina-customer-info")
         savedCart = sessionStorage.getItem("cantina-cart")
+        
+        console.log("DEBUGGING - SessionStorage check:", {
+          hasCustomerInfo: !!savedCustomerInfo,
+          hasCart: !!savedCart
+        })
       }
       
       // Intentar recuperar por ID de pedido único
       if (!savedCustomerInfo || !savedCart) {
+        console.log("DEBUGGING - Trying unique order ID...")
         const orderId = localStorage.getItem("cantina-current-order-id") || sessionStorage.getItem("cantina-current-order-id")
+        console.log("DEBUGGING - Found order ID:", orderId)
+        
         if (orderId) {
           const orderData = localStorage.getItem(`cantina-order-${orderId}`) || sessionStorage.getItem(`cantina-order-${orderId}`)
+          console.log("DEBUGGING - Found order data:", !!orderData, orderData?.substring(0, 100))
+          
           if (orderData) {
             const parsedOrderData = JSON.parse(orderData)
             savedCustomerInfo = JSON.stringify(parsedOrderData.customerInfo)
             savedCart = JSON.stringify(parsedOrderData.cart)
+            console.log("DEBUGGING - Recovered from order ID successfully")
           }
         }
       }
       
       // Intentar recuperar del parámetro custom de PayPal
       if (!savedCustomerInfo || !savedCart) {
+        console.log("DEBUGGING - Trying PayPal custom parameter...")
         const customParam = searchParams.get("custom")
+        console.log("DEBUGGING - PayPal custom param:", customParam)
+        
         if (customParam) {
           const orderData = localStorage.getItem(`cantina-order-${customParam}`) || sessionStorage.getItem(`cantina-order-${customParam}`)
+          console.log("DEBUGGING - Custom param order data:", !!orderData)
+          
           if (orderData) {
             const parsedOrderData = JSON.parse(orderData)
             savedCustomerInfo = JSON.stringify(parsedOrderData.customerInfo)
             savedCart = JSON.stringify(parsedOrderData.cart)
+            console.log("DEBUGGING - Recovered from custom param successfully")
           }
         }
       }
+
+      console.log("DEBUGGING - Final check before error:", {
+        hasCustomerInfo: !!savedCustomerInfo,
+        hasCart: !!savedCart,
+        allLocalStorageKeys: Object.keys(localStorage),
+        allSessionStorageKeys: Object.keys(sessionStorage)
+      })
 
       if (!savedCustomerInfo || !savedCart) {
         throw new Error("No se encontraron datos del pedido en localStorage ni sessionStorage")
