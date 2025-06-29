@@ -169,14 +169,9 @@ function DetectedProductsDisplay({ products, onCloseChat }: { products: Detected
             })
             window.dispatchEvent(event)
             
-            // Pequeño delay para que se establezca el producto correcto
+            // Pequeño delay para destacar visualmente el producto
             setTimeout(() => {
-              // Simular clic en el botón "Mehr Info" para abrir el modal
-              if (foundButton instanceof HTMLElement) {
-                foundButton.click()
-              }
-              
-              // También destacar visualmente el producto
+              // Destacar visualmente el producto (sin clic redundante)
               const productCard = foundButton.closest('.group')
               if (productCard) {
                 productCard.classList.add('highlight-product')

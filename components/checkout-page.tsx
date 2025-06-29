@@ -15,6 +15,8 @@ import {
   EyeOff,
   Mail,
   KeyRound,
+  Minus,
+  Plus,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -47,6 +49,8 @@ interface CheckoutPageProps {
   cart: CartItem[]
   onBackToStore: () => void
   onClearCart?: () => void
+  onAddToCart?: (product: CartItem) => void
+  onRemoveFromCart?: (productId: number) => void
 }
 
 interface CustomerInfo {
@@ -83,7 +87,7 @@ interface UserData {
   notes: string
 }
 
-export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageProps) {
+export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, onRemoveFromCart }: CheckoutPageProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: "",
     lastName: "",
@@ -592,6 +596,28 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     setBillingAddress((prev) => ({ ...prev, [field]: value }))
     if (billingErrors[field]) {
       setBillingErrors((prev) => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  // Cart management functions
+  const handleIncreaseQuantity = (item: CartItem) => {
+    if (onAddToCart) {
+      onAddToCart(item)
+    }
+  }
+
+  const handleDecreaseQuantity = (item: CartItem) => {
+    if (onRemoveFromCart) {
+      onRemoveFromCart(item.id)
+    }
+  }
+
+  const handleRemoveItem = (item: CartItem) => {
+    if (onRemoveFromCart) {
+      // Remove all quantity of this item
+      for (let i = 0; i < item.quantity; i++) {
+        onRemoveFromCart(item.id)
+      }
     }
   }
 
@@ -1520,7 +1546,38 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                       />
                       <div className="flex-1">
                         <h4 className="font-semibold text-sm line-clamp-2">{item.name}</h4>
-                        <p className="text-gray-600 text-sm">Menge: {item.quantity}</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDecreaseQuantity(item)}
+                              className="h-8 w-8 p-0 bg-white hover:bg-gray-100"
+                              disabled={!onRemoveFromCart}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="font-medium text-sm min-w-[2rem] text-center">{item.quantity}</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleIncreaseQuantity(item)}
+                              className="h-8 w-8 p-0 bg-white hover:bg-gray-100"
+                              disabled={!onAddToCart}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveItem(item)}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 h-8 px-2"
+                            disabled={!onRemoveFromCart}
+                          >
+                            Entfernen
+                          </Button>
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-orange-600">{(item.price * item.quantity).toFixed(2)} CHF</p>

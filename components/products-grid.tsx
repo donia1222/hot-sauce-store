@@ -811,7 +811,15 @@ export default function ProductsGridCompact({
 
   // NAVEGACIÓN EXACTAMENTE IGUAL - NO CAMBIADA
   if (currentView === "checkout") {
-    return <CheckoutPage cart={cart} onBackToStore={handleBackToProducts} onClearCart={clearCartHandler} />
+    return (
+      <CheckoutPage 
+        cart={cart} 
+        onBackToStore={handleBackToProducts} 
+        onClearCart={clearCartHandler}
+        onAddToCart={addToCartHandler}
+        onRemoveFromCart={removeFromCartHandler}
+      />
+    )
   }
 
   if (currentView === "success") {
