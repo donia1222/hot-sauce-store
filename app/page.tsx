@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { CulinaryInspiration } from "@/components/culinary-inspiration"
@@ -96,24 +96,34 @@ export default function PremiumHotSauceStore() {
     }
   }, [])
 
-  // 👂 Escuchar evento de limpiar carrito desde página de success
-  useEffect(() => {
-    const handleClearCart = (event: CustomEvent) => {
-      console.log("Clearing cart due to:", event.detail?.reason)
-      clearCart()
-    }
-
-    window.addEventListener('clearCart', handleClearCart as EventListener)
-    
-    return () => {
-      window.removeEventListener('clearCart', handleClearCart as EventListener)
-    }
-  }, [clearCart])
 
   // 🔄 Guardar carrito en localStorage cada vez que cambie
   useEffect(() => {
-    localStorage.setItem("cantina-cart", JSON.stringify(cart))
+    if (cart.length > 0) {
+      localStorage.setItem("cantina-cart", JSON.stringify(cart))
+    }
   }, [cart])
+
+  // 🧹 Verificar si el carrito debe ser limpiado (cuando se navega de vuelta desde success)
+  useEffect(() => {
+    const checkClearCart = () => {
+      const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
+      if (shouldClearCart === 'true') {
+        localStorage.removeItem('cart-should-be-cleared')
+        setTimeout(() => {
+          clearCart()
+        }, 100) // Pequeño delay para evitar conflictos
+      }
+    }
+
+    // Verificar cuando se carga la página y cuando se cambia el foco
+    checkClearCart()
+    window.addEventListener('focus', checkClearCart)
+    
+    return () => {
+      window.removeEventListener('focus', checkClearCart)
+    }
+  }, [])
 
   const addToCart = (product: Product, quantity = 1) => {
     setCart((prevCart) => {
@@ -169,10 +179,10 @@ export default function PremiumHotSauceStore() {
   }
 
   // 🗑️ Nueva función para limpiar el carrito completamente
-  const clearCart = useCallback(() => {
+  const clearCart = () => {
     setCart([])
     localStorage.removeItem("cantina-cart") // También limpiar localStorage
-  }, [])
+  }
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0)

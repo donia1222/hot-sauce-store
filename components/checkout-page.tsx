@@ -504,11 +504,6 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
     localStorage.setItem("cantina-current-order-id", orderId)
     sessionStorage.setItem("cantina-current-order-id", orderId)
 
-    console.log("DEBUGGING: Data saved before PayPal:", {
-      customerData,
-      cart,
-      orderId
-    })
 
     const total = getFinalTotal()
     const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=info@cantinatexmex.ch&amount=${total.toFixed(2)}&currency_code=CHF&item_name=FEUER KÖNIGREICH Order&custom=${orderId}&return=${window.location.origin}/success&cancel_return=${window.location.origin}/cancel`
