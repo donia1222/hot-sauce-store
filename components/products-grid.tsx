@@ -106,6 +106,42 @@ export default function ProductsGridCompact({
     loadProducts()
   }, [])
 
+  // Escuchar eventos del chat para abrir modales específicos
+  useEffect(() => {
+    const handleOpenProductModal = (event: any) => {
+      const { productId, productData } = event.detail
+      console.log(`🎯 Recibido evento para abrir modal del producto ${productId}:`, productData)
+      
+      // Buscar el producto real en nuestra lista de productos
+      const realProduct = products.find(p => p.id === productId)
+      if (realProduct) {
+        console.log(`✅ Producto encontrado en la lista:`, realProduct)
+        setSelectedProduct(realProduct)
+      } else {
+        console.log(`⚠️ Producto no encontrado en la lista, usando datos del chat`)
+        // Convertir los datos del chat al formato de Product
+        const chatProduct: Product = {
+          id: productData.id,
+          name: productData.name,
+          description: `Información detallada sobre ${productData.name}`,
+          price: productData.price,
+          image_url: productData.image,
+          heatLevel: productData.heatLevel,
+          rating: 4.5, // Valor por defecto
+          badge: productData.badge,
+          origin: 'USA', // Valor por defecto
+          category: 'bbq-sauce'
+        }
+        setSelectedProduct(chatProduct)
+      }
+    }
+
+    window.addEventListener('openProductModal', handleOpenProductModal)
+    return () => {
+      window.removeEventListener('openProductModal', handleOpenProductModal)
+    }
+  }, [products])
+
   // Animación escalonada
   useEffect(() => {
     if (products.length > 0) {
@@ -621,6 +657,7 @@ export default function ProductsGridCompact({
                       size="sm"
                       className="w-auto min-w-[100px] lg:min-w-[120px] text-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900 font-medium"
                       onClick={() => setSelectedProduct(product)}
+                      data-product-modal={product.id}
                     >
                       <Info className="w-4 h-4 mr-1" />
                       Mehr Info

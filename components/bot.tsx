@@ -29,97 +29,31 @@ type DetectedProduct = {
   heatLevel: number
 }
 
-// Base de datos completa de productos con palabras clave para detección
-const productDatabase: DetectedProduct[] = [
-  {
-    id: 1,
-    name: "Honey BBQ",
-    image: "https://web.lweb.ch/shop/images/honey_bbq.jpg",
-    price: 14.00,
-    badge: "Süß",
-    heatLevel: 1
-  },
-  {
-    id: 2,
-    name: "Garlic BBQ", 
-    image: "https://web.lweb.ch/shop/images/garlic_bbq.jpg",
-    price: 14.00,
-    badge: "Intensiv",
-    heatLevel: 2
-  },
-  {
-    id: 3,
-    name: "Carolina-Style BBQ",
-    image: "https://web.lweb.ch/shop/images/carolina_bbq.jpg", 
-    price: 14.00,
-    badge: "Preisgekrönt",
-    heatLevel: 2
-  },
-  {
-    id: 4,
-    name: "Coffee BBQ",
-    image: "https://web.lweb.ch/shop/images/coffee_bbq.jpg",
-    price: 14.00,
-    badge: "Gourmet", 
-    heatLevel: 3
-  },
-  {
-    id: 5,
-    name: "Chipotle BBQ",
-    image: "https://web.lweb.ch/shop/images/chipotle_bbq.jpg",
-    price: 14.00,
-    badge: "Scharf",
-    heatLevel: 5
-  },
-  {
-    id: 6,
-    name: "Pineapple Papaya BBQ",
-    image: "https://web.lweb.ch/shop/images/pineapple_bbq.jpg",
-    price: 14.00,
-    badge: "Tropisch",
-    heatLevel: 2
-  },
-  {
-    id: 7,
-    name: "Big Red's - Big Yella",
-    image: "https://web.lweb.ch/shop/images/big_yella.jpg",
-    price: 14.90,
-    badge: "Sonnig",
-    heatLevel: 4
-  },
-  {
-    id: 8,
-    name: "Big Red's - Heat Wave",
-    image: "https://web.lweb.ch/shop/images/heat_wave.jpg",
-    price: 12.84,
-    badge: "Hitzewelle",
-    heatLevel: 5
-  },
-  {
-    id: 9,
-    name: "Big Red's - Green Chili",
-    image: "https://web.lweb.ch/shop/images/green_chili.jpg",
-    price: 11.24,
-    badge: "Frisch",
-    heatLevel: 3
-  },
-  {
-    id: 10,
-    name: "Big Red's - Original Sauce",
-    image: "https://web.lweb.ch/shop/images/original_sauce.jpg",
-    price: 1.10,
-    badge: "Klassiker",
-    heatLevel: 4
-  },
-  {
-    id: 11,
-    name: "Big Red's - Habanero",
-    image: "https://web.lweb.ch/shop/images/habanero.jpg",
-    price: 14.93,
-    badge: "Habanero",
-    heatLevel: 5
+// Base de datos de productos que se carga dinámicamente desde la API
+let productDatabase: DetectedProduct[] = []
+
+// Función para cargar productos desde la API
+async function loadProductsFromAPI(): Promise<DetectedProduct[]> {
+  try {
+    const response = await fetch('https://web.lweb.ch/shop/get_products.php')
+    const data = await response.json()
+    
+    if (data.success && data.products) {
+      return data.products.map((product: any) => ({
+        id: product.id,
+        name: product.name,
+        image: product.image_url || "/placeholder.svg?height=128&width=128", // Usar image_url de la API
+        price: product.price,
+        badge: product.badge,
+        heatLevel: product.heat_level
+      }))
+    }
+    return []
+  } catch (error) {
+    console.error('Error loading products from API:', error)
+    return []
   }
-]
+}
 
 // Función inteligente para detectar productos mencionados en el texto
 function detectProductsInText(responseText: string): DetectedProduct[] {
@@ -151,11 +85,17 @@ function detectProductsInText(responseText: string): DetectedProduct[] {
 }
 
 // Componente visual para mostrar productos detectados con navegación - Versión responsiva
-function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) {
+function DetectedProductsDisplay({ products, onCloseChat }: { products: DetectedProduct[]; onCloseChat?: () => void }) {
   if (products.length === 0) return null
   
-  // Función para hacer scroll suave a la sección de productos
+  // Función para hacer scroll suave a la sección de productos y abrir modal
   const scrollToProducts = (productId?: number) => {
+    // Cerrar el chat automáticamente en pantallas pequeñas (móviles)
+    const isMobile = window.innerWidth < 640 // sm breakpoint
+    if (isMobile && onCloseChat && typeof onCloseChat === 'function') {
+      onCloseChat()
+    }
+    
     const offersSection = document.getElementById('offers')
     if (offersSection) {
       // Realizar scroll suave hacia la sección
@@ -171,19 +111,92 @@ function DetectedProductsDisplay({ products }: { products: DetectedProduct[] }) 
         offersSection.classList.remove('highlight-section')
       }, 2000)
       
-      // Si tenemos un productId específico, podríamos intentar destacar ese producto
+      // Si tenemos un productId específico, abrir el modal del producto
       if (productId) {
-        // Pequeño delay para que el scroll termine antes de buscar el producto
+        // Delay más largo para que termine el scroll primero
         setTimeout(() => {
-          // Buscar el producto específico en el grid (si tiene IDs únicos)
-          const productElement = document.querySelector(`[data-product-id="${productId}"]`)
-          if (productElement) {
-            productElement.classList.add('highlight-product')
-            setTimeout(() => {
-              productElement.classList.remove('highlight-product')
-            }, 3000)
+          console.log(`🔍 Buscando producto con ID: ${productId}`)
+          
+          // Obtener datos del producto del chat
+          const productData = productDatabase.find(p => p.id === productId)
+          if (!productData) {
+            console.log(`❌ No se encontraron datos para producto ${productId}`)
+            return
           }
-        }, 500)
+          
+          console.log(`📝 Datos del producto:`, productData)
+          
+          // Buscar el producto en el DOM por nombre (más confiable que por ID)
+          const productCards = document.querySelectorAll('.group')
+          let foundButton: Element | null = null
+          
+          for (const card of productCards) {
+            const titleElement = card.querySelector('h4')
+            if (titleElement && titleElement.textContent) {
+              const cardTitle = titleElement.textContent.toLowerCase().trim()
+              const productName = productData.name.toLowerCase().trim()
+              
+              console.log(`🔍 Comparando: "${cardTitle}" con "${productName}"`)
+              
+              // Búsqueda exacta por nombre para evitar coincidencias incorrectas
+              if (cardTitle === productName) {
+                foundButton = card.querySelector('[data-product-modal]')
+                console.log(`✅ Producto encontrado por nombre exacto: ${cardTitle}`)
+                break
+              }
+              
+              // Búsqueda alternativa sin prefijos "Big Red's -" o "Big Red's  -" si no hay match exacto
+              const normalizedCardTitle = cardTitle.replace(/^big red's\s+-\s+/i, '')
+              const normalizedProductName = productName.replace(/^big red's\s+-\s+/i, '')
+              
+              if (normalizedCardTitle === normalizedProductName) {
+                foundButton = card.querySelector('[data-product-modal]')
+                console.log(`✅ Producto encontrado por nombre normalizado: ${cardTitle}`)
+                break
+              }
+            }
+          }
+          
+          if (foundButton) {
+            console.log(`✅ Abriendo modal para producto: ${productData.name}`)
+            
+            // Crear evento personalizado para comunicar el producto al grid
+            const event = new CustomEvent('openProductModal', { 
+              detail: { 
+                productData: productData,
+                searchByName: true
+              } 
+            })
+            window.dispatchEvent(event)
+            
+            // Pequeño delay para que se establezca el producto correcto
+            setTimeout(() => {
+              // Simular clic en el botón "Mehr Info" para abrir el modal
+              if (foundButton instanceof HTMLElement) {
+                foundButton.click()
+              }
+              
+              // También destacar visualmente el producto
+              const productCard = foundButton.closest('.group')
+              if (productCard) {
+                productCard.classList.add('highlight-product')
+                setTimeout(() => {
+                  productCard.classList.remove('highlight-product')
+                }, 3000)
+              }
+            }, 100)
+          } else {
+            console.log(`❌ No se encontró producto con nombre: ${productData.name}`)
+            // Fallback: destacar la sección general
+            const offersSection = document.getElementById('offers')
+            if (offersSection) {
+              offersSection.classList.add('highlight-section')
+              setTimeout(() => {
+                offersSection.classList.remove('highlight-section')
+              }, 2000)
+            }
+          }
+        }, 1000) // Delay de 1 segundo para asegurar que el scroll termine completamente
       }
     }
   }
@@ -501,6 +514,22 @@ ${contactMessage}`
     }
   }, [])
 
+  // Cargar productos desde la API cuando se monta el componente
+  useEffect(() => {
+    const initializeProducts = async () => {
+      try {
+        const products = await loadProductsFromAPI()
+        productDatabase.length = 0 // Limpiar productos existentes
+        productDatabase.push(...products) // Agregar nuevos productos
+        console.log(`Cargados ${products.length} productos desde la API`)
+      } catch (error) {
+        console.error('Error al inicializar productos:', error)
+      }
+    }
+    
+    initializeProducts()
+  }, [])
+
   // Renderiza formulario de contacto - Versión responsiva
   const renderContactFlow = () => {
     return (
@@ -797,7 +826,10 @@ ${contactMessage}`
                           />
                           {/* Productos detectados */}
                           {msg.detectedProducts && msg.detectedProducts.length > 0 && (
-                            <DetectedProductsDisplay products={msg.detectedProducts} />
+                            <DetectedProductsDisplay 
+                              products={msg.detectedProducts} 
+                              onCloseChat={() => setIsOpen(false)}
+                            />
                           )}
                         </div>
                       ) : (

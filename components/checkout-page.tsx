@@ -91,6 +91,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "invoice">("paypal")
 
   // User account states
   const [showCreateAccount, setShowCreateAccount] = useState(false)
@@ -391,7 +392,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
         cart: cart,
         totalAmount: getFinalTotal(),
         shippingCost: getShippingCost(),
-        paymentMethod: "paypal",
+        paymentMethod: paymentMethod,
         paymentStatus: "completed",
         userId: userId || currentUser?.id || null,
       }
@@ -431,6 +432,44 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
     setOrderStatus("processing")
     window.open(paypalUrl, "_blank")
+  }
+
+  const handleInvoicePayment = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    if (showCreateAccount && !validateAccountCreation()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const savedOrder = await saveOrderToDatabase()
+
+      setOrderStatus("completed")
+      setOrderDetails({
+        id: savedOrder.orderNumber,
+        status: "INVOICE_SENT",
+        customerInfo: customerInfo,
+        cart: cart,
+        total: getFinalTotal(),
+        createdAt: savedOrder.createdAt,
+      })
+
+      if (onClearCart) {
+        onClearCart()
+      }
+
+      localStorage.removeItem("cantina-cart")
+    } catch (error: any) {
+      console.error("Error saving order:", error)
+      alert(`Error al guardar el pedido: ${error.message}`)
+      setOrderStatus("error")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handlePaymentConfirmation = async (success: boolean) => {
@@ -767,14 +806,17 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
             <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
             <h1 className="text-4xl font-bold text-green-700 mb-4">Bestellung erfolgreich!</h1>
             <p className="text-xl text-gray-600 mb-6">
-              Vielen Dank für Ihre Bestellung! Sie erhalten in Kürze eine Bestätigungs-E-Mail.
+              {orderDetails?.status === "INVOICE_SENT" 
+                ? "Vielen Dank für Ihre Bestellung! Wir senden Ihnen die Rechnung per Post an Ihre Adresse."
+                : "Vielen Dank für Ihre Bestellung! Sie erhalten in Kürze eine Bestätigungs-E-Mail."
+              }
             </p>
 
             <div className="bg-green-50 rounded-lg p-6 mb-6">
               <h3 className="text-lg font-semibold text-green-700 mb-2">Bestelldetails</h3>
               <p className="text-green-600">Bestellnummer: {orderDetails?.id}</p>
               <p className="text-green-600">Betrag: {getFinalTotal().toFixed(2)} CHF</p>
-              <p className="text-green-600">Status: Bezahlt</p>
+              <p className="text-green-600">Status: {orderDetails?.status === "INVOICE_SENT" ? "Rechnung wird gesendet" : "Bezahlt"}</p>
               {isLoggedIn && <p className="text-green-600">Konto: Gespeichert ✅</p>}
             </div>
 
