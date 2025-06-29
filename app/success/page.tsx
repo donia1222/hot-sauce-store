@@ -41,12 +41,44 @@ export default function PayPalSuccessPage() {
 
   const processPayPalSuccess = async (payerIdFromUrl: string) => {
     try {
-      // Obtener datos del pedido desde localStorage
-      const savedCustomerInfo = localStorage.getItem("cantina-customer-info")
-      const savedCart = localStorage.getItem("cantina-cart")
+      // Intentar obtener datos del pedido usando múltiples métodos
+      let savedCustomerInfo = localStorage.getItem("cantina-customer-info")
+      let savedCart = localStorage.getItem("cantina-cart")
+      
+      // Si no están en localStorage, intentar sessionStorage
+      if (!savedCustomerInfo || !savedCart) {
+        savedCustomerInfo = sessionStorage.getItem("cantina-customer-info")
+        savedCart = sessionStorage.getItem("cantina-cart")
+      }
+      
+      // Intentar recuperar por ID de pedido único
+      if (!savedCustomerInfo || !savedCart) {
+        const orderId = localStorage.getItem("cantina-current-order-id") || sessionStorage.getItem("cantina-current-order-id")
+        if (orderId) {
+          const orderData = localStorage.getItem(`cantina-order-${orderId}`) || sessionStorage.getItem(`cantina-order-${orderId}`)
+          if (orderData) {
+            const parsedOrderData = JSON.parse(orderData)
+            savedCustomerInfo = JSON.stringify(parsedOrderData.customerInfo)
+            savedCart = JSON.stringify(parsedOrderData.cart)
+          }
+        }
+      }
+      
+      // Intentar recuperar del parámetro custom de PayPal
+      if (!savedCustomerInfo || !savedCart) {
+        const customParam = searchParams.get("custom")
+        if (customParam) {
+          const orderData = localStorage.getItem(`cantina-order-${customParam}`) || sessionStorage.getItem(`cantina-order-${customParam}`)
+          if (orderData) {
+            const parsedOrderData = JSON.parse(orderData)
+            savedCustomerInfo = JSON.stringify(parsedOrderData.customerInfo)
+            savedCart = JSON.stringify(parsedOrderData.cart)
+          }
+        }
+      }
 
       if (!savedCustomerInfo || !savedCart) {
-        throw new Error("No se encontraron datos del pedido en localStorage")
+        throw new Error("No se encontraron datos del pedido en localStorage ni sessionStorage")
       }
 
       const customerInfo = JSON.parse(savedCustomerInfo)
@@ -71,8 +103,25 @@ export default function PayPalSuccessPage() {
       // 2. SEGUNDO: Enviar email de confirmación
       await sendOrderEmail(orderData)
 
-      // 3. Limpiar localStorage
+      // 3. Limpiar localStorage y sessionStorage
       localStorage.removeItem("cantina-cart")
+      sessionStorage.removeItem("cantina-cart")
+      
+      // Limpiar datos temporales del pedido
+      const orderId = localStorage.getItem("cantina-current-order-id") || sessionStorage.getItem("cantina-current-order-id")
+      const customParam = searchParams.get("custom")
+      
+      if (orderId) {
+        localStorage.removeItem(`cantina-order-${orderId}`)
+        sessionStorage.removeItem(`cantina-order-${orderId}`)
+        localStorage.removeItem("cantina-current-order-id")
+        sessionStorage.removeItem("cantina-current-order-id")
+      }
+      
+      if (customParam && customParam !== orderId) {
+        localStorage.removeItem(`cantina-order-${customParam}`)
+        sessionStorage.removeItem(`cantina-order-${customParam}`)
+      }
 
       // 4. Guardar información del pago exitoso
       const paymentInfo = {
