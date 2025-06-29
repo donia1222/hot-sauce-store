@@ -461,7 +461,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
     const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=info@cantinatexmex.ch&amount=${total.toFixed(2)}&currency_code=CHF&item_name=FEUER KÖNIGREICH Order&return=${window.location.origin}/success&cancel_return=${window.location.origin}/cancel`
 
     setOrderStatus("processing")
-    window.open(paypalUrl, "_blank")
+    window.location.href = paypalUrl
   }
 
   const handleInvoicePayment = async () => {
