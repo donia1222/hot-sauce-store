@@ -90,6 +90,7 @@ export default function ProductsGridCompact({
   const [addedItems, setAddedItems] = useState<Set<number>>(new Set())
   const [activeTab, setActiveTab] = useState("all")
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [stats, setStats] = useState({ hot_sauces: 0, bbq_sauces: 0, total_products: 0 })
   const [cartCount, setCartCount] = useState(0)
   const [animatingProducts, setAnimatingProducts] = useState<Set<number>>(new Set())
@@ -101,10 +102,56 @@ export default function ProductsGridCompact({
 
   const API_BASE_URL = "https://web.lweb.ch/shop"
 
-  // Cargar productos desde la API
+  // Cargar productos desde la API y carrito desde localStorage
   useEffect(() => {
     loadProducts()
+    loadCartFromStorage()
   }, [])
+
+  // Funciones de localStorage para el carrito
+  const saveCartToStorage = (cartData: CartItem[]) => {
+    try {
+      localStorage.setItem('hot-sauce-cart', JSON.stringify(cartData))
+      const totalItems = cartData.reduce((sum, item) => sum + item.quantity, 0)
+      localStorage.setItem('hot-sauce-cart-count', totalItems.toString())
+    } catch (error) {
+      console.error('Error saving cart to localStorage:', error)
+    }
+  }
+
+  const loadCartFromStorage = () => {
+    try {
+      const savedCart = localStorage.getItem('hot-sauce-cart')
+      const savedCount = localStorage.getItem('hot-sauce-cart-count')
+      const savedPurchasedItems = localStorage.getItem('hot-sauce-purchased-items')
+      
+      if (savedCart) {
+        const cartData: CartItem[] = JSON.parse(savedCart)
+        setCart(cartData)
+        
+        if (savedCount) {
+          setCartCount(parseInt(savedCount))
+        } else {
+          // Recalcular count si no está guardado
+          const totalItems = cartData.reduce((sum, item) => sum + item.quantity, 0)
+          setCartCount(totalItems)
+        }
+        
+        // Marcar productos como añadidos si están en el carrito
+        const addedProductIds = new Set(cartData.map(item => item.id))
+        setAddedItems(addedProductIds)
+      }
+      
+      // Cargar productos marcados como comprados
+      if (savedPurchasedItems) {
+        const purchasedIds: number[] = JSON.parse(savedPurchasedItems)
+        // Aquí podrías usar onMarkAsPurchased si necesitas notificar al componente padre
+        // Por ahora solo mantenemos el estado local
+      }
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error)
+    }
+  }
 
   // Escuchar eventos del chat para abrir modales específicos
   useEffect(() => {
@@ -117,6 +164,7 @@ export default function ProductsGridCompact({
       if (realProduct) {
         console.log(`✅ Producto encontrado en la lista:`, realProduct)
         setSelectedProduct(realProduct)
+        setIsModalOpen(true)
       } else {
         console.log(`⚠️ Producto no encontrado en la lista, usando datos del chat`)
         // Convertir los datos del chat al formato de Product
@@ -133,6 +181,7 @@ export default function ProductsGridCompact({
           category: 'bbq-sauce'
         }
         setSelectedProduct(chatProduct)
+        setIsModalOpen(true)
       }
     }
 
@@ -141,6 +190,12 @@ export default function ProductsGridCompact({
       window.removeEventListener('openProductModal', handleOpenProductModal)
     }
   }, [products])
+
+  // Sincronizar addedItems con el carrito para mostrar el estado visual correcto
+  useEffect(() => {
+    const addedProductIds = new Set(cart.map(item => item.id))
+    setAddedItems(addedProductIds)
+  }, [cart])
 
   // Animación escalonada
   useEffect(() => {
@@ -240,7 +295,7 @@ export default function ProductsGridCompact({
 
   const getQty = (id: number) => quantities[id] ?? 1
 
-  // Funciones del carrito - EXACTAMENTE COMO ESTABAN
+  // Funciones del carrito con persistencia
   const addToCartHandler = (product: any) => {
     const cartItem: CartItem = {
       id: product.id!,
@@ -257,20 +312,32 @@ export default function ProductsGridCompact({
 
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === cartItem.id)
+      let newCart
       if (existingItem) {
-        return prevCart.map((item) => (item.id === cartItem.id ? { ...item, quantity: item.quantity + 1 } : item))
+        newCart = prevCart.map((item) => (item.id === cartItem.id ? { ...item, quantity: item.quantity + 1 } : item))
+      } else {
+        newCart = [...prevCart, cartItem]
       }
-      return [...prevCart, cartItem]
+      
+      // Guardar en localStorage
+      saveCartToStorage(newCart)
+      return newCart
     })
   }
 
   const removeFromCartHandler = (productId: number) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === productId)
+      let newCart
       if (existingItem && existingItem.quantity > 1) {
-        return prevCart.map((item) => (item.id === productId ? { ...item, quantity: item.quantity - 1 } : item))
+        newCart = prevCart.map((item) => (item.id === productId ? { ...item, quantity: item.quantity - 1 } : item))
+      } else {
+        newCart = prevCart.filter((item) => item.id !== productId)
       }
-      return prevCart.filter((item) => item.id !== productId)
+      
+      // Guardar en localStorage
+      saveCartToStorage(newCart)
+      return newCart
     })
 
     // Actualizar contador del carrito
@@ -280,6 +347,13 @@ export default function ProductsGridCompact({
   const clearCartHandler = () => {
     setCart([])
     setCartCount(0)
+    // Limpiar localStorage
+    try {
+      localStorage.removeItem('hot-sauce-cart')
+      localStorage.removeItem('hot-sauce-cart-count')
+    } catch (error) {
+      console.error('Error clearing cart from localStorage:', error)
+    }
   }
 
   const goToCheckoutHandler = () => {
@@ -289,14 +363,35 @@ export default function ProductsGridCompact({
 
   const handleOrderComplete = () => {
     setCurrentView("success")
-    clearCartHandler()
+    clearCartHandler() // Esto ya limpia localStorage
   }
 
   const handleBackToProducts = () => {
     setCurrentView("products")
   }
 
-  const handlePurchase = (product: Product, event?: React.MouseEvent) => {
+  const handlePurchase = (product: Product, event?: React.MouseEvent, fromModal?: boolean) => {
+    // Si viene del modal, agregar al carrito sin animación y cerrar modal
+    if (fromModal) {
+      onAddToCart(product, getQty(product.id!))
+      onMarkAsPurchased(product.id!)
+      addToCartHandler(product)
+      setCartCount((prev) => prev + getQty(product.id!))
+      setCartBounce(true)
+      setTimeout(() => setCartBounce(false), 600)
+      setAddedItems((prev) => new Set([...prev, product.id!]))
+      setIsModalOpen(false) // Cerrar modal
+      
+      setTimeout(() => {
+        setAddedItems((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(product.id!)
+          return newSet
+        })
+      }, 2000)
+      return
+    }
+
     // Obtener la posición del elemento que se está animando
     const target = event?.currentTarget as HTMLElement
     const rect = target?.getBoundingClientRect()
@@ -560,7 +655,7 @@ export default function ProductsGridCompact({
 
             {/* Botón de compra */}
             <Button
-              onClick={(e) => handlePurchase(product, e)}
+              onClick={() => handlePurchase(product, undefined, true)}
               disabled={purchasedItems.has(product.id!)}
               className={`w-full font-semibold py-3 rounded-lg transition-all duration-500 shadow-md hover:shadow-lg ${
                 purchasedItems.has(product.id!) || addedItems.has(product.id!)
@@ -650,20 +745,23 @@ export default function ProductsGridCompact({
 
               {/* MEJORADO: Botones con ancho apropiado y mejor diseño */}
               <div className="flex items-center gap-2 lg:gap-3">
-                <Dialog>
+                <Dialog open={isModalOpen && selectedProduct?.id === product.id} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
                       className="w-auto min-w-[100px] lg:min-w-[120px] text-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900 font-medium"
-                      onClick={() => setSelectedProduct(product)}
+                      onClick={() => {
+                        setSelectedProduct(product)
+                        setIsModalOpen(true)
+                      }}
                       data-product-modal={product.id}
                     >
                       <Info className="w-4 h-4 mr-1" />
                       Mehr Info
                     </Button>
                   </DialogTrigger>
-                  {selectedProduct && <ProductDetailModal product={selectedProduct} />}
+                  {selectedProduct && selectedProduct.id === product.id && <ProductDetailModal product={selectedProduct} />}
                 </Dialog>
 
                 <Button

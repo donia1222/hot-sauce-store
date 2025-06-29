@@ -61,6 +61,15 @@ interface CustomerInfo {
   notes: string
 }
 
+interface BillingAddress {
+  firstName: string
+  lastName: string
+  address: string
+  city: string
+  postalCode: string
+  canton: string
+}
+
 interface UserData {
   id?: number
   email: string
@@ -92,6 +101,18 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<"paypal" | "invoice">("paypal")
+
+  // Billing address states
+  const [useDifferentBillingAddress, setUseDifferentBillingAddress] = useState(false)
+  const [billingAddress, setBillingAddress] = useState<BillingAddress>({
+    firstName: "",
+    lastName: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    canton: "",
+  })
+  const [billingErrors, setBillingErrors] = useState<Partial<BillingAddress>>({})
 
   // User account states
   const [showCreateAccount, setShowCreateAccount] = useState(false)
@@ -389,11 +410,12 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
       const orderData = {
         customerInfo: customerInfo,
+        billingAddress: useDifferentBillingAddress ? billingAddress : null,
         cart: cart,
         totalAmount: getFinalTotal(),
         shippingCost: getShippingCost(),
         paymentMethod: paymentMethod,
-        paymentStatus: "completed",
+        paymentStatus: paymentMethod === "invoice" ? "pending" : "completed",
         userId: userId || currentUser?.id || null,
       }
 
@@ -423,6 +445,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
       return
     }
 
+    if (!validateBillingAddress()) {
+      return
+    }
+
     if (showCreateAccount && !validateAccountCreation()) {
       return
     }
@@ -436,6 +462,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
 
   const handleInvoicePayment = async () => {
     if (!validateForm()) {
+      return
+    }
+
+    if (!validateBillingAddress()) {
       return
     }
 
@@ -556,6 +586,34 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: undefined }))
     }
+  }
+
+  const handleBillingInputChange = (field: keyof BillingAddress, value: string) => {
+    setBillingAddress((prev) => ({ ...prev, [field]: value }))
+    if (billingErrors[field]) {
+      setBillingErrors((prev) => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  const validateBillingAddress = () => {
+    if (!useDifferentBillingAddress) return true
+
+    const errors: Partial<BillingAddress> = {}
+
+    if (!billingAddress.firstName.trim()) errors.firstName = "Vorname ist erforderlich"
+    if (!billingAddress.lastName.trim()) errors.lastName = "Nachname ist erforderlich"
+    if (!billingAddress.address.trim()) errors.address = "Adresse ist erforderlich"
+    if (!billingAddress.city.trim()) errors.city = "Stadt ist erforderlich"
+    if (!billingAddress.postalCode.trim()) errors.postalCode = "PLZ ist erforderlich"
+    if (!billingAddress.canton.trim()) errors.canton = "Kanton ist erforderlich"
+
+    const postalCodeRegex = /^\d{4}$/
+    if (billingAddress.postalCode && !postalCodeRegex.test(billingAddress.postalCode)) {
+      errors.postalCode = "PLZ muss 4 Ziffern haben"
+    }
+
+    setBillingErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
   const handleLogout = () => {
@@ -1180,6 +1238,119 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               </CardContent>
             </Card>
 
+            {/* Billing Address Section */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Checkbox
+                    id="differentBillingAddress"
+                    checked={useDifferentBillingAddress}
+                    onCheckedChange={(checked) => {
+                      setUseDifferentBillingAddress(checked as boolean)
+                      if (!checked) {
+                        // Reset billing address when unchecked
+                        setBillingAddress({
+                          firstName: "",
+                          lastName: "",
+                          address: "",
+                          city: "",
+                          postalCode: "",
+                          canton: "",
+                        })
+                        setBillingErrors({})
+                      }
+                    }}
+                  />
+                  <Label htmlFor="differentBillingAddress" className="flex items-center cursor-pointer">
+                    <CreditCard className="w-4 h-4 mr-2 text-orange-600" />
+                    Rechnungsadresse anders als Lieferadresse
+                  </Label>
+                </div>
+
+                {useDifferentBillingAddress && (
+                  <div className="space-y-4 bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <h4 className="font-semibold text-orange-800 mb-3">Rechnungsadresse</h4>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="billingFirstName">Vorname *</Label>
+                        <Input
+                          id="billingFirstName"
+                          value={billingAddress.firstName}
+                          onChange={(e) => handleBillingInputChange("firstName", e.target.value)}
+                          className={`bg-white ${billingErrors.firstName ? "border-red-500" : ""}`}
+                        />
+                        {billingErrors.firstName && <p className="text-red-500 text-sm mt-1">{billingErrors.firstName}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="billingLastName">Nachname *</Label>
+                        <Input
+                          id="billingLastName"
+                          value={billingAddress.lastName}
+                          onChange={(e) => handleBillingInputChange("lastName", e.target.value)}
+                          className={`bg-white ${billingErrors.lastName ? "border-red-500" : ""}`}
+                        />
+                        {billingErrors.lastName && <p className="text-red-500 text-sm mt-1">{billingErrors.lastName}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="billingAddress">Straße und Hausnummer *</Label>
+                      <Input
+                        id="billingAddress"
+                        value={billingAddress.address}
+                        onChange={(e) => handleBillingInputChange("address", e.target.value)}
+                        className={`bg-white ${billingErrors.address ? "border-red-500" : ""}`}
+                      />
+                      {billingErrors.address && <p className="text-red-500 text-sm mt-1">{billingErrors.address}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="billingPostalCode">PLZ *</Label>
+                        <Input
+                          id="billingPostalCode"
+                          value={billingAddress.postalCode}
+                          onChange={(e) => handleBillingInputChange("postalCode", e.target.value)}
+                          className={`bg-white ${billingErrors.postalCode ? "border-red-500" : ""}`}
+                          placeholder="1234"
+                        />
+                        {billingErrors.postalCode && <p className="text-red-500 text-sm mt-1">{billingErrors.postalCode}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="billingCity">Stadt *</Label>
+                        <Input
+                          id="billingCity"
+                          value={billingAddress.city}
+                          onChange={(e) => handleBillingInputChange("city", e.target.value)}
+                          className={`bg-white ${billingErrors.city ? "border-red-500" : ""}`}
+                        />
+                        {billingErrors.city && <p className="text-red-500 text-sm mt-1">{billingErrors.city}</p>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="billingCanton">Kanton *</Label>
+                      <Input
+                        id="billingCanton"
+                        value={billingAddress.canton}
+                        onChange={(e) => handleBillingInputChange("canton", e.target.value)}
+                        className={`bg-white ${billingErrors.canton ? "border-red-500" : ""}`}
+                        placeholder="z.B. Zürich, Bern, Basel..."
+                      />
+                      {billingErrors.canton && <p className="text-red-500 text-sm mt-1">{billingErrors.canton}</p>}
+                    </div>
+
+                    <div className="bg-orange-100 p-3 rounded-lg">
+                      <p className="text-sm text-orange-700">
+                        <strong>Hinweis:</strong> Die Rechnungsadresse wird nur für die Rechnungsstellung verwendet und nicht in der Datenbank gespeichert.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Create Account Section - ONLY show if NOT logged in */}
             {!isLoggedIn && (
               <Card>
@@ -1394,26 +1565,99 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
               </CardContent>
             </Card>
 
-            {/* PayPal Payment */}
+            {/* Payment Method Selection */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
                   <CreditCard className="w-5 h-5 mr-2 text-orange-600" />
-                  Zahlung
+                  Zahlungsart wählen
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Shield className="w-5 h-5 text-green-600" />
-                    <span className="text-sm text-gray-600">Sichere Zahlung mit PayPal</span>
+                <div className="space-y-4 mb-6">
+                  {/* PayPal Option */}
+                  <div 
+                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                      paymentMethod === "paypal" 
+                        ? "border-blue-500 bg-blue-50" 
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    onClick={() => setPaymentMethod("paypal")}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full border-2 ${
+                        paymentMethod === "paypal" ? "border-blue-500 bg-blue-500" : "border-gray-400"
+                      }`}>
+                        {paymentMethod === "paypal" && <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <Shield className="w-5 h-5 text-blue-600" />
+                          <span className="font-semibold text-gray-900">PayPal</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Sofortige Zahlung mit PayPal - Sie werden weitergeleitet
+                        </p>
+                      </div>
+                      <div className="text-xl">💳</div>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Sie werden zu PayPal weitergeleitet um die Zahlung abzuschließen.
-                  </p>
+
+                  {/* Invoice Option */}
+                  <div 
+                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                      paymentMethod === "invoice" 
+                        ? "border-green-500 bg-green-50" 
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    onClick={() => setPaymentMethod("invoice")}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full border-2 ${
+                        paymentMethod === "invoice" ? "border-green-500 bg-green-500" : "border-gray-400"
+                      }`}>
+                        {paymentMethod === "invoice" && <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <Package className="w-5 h-5 text-green-600" />
+                          <span className="font-semibold text-gray-900">Kauf auf Rechnung</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Rechnung wird mit der Lieferung gesendet - 30 Tage Zahlungsziel
+                        </p>
+                      </div>
+                      <div className="text-xl">📄</div>
+                    </div>
+                  </div>
                 </div>
 
-                {orderStatus === "processing" ? (
+                {/* Payment Method Specific Content */}
+                {paymentMethod === "paypal" && (
+                  <div className="mb-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Shield className="w-5 h-5 text-green-600" />
+                      <span className="text-sm text-gray-600">Sichere Zahlung mit PayPal</span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Sie werden zu PayPal weitergeleitet um die Zahlung abzuschließen.
+                    </p>
+                  </div>
+                )}
+
+                {paymentMethod === "invoice" && (
+                  <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-green-800 mb-2">📄 Kauf auf Rechnung</h4>
+                    <ul className="text-sm text-green-700 space-y-1">
+                      <li>• Rechnung wird mit der Lieferung per Post gesendet</li>
+                      <li>• 30 Tage Zahlungsziel ab Rechnungsdatum</li>
+                      <li>• Überweisung auf unser Bankkonto</li>
+                      <li>• Nur für Lieferadressen in der Schweiz</li>
+                    </ul>
+                  </div>
+                )}
+
+                {orderStatus === "processing" && paymentMethod === "paypal" ? (
                   <div className="text-center py-8 space-y-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
                     <p className="text-gray-600 font-semibold">Warten auf PayPal Zahlung...</p>
@@ -1449,16 +1693,35 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart }: CheckoutPageP
                     </p>
                   </div>
                 ) : (
-                  <Button
-                    onClick={handlePayPalPayment}
-                    className="w-full h-16 text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black shadow-xl hover:shadow-2xl transition-all duration-300"
-                  >
-                    💳 PayPal - {getFinalTotal().toFixed(2)} CHF
-                  </Button>
+                  <div className="space-y-4">
+                    {paymentMethod === "paypal" ? (
+                      <Button
+                        onClick={handlePayPalPayment}
+                        className="w-full h-16 text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black shadow-xl hover:shadow-2xl transition-all duration-300"
+                      >
+                        💳 Mit PayPal bezahlen - {getFinalTotal().toFixed(2)} CHF
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleInvoicePayment}
+                        disabled={isSubmitting}
+                        className="w-full h-16 text-xl font-bold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Bestellung wird verarbeitet...
+                          </>
+                        ) : (
+                          <>📄 Kauf auf Rechnung - {getFinalTotal().toFixed(2)} CHF</>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 )}
 
                 <p className="text-xs text-gray-500 mt-4 text-center">
-                  Mit dem Klick auf "Mit PayPal bezahlen" akzeptieren Sie unsere AGB und Datenschutzbestimmungen.
+                  Mit dem Klick auf "{paymentMethod === "paypal" ? "Mit PayPal bezahlen" : "Kauf auf Rechnung"}" akzeptieren Sie unsere AGB und Datenschutzbestimmungen.
                 </p>
               </CardContent>
             </Card>

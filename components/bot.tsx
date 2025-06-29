@@ -325,6 +325,10 @@ export default function SpaceChat() {
       try {
         const parsedMessages = JSON.parse(storedMessages) as Message[]
         setMessages(parsedMessages)
+        // Mostrar botón de limpiar si hay mensajes guardados
+        if (parsedMessages.length > 0) {
+          setShowClearIcon(true)
+        }
       } catch (error) {
         console.error("Error loading stored messages:", error)
       }
@@ -335,6 +339,8 @@ export default function SpaceChat() {
   useEffect(() => {
     // Guardar en localStorage cada vez que cambien los mensajes
     localStorage.setItem("smokehouseChatMessages", JSON.stringify(messages))
+    // Actualizar visibilidad del botón según si hay mensajes
+    setShowClearIcon(messages.length > 0)
     scrollToBottom()
   }, [messages])
 
@@ -419,7 +425,6 @@ export default function SpaceChat() {
 
         setMessages(updatedMessages)
         setInput("")
-        setShowClearIcon(true)
       } else if (data.error) {
         console.error("Error del servidor:", data.error)
       }
@@ -470,7 +475,6 @@ ${contactMessage}`
   // Borrar todo el chat
   const clearChat = () => {
     setMessages([])
-    setShowClearIcon(false)
     localStorage.removeItem("smokehouseChatMessages")
   }
 
