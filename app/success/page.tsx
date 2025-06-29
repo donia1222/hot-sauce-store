@@ -141,6 +141,13 @@ export default function PayPalSuccessPage() {
       localStorage.removeItem("cantina-cart")
       sessionStorage.removeItem("cantina-cart")
       
+      // Disparar evento personalizado para limpiar carrito en la aplicación principal
+      const clearCartEvent = new CustomEvent('clearCart', { detail: { reason: 'paypal_success' } })
+      window.dispatchEvent(clearCartEvent)
+      
+      // También crear un flag para que la aplicación sepa que debe limpiar el carrito
+      localStorage.setItem('cart-should-be-cleared', 'true')
+      
       // Limpiar datos temporales del pedido
       const orderId = localStorage.getItem("cantina-current-order-id") || sessionStorage.getItem("cantina-current-order-id")
       const customParam = searchParams.get("custom")

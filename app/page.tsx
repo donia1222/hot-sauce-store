@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { CulinaryInspiration } from "@/components/culinary-inspiration"
@@ -57,6 +57,15 @@ export default function PremiumHotSauceStore() {
 
   // 💾 Cargar carrito desde localStorage al iniciar
   useEffect(() => {
+    // Verificar si el carrito debe ser limpiado después de un pago exitoso
+    const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
+    if (shouldClearCart === 'true') {
+      localStorage.removeItem('cart-should-be-cleared')
+      localStorage.removeItem('cantina-cart')
+      setCart([])
+      return // No cargar carrito si debe ser limpiado
+    }
+
     const savedCart = localStorage.getItem("cantina-cart")
     if (savedCart) {
       try {
@@ -86,6 +95,20 @@ export default function PremiumHotSauceStore() {
       }
     }
   }, [])
+
+  // 👂 Escuchar evento de limpiar carrito desde página de success
+  useEffect(() => {
+    const handleClearCart = (event: CustomEvent) => {
+      console.log("Clearing cart due to:", event.detail?.reason)
+      clearCart()
+    }
+
+    window.addEventListener('clearCart', handleClearCart as EventListener)
+    
+    return () => {
+      window.removeEventListener('clearCart', handleClearCart as EventListener)
+    }
+  }, [clearCart])
 
   // 🔄 Guardar carrito en localStorage cada vez que cambie
   useEffect(() => {
@@ -146,10 +169,10 @@ export default function PremiumHotSauceStore() {
   }
 
   // 🗑️ Nueva función para limpiar el carrito completamente
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([])
     localStorage.removeItem("cantina-cart") // También limpiar localStorage
-  }
+  }, [])
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0)
