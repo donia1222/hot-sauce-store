@@ -107,12 +107,20 @@ export default function PayPalSuccessPage() {
       // 2. SEGUNDO: Enviar email de confirmación
       await sendOrderEmail(orderData)
 
-      // 3. Limpiar localStorage y sessionStorage
+      // 3. Limpiar localStorage y sessionStorage inmediatamente
       localStorage.removeItem("cantina-cart")
       sessionStorage.removeItem("cantina-cart")
+      localStorage.removeItem("cantina-customer-info")
+      sessionStorage.removeItem("cantina-customer-info")
       
       // Flag para que la aplicación sepa que debe limpiar el carrito
       localStorage.setItem('cart-should-be-cleared', 'true')
+      
+      // Forzar limpieza del carrito usando eventos del navegador
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'cart-should-be-cleared',
+        newValue: 'true'
+      }))
       
       // Limpiar datos temporales del pedido
       const orderId = localStorage.getItem("cantina-current-order-id") || sessionStorage.getItem("cantina-current-order-id")

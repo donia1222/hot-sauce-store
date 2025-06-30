@@ -110,31 +110,18 @@ export default function PremiumHotSauceStore() {
       const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
       if (shouldClearCart === 'true') {
         localStorage.removeItem('cart-should-be-cleared')
-        clearCart() // Eliminar el timeout innecesario
+        setTimeout(() => {
+          clearCart()
+        }, 100) // Pequeño delay para evitar conflictos
       }
     }
 
-    // Verificar cuando se carga la página
+    // Verificar cuando se carga la página y cuando se cambia el foco
     checkClearCart()
-    
-    // Verificar periódicamente cada segundo para detectar cambios
-    const interval = setInterval(checkClearCart, 1000)
-    
-    // Escuchar eventos de storage para detectar cambios desde otras pestañas/ventanas
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'cart-should-be-cleared' && e.newValue === 'true') {
-        checkClearCart()
-      }
-    }
-    
-    // También verificar cuando se cambia el foco
     window.addEventListener('focus', checkClearCart)
-    window.addEventListener('storage', handleStorageChange)
     
     return () => {
-      clearInterval(interval)
       window.removeEventListener('focus', checkClearCart)
-      window.removeEventListener('storage', handleStorageChange)
     }
   }, [])
 
