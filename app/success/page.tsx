@@ -24,20 +24,25 @@ export default function PayPalSuccessPage() {
   const [orderNumber, setOrderNumber] = useState<string>("")
   const [debugInfo, setDebugInfo] = useState<string>("")
   const [error, setError] = useState<string>("")
+  const [hasProcessed, setHasProcessed] = useState<boolean>(false)
 
   // API Base URL
   const API_BASE_URL = "https://web.lweb.ch/shop"
 
   useEffect(() => {
+    // Prevenir múltiples ejecuciones
+    if (hasProcessed) return
+    
     const payerIdFromUrl = searchParams.get("PayerID")
     if (payerIdFromUrl) {
       setPayerID(payerIdFromUrl)
+      setHasProcessed(true)
       processPayPalSuccess(payerIdFromUrl)
     } else {
       setError("No se encontró PayerID en la URL")
       setIsProcessing(false)
     }
-  }, [searchParams])
+  }, [searchParams, hasProcessed])
 
   const processPayPalSuccess = async (payerIdFromUrl: string) => {
     try {
@@ -107,13 +112,7 @@ export default function PayPalSuccessPage() {
       // 2. SEGUNDO: Enviar email de confirmación
       await sendOrderEmail(orderData)
 
-      // 3. Limpiar localStorage y sessionStorage inmediatamente
-      localStorage.removeItem("cantina-cart")
-      sessionStorage.removeItem("cantina-cart")
-      localStorage.removeItem("cantina-customer-info")
-      sessionStorage.removeItem("cantina-customer-info")
-      
-      // Flag para que la aplicación sepa que debe limpiar el carrito
+      // 3. PRIMERO: Marcar para limpieza y comunicar con la página principal
       localStorage.setItem('cart-should-be-cleared', 'true')
       
       // Forzar limpieza del carrito usando eventos del navegador
@@ -131,6 +130,14 @@ export default function PayPalSuccessPage() {
       if (window.opener) {
         window.opener.postMessage({ type: 'CLEAR_CART', source: 'paypal-success' }, '*')
       }
+      
+      // DESPUÉS: Limpiar localStorage y sessionStorage con delay para asegurar comunicación
+      setTimeout(() => {
+        localStorage.removeItem("cantina-cart")
+        sessionStorage.removeItem("cantina-cart")
+        localStorage.removeItem("cantina-customer-info")
+        sessionStorage.removeItem("cantina-customer-info")
+      }, 1000)
       
       // Limpiar datos temporales del pedido
       const orderId = localStorage.getItem("cantina-current-order-id") || sessionStorage.getItem("cantina-current-order-id")

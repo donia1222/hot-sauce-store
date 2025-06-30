@@ -60,6 +60,7 @@ export default function PremiumHotSauceStore() {
     // Verificar si el carrito debe ser limpiado después de un pago exitoso
     const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
     if (shouldClearCart === 'true') {
+      console.log('🧹 INICIAL: Limpiando carrito por flag cart-should-be-cleared')
       localStorage.removeItem('cart-should-be-cleared')
       localStorage.removeItem('cantina-cart')
       setCart([])
@@ -109,8 +110,9 @@ export default function PremiumHotSauceStore() {
     const checkClearCart = () => {
       const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
       if (shouldClearCart === 'true') {
+        console.log('🧹 PERIODIC: Limpiando carrito por flag cart-should-be-cleared')
         localStorage.removeItem('cart-should-be-cleared')
-        clearCart() // Eliminar el timeout innecesario
+        clearCart()
       }
     }
 
@@ -123,6 +125,7 @@ export default function PremiumHotSauceStore() {
     // Escuchar eventos de storage para detectar cambios desde otras pestañas/ventanas
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'cart-should-be-cleared' && e.newValue === 'true') {
+        console.log('🧹 STORAGE EVENT: Recibido evento de storage para limpiar carrito')
         checkClearCart()
       }
     }
@@ -252,8 +255,10 @@ export default function PremiumHotSauceStore() {
 
   // 🗑️ Nueva función para limpiar el carrito completamente
   const clearCart = () => {
+    console.log('🧹 CLEARING CART: Limpiando carrito completamente, items actuales:', cart.length)
     setCart([])
-    localStorage.removeItem("cantina-cart") // También limpiar localStorage
+    localStorage.removeItem("cantina-cart")
+    console.log('✅ CART CLEARED: Carrito limpiado exitosamente')
   }
 
   const getTotalItems = () => {
