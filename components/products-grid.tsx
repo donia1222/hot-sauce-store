@@ -111,9 +111,9 @@ export default function ProductsGridCompact({
   // Funciones de localStorage para el carrito
   const saveCartToStorage = (cartData: CartItem[]) => {
     try {
-      localStorage.setItem('hot-sauce-cart', JSON.stringify(cartData))
+      localStorage.setItem('cantina-cart', JSON.stringify(cartData))
       const totalItems = cartData.reduce((sum, item) => sum + item.quantity, 0)
-      localStorage.setItem('hot-sauce-cart-count', totalItems.toString())
+      localStorage.setItem('cantina-cart-count', totalItems.toString())
     } catch (error) {
       console.error('Error saving cart to localStorage:', error)
     }
@@ -121,9 +121,9 @@ export default function ProductsGridCompact({
 
   const loadCartFromStorage = () => {
     try {
-      const savedCart = localStorage.getItem('hot-sauce-cart')
-      const savedCount = localStorage.getItem('hot-sauce-cart-count')
-      const savedPurchasedItems = localStorage.getItem('hot-sauce-purchased-items')
+      const savedCart = localStorage.getItem('cantina-cart')
+      const savedCount = localStorage.getItem('cantina-cart-count')
+      const savedPurchasedItems = localStorage.getItem('cantina-purchased-items')
       
       if (savedCart) {
         const cartData: CartItem[] = JSON.parse(savedCart)
@@ -349,8 +349,8 @@ export default function ProductsGridCompact({
     setCartCount(0)
     // Limpiar localStorage
     try {
-      localStorage.removeItem('hot-sauce-cart')
-      localStorage.removeItem('hot-sauce-cart-count')
+      localStorage.removeItem('cantina-cart')
+      localStorage.removeItem('cantina-cart-count')
     } catch (error) {
       console.error('Error clearing cart from localStorage:', error)
     }

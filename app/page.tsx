@@ -54,28 +54,16 @@ export default function PremiumHotSauceStore() {
   const [purchasedItems, setPurchasedItems] = useState<Set<number>>(new Set())
   const [purchasedCombos, setPurchasedCombos] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState<"store" | "checkout" | "admin">("store")
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  // 💾 Cargar carrito desde localStorage al iniciar
+  // 💾 SIEMPRE limpiar carrito al cargar la página
   useEffect(() => {
-    // Verificar si el carrito debe ser limpiado después de un pago exitoso
-    const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
-    if (shouldClearCart === 'true') {
-      console.log('🧹 INICIAL: Limpiando carrito por flag cart-should-be-cleared')
-      localStorage.removeItem('cart-should-be-cleared')
-      localStorage.removeItem('cantina-cart')
-      setCart([])
-      return // No cargar carrito si debe ser limpiado
-    }
-
-    const savedCart = localStorage.getItem("cantina-cart")
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart)
-        setCart(parsedCart)
-      } catch (error) {
-        console.error("Error loading cart from localStorage:", error)
-      }
-    }
+    console.log('🧹 INIT: Limpiando carrito al iniciar página')
+    // Limpiar completamente el carrito al cargar la página
+    localStorage.removeItem('cantina-cart')
+    localStorage.removeItem('cart-should-be-cleared')
+    setCart([])
+    setIsInitialLoad(false)
 
     // 🎉 Verificar si hay un pago exitoso reciente
     const lastPayment = localStorage.getItem("last-payment")
@@ -98,12 +86,12 @@ export default function PremiumHotSauceStore() {
   }, [])
 
 
-  // 🔄 Guardar carrito en localStorage cada vez que cambie
+  // 🔄 Guardar carrito en localStorage cada vez que cambie (pero no durante la carga inicial)
   useEffect(() => {
-    if (cart.length > 0) {
+    if (!isInitialLoad && cart.length > 0) {
       localStorage.setItem("cantina-cart", JSON.stringify(cart))
     }
-  }, [cart])
+  }, [cart, isInitialLoad])
 
   // 🧹 Verificar si el carrito debe ser limpiado (cuando se navega de vuelta desde success)
   useEffect(() => {

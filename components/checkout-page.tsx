@@ -1621,17 +1621,14 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                             size="sm"
                             variant="ghost"
                             onClick={() => handleRemoveItem(item)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 h-8 px-2"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 "
                             disabled={!onRemoveFromCart}
                           >
-                            Entfernen
+                           🗑
                           </Button>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-orange-600">{(item.price * item.quantity).toFixed(2)} CHF</p>
-                        <p className="text-xs text-gray-500">{item.price.toFixed(2)} CHF/Stück</p>
-                      </div>
+          
                     </div>
                   ))}
                 </div>
