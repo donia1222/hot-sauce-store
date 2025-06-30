@@ -127,16 +127,75 @@ export default function PremiumHotSauceStore() {
       }
     }
     
+    // Escuchar evento personalizado de PayPal
+    const handlePayPalClearCart = (e: CustomEvent) => {
+      console.log('🎯 Evento PayPal cart clear recibido:', e.detail)
+      checkClearCart()
+    }
+    
+    // Escuchar mensajes de postMessage desde success page
+    const handlePostMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'CLEAR_CART' && e.data?.source === 'paypal-success') {
+        console.log('📨 PostMessage de limpieza de carrito recibido')
+        checkClearCart()
+      }
+    }
+    
     // También verificar cuando se cambia el foco
     window.addEventListener('focus', checkClearCart)
     window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('paypal-cart-clear', handlePayPalClearCart as EventListener)
+    window.addEventListener('message', handlePostMessage)
     
     return () => {
       clearInterval(interval)
       window.removeEventListener('focus', checkClearCart)
       window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('paypal-cart-clear', handlePayPalClearCart as EventListener)
+      window.removeEventListener('message', handlePostMessage)
     }
   }, [])
+
+  // 👁️ Verificar limpieza del carrito cuando la página se vuelve visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Verificar múltiples fuentes de truth para la limpieza del carrito
+        const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
+        const lastPayment = localStorage.getItem("last-payment")
+        
+        if (shouldClearCart === 'true') {
+          console.log('🧹 Limpiando carrito por flag cart-should-be-cleared')
+          localStorage.removeItem('cart-should-be-cleared')
+          clearCart()
+        }
+        
+        // Verificar si hay un pago reciente completado y carrito aún tiene items
+        if (lastPayment && cart.length > 0) {
+          try {
+            const paymentInfo = JSON.parse(lastPayment)
+            const paymentTime = new Date(paymentInfo.timestamp)
+            const now = new Date()
+            const diffMinutes = (now.getTime() - paymentTime.getTime()) / (1000 * 60)
+            
+            // Si el pago fue hace menos de 10 minutos y está marcado como completado
+            if (diffMinutes < 10 && paymentInfo.status === "completed") {
+              console.log('🧹 Limpiando carrito por pago reciente completado')
+              clearCart()
+            }
+          } catch (error) {
+            console.error("Error checking payment for cart cleanup:", error)
+          }
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [cart])
 
   const addToCart = (product: Product, quantity = 1) => {
     setCart((prevCart) => {

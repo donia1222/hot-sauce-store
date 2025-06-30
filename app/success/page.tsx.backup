@@ -122,16 +122,6 @@ export default function PayPalSuccessPage() {
         newValue: 'true'
       }))
       
-      // Forzar evento personalizado adicional para mayor compatibilidad
-      window.dispatchEvent(new CustomEvent('paypal-cart-clear', { 
-        detail: { timestamp: Date.now() } 
-      }))
-      
-      // Usar postMessage para comunicación entre pestañas/ventanas
-      if (window.opener) {
-        window.opener.postMessage({ type: 'CLEAR_CART', source: 'paypal-success' }, '*')
-      }
-      
       // Limpiar datos temporales del pedido
       const orderId = localStorage.getItem("cantina-current-order-id") || sessionStorage.getItem("cantina-current-order-id")
       const customParam = searchParams.get("custom")
