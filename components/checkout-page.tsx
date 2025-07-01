@@ -418,7 +418,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
       }
 
       const orderData = getOrderData({
-        userId: userId || currentUser?.id || null,
+        userId: currentUser?.id || null,
         ...orderDataOverrides
       })
 
@@ -597,7 +597,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
       shippingCost: getShippingCost(),
       paymentMethod: paymentMethod,
       paymentStatus: paymentMethod === "invoice" ? "pending" : "completed",
-      userId: userId || currentUser?.id || null,
+      userId: currentUser?.id || null,
       ...overrides
     }
   }
@@ -607,17 +607,24 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
       setStripePaymentStatus("success")
       setIsSubmitting(true)
 
+      let userId = null
+
+      // Create user account if requested
+      if (showCreateAccount && createAccountData.saveData && !isLoggedIn) {
+        userId = await createUserAccount()
+      }
+
       // Actualizar orderData para incluir información de Stripe
       const stripeOrderData = {
         ...getOrderData(),
         paymentMethod: "stripe",
         paymentStatus: "completed",
         stripePaymentIntentId: paymentIntent.id,
-        stripeChargeId: paymentIntent.charges?.data?.[0]?.id || null
+        stripeChargeId: paymentIntent.charges?.data?.[0]?.id || null,
+        userId: userId || currentUser?.id || null
       }
 
       const savedOrder = await saveOrderToDatabase(stripeOrderData)
-
       setOrderStatus("completed")
       setOrderDetails({
         id: savedOrder.orderNumber,
