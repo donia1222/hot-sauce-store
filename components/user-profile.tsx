@@ -693,8 +693,8 @@ export function UserProfile({ onClose, onAccountDeleted }: UserProfileProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto z-[9999]">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl min-h-[90vh] sm:max-h-[90vh] overflow-hidden flex flex-col my-2 sm:my-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto z-[60]">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl min-h-[90vh] max-h-[90vh] overflow-hidden flex flex-col my-2 sm:my-4">
         {/* Header */}
         <div className="bg-white shadow-lg border-b-4 border-orange-500 flex-shrink-0">
           <div className="px-3 sm:px-6 py-3 sm:py-4">
@@ -712,9 +712,14 @@ export function UserProfile({ onClose, onAccountDeleted }: UserProfileProps) {
               <div className="flex items-center space-x-2 w-full sm:w-auto">
                 {!isEditing ? (
                   <Button
-                    onClick={() => setIsEditing(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsEditing(true);
+                    }}
                     className="bg-orange-500 hover:bg-orange-600 flex-1 sm:flex-none"
                     size="sm"
+                    type="button"
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Bearbeiten
@@ -722,32 +727,49 @@ export function UserProfile({ onClose, onAccountDeleted }: UserProfileProps) {
                 ) : (
                   <div className="flex space-x-2 w-full sm:w-auto">
                     <Button
-                      onClick={handleSave}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSave();
+                      }}
                       disabled={isSaving}
                       className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
                       size="sm"
+                      type="button"
                     >
                       <Save className="w-4 h-4 mr-1 sm:mr-2" />
                       <span className="hidden sm:inline">{isSaving ? "Speichere..." : "Speichern"}</span>
                       <span className="sm:hidden">{isSaving ? "..." : "OK"}</span>
                     </Button>
-                    <Button onClick={handleCancel} variant="outline" size="sm">
+                    <Button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCancel();
+                      }} 
+                      variant="outline" 
+                      size="sm"
+                      type="button"
+                    >
                       <X className="w-4 h-4 mr-1 sm:mr-2" />
                       <span className="hidden sm:inline">Abbrechen</span>
-                  
                     </Button>
                   </div>
                 )}
 
                 <Button
-                  onClick={onClose}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClose();
+                  }}
                   variant="outline"
                   className="bg-red-500 hover:bg-red-600 text-white"
                   size="sm"
+                  type="button"
                 >
                   <X className="w-4 h-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Schließen</span>
-
                 </Button>
               </div>
             </div>
@@ -755,7 +777,7 @@ export function UserProfile({ onClose, onAccountDeleted }: UserProfileProps) {
         </div>
 
         {/* Main Content - SCROLLABLE */}
-        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-orange-50 to-red-50">
+        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-orange-50 to-red-50" style={{ scrollBehavior: 'smooth' }}>
           <div className="px-3 sm:px-6 py-4 sm:py-8">
             <div className="max-w-6xl mx-auto">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
@@ -959,8 +981,53 @@ export function UserProfile({ onClose, onAccountDeleted }: UserProfileProps) {
                     </CardContent>
                   </Card>
 
-          
-            
+                  {/* Password Change */}
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-blue-600">
+                        <Lock className="w-5 h-5 mr-2" />
+                        Passwort ändern
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <p className="text-sm text-blue-700">
+                          Ändern Sie Ihr Passwort regelmäßig, um Ihr Konto zu schützen.
+                        </p>
+                        <Button onClick={openPasswordDialog} className="bg-blue-600 hover:bg-blue-700 w-full" size="lg">
+                          <Lock className="w-4 h-4 mr-2" />
+                          Passwort ändern
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* DANGER ZONE */}
+                  <Card className="border-red-200 bg-red-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-red-600">
+                        <AlertTriangle className="w-5 h-5 mr-2" />
+                        Konto löschen
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <p className="text-sm text-red-700">
+                          <strong>Achtung:</strong> Das Löschen Ihres Kontos ist unwiderruflich. Alle Ihre Daten werden
+                          permanent entfernt.
+                        </p>
+                        <Button
+                          onClick={openDeleteDialog}
+                          variant="destructive"
+                          className="bg-red-600 hover:bg-red-700 w-full"
+                          size="lg"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Mein Konto löschen
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 {/* Orders Section - EXPANDED */}
@@ -1175,52 +1242,6 @@ export function UserProfile({ onClose, onAccountDeleted }: UserProfileProps) {
                                   </div>
                                 </div>
                               ))}
-      <Card className="border-blue-200 bg-blue-50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-blue-600">
-                        <Lock className="w-5 h-5 mr-2" />
-                        Passwort ändern
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <p className="text-sm text-blue-700">
-                          Ändern Sie Ihr Passwort regelmäßig, um Ihr Konto zu schützen.
-                        </p>
-                        <Button onClick={openPasswordDialog} className="bg-blue-600 hover:bg-blue-700 w-full" size="lg">
-                          <Lock className="w-4 h-4 mr-2" />
-                          Passwort ändern
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* DANGER ZONE */}
-                  <Card className="border-red-200 bg-red-50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-red-600">
-                        <AlertTriangle className="w-5 h-5 mr-2" />
-                        Konto löschen
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <p className="text-sm text-red-700">
-                          <strong>Achtung:</strong> Das Löschen Ihres Kontos ist unwiderruflich. Alle Ihre Daten werden
-                          permanent entfernt.
-                        </p>
-                        <Button
-                          onClick={openDeleteDialog}
-                          variant="destructive"
-                          className="bg-red-600 hover:bg-red-700 w-full"
-                          size="lg"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Mein Konto löschen
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
                               {/* Pagination */}
                               {totalPages > 1 && (
                                 <div className="flex flex-col sm:flex-row items-center justify-between pt-4 sm:pt-6 border-t gap-3">

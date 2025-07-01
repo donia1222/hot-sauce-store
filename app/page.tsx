@@ -319,7 +319,7 @@ export default function PremiumHotSauceStore() {
       {/* Construction Notice Modal */}
       <ConstructionNotice />
 
-      <Header  onAdminOpen={goToAdmin} />
+      <Header onAdminOpen={goToAdmin} />
                <div id="Chat" className="w-full relative" data-aos="fade-up" data-aos-delay="1200">
             <Bot />
           </div>

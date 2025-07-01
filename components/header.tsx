@@ -168,6 +168,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
 
   const handleShowProfile = () => {
     setShowUserProfile(true)
+    setIsMenuOpen(false) // Cerrar menú móvil al abrir perfil
   }
 
   const handleProfileClose = () => {
