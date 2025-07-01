@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   ArrowLeft,
   Package,
@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { UserProfile } from "./user-profile"
+import { StripePayment } from "./stripe-payment"
 
 interface Product {
   id: number
@@ -104,7 +105,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [formErrors, setFormErrors] = useState<Partial<CustomerInfo>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "invoice">("paypal")
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "invoice" | "stripe">("stripe")
 
   // Billing address states
   const [useDifferentBillingAddress, setUseDifferentBillingAddress] = useState(false)
@@ -147,6 +148,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [loginStatus, setLoginStatus] = useState<"idle" | "success" | "error">("idle")
   const [loginMessage, setLoginMessage] = useState("")
+
+  // Stripe payment states
+  const [stripePaymentStatus, setStripePaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle")
+  const [stripeError, setStripeError] = useState("")
 
   // Password Reset states
   const [showPasswordReset, setShowPasswordReset] = useState(false)
@@ -403,7 +408,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
     }
   }
 
-  const saveOrderToDatabase = async () => {
+  const saveOrderToDatabase = async (orderDataOverrides = {}) => {
     try {
       let userId = null
 
@@ -412,16 +417,10 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
         userId = await createUserAccount()
       }
 
-      const orderData = {
-        customerInfo: customerInfo,
-        billingAddress: useDifferentBillingAddress ? billingAddress : null,
-        cart: cart,
-        totalAmount: getFinalTotal(),
-        shippingCost: getShippingCost(),
-        paymentMethod: paymentMethod,
-        paymentStatus: paymentMethod === "invoice" ? "pending" : "completed",
+      const orderData = getOrderData({
         userId: userId || currentUser?.id || null,
-      }
+        ...orderDataOverrides
+      })
 
       const response = await fetch(`${API_BASE_URL}/add_order.php`, {
         method: "POST",
@@ -589,6 +588,70 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
     }
   }
 
+  const getOrderData = (overrides = {}) => {
+    return {
+      customerInfo: customerInfo,
+      billingAddress: useDifferentBillingAddress ? billingAddress : null,
+      cart: cart,
+      totalAmount: getFinalTotal(),
+      shippingCost: getShippingCost(),
+      paymentMethod: paymentMethod,
+      paymentStatus: paymentMethod === "invoice" ? "pending" : "completed",
+      userId: userId || currentUser?.id || null,
+      ...overrides
+    }
+  }
+
+  const handleStripeSuccess = async (paymentIntent: any) => {
+    try {
+      setStripePaymentStatus("success")
+      setIsSubmitting(true)
+
+      // Actualizar orderData para incluir información de Stripe
+      const stripeOrderData = {
+        ...getOrderData(),
+        paymentMethod: "stripe",
+        paymentStatus: "completed",
+        stripePaymentIntentId: paymentIntent.id,
+        stripeChargeId: paymentIntent.charges?.data?.[0]?.id || null
+      }
+
+      const savedOrder = await saveOrderToDatabase(stripeOrderData)
+
+      setOrderStatus("completed")
+      setOrderDetails({
+        id: savedOrder.orderNumber,
+        status: "COMPLETED",
+        customerInfo: customerInfo,
+        cart: cart,
+        total: getFinalTotal(),
+        createdAt: savedOrder.createdAt,
+        paymentMethod: "stripe",
+        paymentId: paymentIntent.id
+      })
+
+      if (onClearCart) {
+        onClearCart()
+      }
+
+      localStorage.removeItem("cantina-cart")
+      console.log("✅ Stripe payment completed successfully:", paymentIntent.id)
+    } catch (error: any) {
+      console.error("❌ Error saving Stripe order:", error)
+      setStripePaymentStatus("error")
+      setStripeError(`Error al guardar el pedido: ${error.message}`)
+      setOrderStatus("error")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleStripeError = (error: string) => {
+    setStripePaymentStatus("error")
+    setStripeError(error)
+    console.error("❌ Stripe payment error:", error)
+  }
+
   const validateForm = () => {
     const errors: Partial<CustomerInfo> = {}
 
@@ -690,6 +753,19 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
     setBillingErrors(errors)
     return Object.keys(errors).length === 0
   }
+
+  // Memoized validations to prevent infinite re-renders
+  const isFormValid = useMemo(() => {
+    return validateForm()
+  }, [customerInfo])
+
+  const isBillingValid = useMemo(() => {
+    return useDifferentBillingAddress ? validateBillingAddress() : true
+  }, [useDifferentBillingAddress, billingAddress])
+
+  const isAccountValid = useMemo(() => {
+    return showCreateAccount ? validateAccountCreation() : true
+  }, [showCreateAccount, createAccountData])
 
   const handleLogout = () => {
     console.log("🚪 Cerrando sesión...")
@@ -1706,6 +1782,34 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                     </div>
                   </div>
 
+                  {/* Stripe Option */}
+                  <div 
+                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                      paymentMethod === "stripe" 
+                        ? "border-purple-500 bg-purple-50" 
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    onClick={() => setPaymentMethod("stripe")}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full border-2 ${
+                        paymentMethod === "stripe" ? "border-purple-500 bg-purple-500" : "border-gray-400"
+                      }`}>
+                        {paymentMethod === "stripe" && <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <CreditCard className="w-5 h-5 text-purple-600" />
+                          <span className="font-semibold text-gray-900">Kreditkarte</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Sichere Zahlung mit Kreditkarte - Visa, Mastercard, AMEX
+                        </p>
+                      </div>
+                      <div className="text-xl">💳</div>
+                    </div>
+                  </div>
+
                   {/* Invoice Option */}
                   <div 
                     className={`border rounded-lg p-4 cursor-pointer transition-all ${
@@ -1760,6 +1864,32 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                   </div>
                 )}
 
+                {paymentMethod === "stripe" && (
+                  <div className="mb-4">
+                    <StripePayment
+                      amount={getFinalTotal()}
+                      currency="CHF"
+                      orderData={{
+                        orderId: `ORDER-${Date.now()}`,
+                        customerInfo: customerInfo,
+                        cart: cart
+                      }}
+                      onSuccess={handleStripeSuccess}
+                      onError={handleStripeError}
+                      disabled={!isFormValid || !isBillingValid || !isAccountValid}
+                    />
+                    {stripeError && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center space-x-2 text-red-600">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="text-sm font-medium">Stripe Fehler</span>
+                        </div>
+                        <p className="text-sm text-red-600 mt-1">{stripeError}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {orderStatus === "processing" && paymentMethod === "paypal" ? (
                   <div className="text-center py-8 space-y-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
@@ -1804,6 +1934,11 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                       >
                         💳 Mit PayPal bezahlen - {getFinalTotal().toFixed(2)} CHF
                       </Button>
+                    ) : paymentMethod === "stripe" ? (
+                      // Stripe payment is handled by StripePayment component above
+                      <div className="text-center text-sm text-gray-500 py-4">
+                        Füllen Sie das Formular oben aus und klicken Sie auf "Mit Karte bezahlen"
+                      </div>
                     ) : (
                       <Button
                         onClick={handleInvoicePayment}
@@ -1824,7 +1959,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                 )}
 
                 <p className="text-xs text-gray-500 mt-4 text-center">
-                  Mit dem Klick auf "{paymentMethod === "paypal" ? "Mit PayPal bezahlen" : "Kauf auf Rechnung"}" akzeptieren Sie unsere AGB und Datenschutzbestimmungen.
+                  Mit dem Klick auf "{paymentMethod === "paypal" ? "Mit PayPal bezahlen" : paymentMethod === "stripe" ? "Mit Karte bezahlen" : "Kauf auf Rechnung"}" akzeptieren Sie unsere AGB und Datenschutzbestimmungen.
                 </p>
               </CardContent>
             </Card>
