@@ -251,6 +251,7 @@ export function AdminAuth({ onAdminOpen, isLightSection = false }: AdminAuthProp
       console.log("🔍 Verificando con credenciales de prueba:", credentialsValid ? "✅ Válidas" : "❌ Inválidas")
     }
 
+    
     // Actualizar debug info
     setDebugInfo((prev) => ({ ...prev, credentialsMatch: credentialsValid }))
 
