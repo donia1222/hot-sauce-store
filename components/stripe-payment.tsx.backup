@@ -9,8 +9,6 @@ import {
   useElements
 } from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CreditCard, Shield, CheckCircle, AlertCircle, Lock } from "lucide-react"
 
@@ -31,7 +29,6 @@ const StripeCheckoutForm = ({ amount, currency, orderData, onSuccess, onError, d
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState("")
-  const [cardholderName, setCardholderName] = useState(`${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}`)
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -67,7 +64,7 @@ const StripeCheckoutForm = ({ amount, currency, orderData, onSuccess, onError, d
         payment_method: {
           card: cardElement!,
           billing_details: {
-            name: cardholderName || `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}`,
+            name: `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}`,
             email: orderData.customerInfo.email,
             address: {
               line1: orderData.customerInfo.address,
@@ -100,22 +97,6 @@ const StripeCheckoutForm = ({ amount, currency, orderData, onSuccess, onError, d
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Cardholder Name Field */}
-        <div className="space-y-2">
-          <Label htmlFor="cardholderName" className="text-sm font-medium text-gray-700">
-            Name auf der Karte
-          </Label>
-          <Input
-            id="cardholderName"
-            type="text"
-            value={cardholderName}
-            onChange={(e) => setCardholderName(e.target.value)}
-            placeholder="Vollständiger Name wie auf der Karte"
-            disabled={disabled || isProcessing}
-            className="w-full bg-white text-black"
-          />
-        </div>
-
         <div className="p-4 border border-gray-300 rounded-lg bg-white shadow-sm">
           <CardElement 
             options={{
@@ -154,7 +135,7 @@ const StripeCheckoutForm = ({ amount, currency, orderData, onSuccess, onError, d
 
         <Button 
           type="submit" 
-          disabled={!stripe || isProcessing || paymentStatus === "success" || disabled || !cardholderName.trim()}
+          disabled={!stripe || isProcessing || paymentStatus === "success" || disabled}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           size="lg"
         >

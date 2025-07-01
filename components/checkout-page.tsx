@@ -661,17 +661,11 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
     if (!customerInfo.phone.trim()) errors.phone = "Telefon ist erforderlich"
     if (!customerInfo.address.trim()) errors.address = "Adresse ist erforderlich"
     if (!customerInfo.city.trim()) errors.city = "Stadt ist erforderlich"
-    if (!customerInfo.postalCode.trim()) errors.postalCode = "PLZ ist erforderlich"
     if (!customerInfo.canton.trim()) errors.canton = "Kanton ist erforderlich"
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (customerInfo.email && !emailRegex.test(customerInfo.email)) {
       errors.email = "Ungültige E-Mail-Adresse"
-    }
-
-    const postalCodeRegex = /^\d{4}$/
-    if (customerInfo.postalCode && !postalCodeRegex.test(customerInfo.postalCode)) {
-      errors.postalCode = "PLZ muss 4 Ziffern haben"
     }
 
     setFormErrors(errors)
@@ -742,13 +736,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
     if (!billingAddress.lastName.trim()) errors.lastName = "Nachname ist erforderlich"
     if (!billingAddress.address.trim()) errors.address = "Adresse ist erforderlich"
     if (!billingAddress.city.trim()) errors.city = "Stadt ist erforderlich"
-    if (!billingAddress.postalCode.trim()) errors.postalCode = "PLZ ist erforderlich"
     if (!billingAddress.canton.trim()) errors.canton = "Kanton ist erforderlich"
-
-    const postalCodeRegex = /^\d{4}$/
-    if (billingAddress.postalCode && !postalCodeRegex.test(billingAddress.postalCode)) {
-      errors.postalCode = "PLZ muss 4 Ziffern haben"
-    }
 
     setBillingErrors(errors)
     return Object.keys(errors).length === 0
@@ -1341,7 +1329,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="postalCode">PLZ *</Label>
+                    <Label htmlFor="postalCode">PLZ</Label>
                     <Input
                       id="postalCode"
                       value={customerInfo.postalCode}
