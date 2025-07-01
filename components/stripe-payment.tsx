@@ -133,7 +133,7 @@ const StripeCheckoutForm = ({ amount, currency, orderData, onSuccess, onError, d
                   color: '#9e2146',
                 },
               },
-              hidePostalCode: false,
+              hidePostalCode: true,
             }}
           />
         </div>
