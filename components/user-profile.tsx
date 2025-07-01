@@ -693,7 +693,7 @@ export function UserProfile({ onClose, onAccountDeleted }: UserProfileProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto z-[9999]">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl min-h-[90vh] sm:max-h-[90vh] overflow-hidden flex flex-col my-2 sm:my-4">
         {/* Header */}
         <div className="bg-white shadow-lg border-b-4 border-orange-500 flex-shrink-0">

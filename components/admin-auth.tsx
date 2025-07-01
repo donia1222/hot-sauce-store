@@ -20,6 +20,24 @@ interface AdminAuthProps {
   isLightSection?: boolean
 }
 
+// Exportable Admin Login Button Component (simplified version for footer)
+export function AdminLoginButton({
+  onAdminOpen,
+  isLightSection = false,
+  className = "",
+}: {
+  onAdminOpen: () => void
+  isLightSection?: boolean
+  className?: string
+}) {
+  return (
+    <AdminAuth 
+      onAdminOpen={onAdminOpen} 
+      isLightSection={isLightSection} 
+    />
+  )
+}
+
 export function AdminAuth({ onAdminOpen, isLightSection = false }: AdminAuthProps) {
   // Estados del sistema de admin
   const [isLoginOpen, setIsLoginOpen] = useState(false)

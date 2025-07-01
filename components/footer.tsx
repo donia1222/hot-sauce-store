@@ -3,8 +3,13 @@
 import { Truck, Shield, MapPin, CreditCard, Phone, Mail, Flame, Heart, ExternalLink } from "lucide-react"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { AdminLoginButton } from "@/components/admin-auth"
 
-export function Footer() {
+interface FooterProps {
+  onAdminOpen?: () => void
+}
+
+export function Footer({ onAdminOpen }: FooterProps = {}) {
   const [openModal, setOpenModal] = useState<string | null>(null)
 
   const legalContent = {
@@ -108,7 +113,7 @@ export function Footer() {
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full animate-bounce opacity-80"></div>
             </div>
             <h2 className="text-4xl font-bold bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
-              HOT & BBQ
+              Salsas.ch
             </h2>
             <div className="relative">
               <Flame className="w-12 h-12 text-orange-500 scale-x-[-1]" />
@@ -319,7 +324,7 @@ export function Footer() {
         <div className="border-t border-gray-700/50 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="text-center md:text-left">
-              <p className="text-gray-400 text-sm">© 2025 HOT & BBQ. Alle Rechte vorbehalten.</p>
+              <p className="text-gray-400 text-sm">© 2025 Salsas.ch. Alle Rechte vorbehalten.</p>
               <p className="text-xs text-gray-500 mt-1">Mit ❤️ und 🌶️ für Sauce-Liebhaber gemacht</p>
             </div>
             <div className="flex items-center gap-6 text-sm">
@@ -331,6 +336,13 @@ export function Footer() {
                 <Shield className="h-4 w-4 text-green-400" />
                 <span>100% Sicher</span>
               </div>
+              {/* Admin Login */}
+              {onAdminOpen && (
+                <AdminLoginButton
+                  onAdminOpen={onAdminOpen}
+                  className="hover:bg-gray-700/50 border border-gray-600/50"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -341,6 +353,7 @@ export function Footer() {
       
       {/* Bottom glow effect */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 opacity-50"></div>
+
     </footer>
   )
 }

@@ -344,7 +344,7 @@ export default function PremiumHotSauceStore() {
         onClearCart={clearCart} // Pasar función para limpiar carrito
       />
 
-      <Footer />
+      <Footer onAdminOpen={goToAdmin} />
     </div>
   )
 }

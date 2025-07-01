@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'FEUER KÖNIGREICH',
+  title: 'Salsas.ch',
   description: 'Die exclusivste Premium-Kollektion scharfer Saucen der Welt',
   generator: '9745 Sevelen',
   /** Color del navegador (barra de direcciones, pestañas, etc.) */

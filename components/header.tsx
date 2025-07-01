@@ -1,10 +1,12 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import { Flame, Zap, Home, ChefHat, Heart, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import { AdminAuth } from "./admin-auth"
-
+import { LoginAuth } from "./login-auth"
+import { UserProfile } from "./user-profile"
 interface HeaderProps {
   onAdminOpen: () => void
 }
@@ -66,7 +68,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentSection, setCurrentSection] = useState("hero")
-
+  const [showUserProfile, setShowUserProfile] = useState(false)
   // Secciones con fondo claro
   const lightSections = ["premium-showcase", "offers"]
   const isLightSection = lightSections.includes(currentSection)
@@ -97,7 +99,6 @@ export function Header({ onAdminOpen }: HeaderProps) {
           const nextSection = sectionElements[index + 1]
           const sectionTop = section.offset - 100 // Offset para el header
           const sectionBottom = nextSection ? nextSection.offset - 100 : Number.POSITIVE_INFINITY
-
           return currentScrollY >= sectionTop && currentScrollY < sectionBottom
         })?.id || "hero"
 
@@ -155,8 +156,26 @@ export function Header({ onAdminOpen }: HeaderProps) {
   const textColor = isLightSection ? "text-white" : "text-gray-300"
   const textColorHover = isLightSection ? "hover:text-gray-200" : "hover:text-white"
 
+  const handleLoginSuccess = (user: any) => {
+    console.log("Usuario logueado en header:", user)
+    // Aquí puedes manejar el estado global del usuario si es necesario
+  }
+
+  const handleLogout = () => {
+    console.log("Usuario deslogueado en header")
+    // Aquí puedes limpiar el estado global del usuario si es necesario
+  }
+
+  const handleShowProfile = () => {
+    setShowUserProfile(true)
+  }
+
+  const handleProfileClose = () => {
+    setShowUserProfile(false)
+  }
   return (
-    <header
+    <>
+      <header
       className={`
         fixed top-0 left-0 w-full z-50
         ${headerStyles}
@@ -171,7 +190,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
     >
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo + Admin Button Desktop */}
+          {/* Logo + Admin Button + Login Button Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
             <div className="relative group cursor-pointer">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-all duration-500 scale-110"></div>
@@ -180,9 +199,10 @@ export function Header({ onAdminOpen }: HeaderProps) {
                 <Zap className="w-3 h-3 text-yellow-200 absolute -top-1 -right-1 animate-pulse drop-shadow-sm" />
               </div>
             </div>
+
             <div className="space-y-1">
               <h1 className="text-3xl font-black bg-gradient-to-r from-orange-400 via-red-400 to-orange-500 bg-clip-text text-transparent tracking-tight leading-none">
-                HOT & BBQ
+                Salsas.ch
               </h1>
               <p
                 className={`text-xs font-medium tracking-wider uppercase ${isLightSection ? "text-gray-300" : "text-gray-400"}`}
@@ -190,15 +210,23 @@ export function Header({ onAdminOpen }: HeaderProps) {
                 Authentische Grillkultur
               </p>
             </div>
-            {/* Admin Button - Al lado del logo en desktop */}
-            <div className="ml-4">
-              <AdminAuth onAdminOpen={onAdminOpen} isLightSection={isLightSection} />
+
+
+            {/* Login Button - Al lado del admin en desktop */}
+            <div className="ml-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl  shadow-xl">
+              <LoginAuth
+                onLoginSuccess={handleLoginSuccess}
+                onLogout={handleLogout}
+                onShowProfile={handleShowProfile}
+                isLightSection={isLightSection}
+                variant="button"
+              />
             </div>
           </div>
 
           {/* Mobile Layout - Todos los botones a la izquierda */}
           <div className="lg:hidden flex items-center justify-between w-full">
-            {/* Logo + Admin Button + Menu Button (todos a la izquierda) */}
+            {/* Logo + Admin Button + Login Button + Menu Button (todos a la izquierda) */}
             <div className="flex items-center space-x-3">
               {/* Logo Mobile */}
               <div className="relative group">
@@ -209,10 +237,10 @@ export function Header({ onAdminOpen }: HeaderProps) {
                 </div>
               </div>
 
-              {/* Admin Button - Al lado del logo */}
-              <AdminAuth onAdminOpen={onAdminOpen} isLightSection={isLightSection} />
 
-              {/* Menu Button - También a la izquierda, al lado del admin */}
+     
+
+              {/* Menu Button - Al final */}
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild>
                   <Button
@@ -228,6 +256,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
                     <span className="sr-only">Menü öffnen</span>
                   </Button>
                 </SheetTrigger>
+
                 <SheetContent side="left" className={`w-80 ${menuStyles}`}>
                   {/* Todo el contenido del menú permanece igual */}
                   <div
@@ -259,6 +288,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
                           </p>
                         </div>
                       </div>
+
                       <SheetClose asChild>
                         <Button
                           variant="ghost"
@@ -272,6 +302,19 @@ export function Header({ onAdminOpen }: HeaderProps) {
                           <X className="w-4 h-4" />
                         </Button>
                       </SheetClose>
+                    </div>
+
+                    {/* Login en el menú móvil */}
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <LoginAuth
+                        onLoginSuccess={handleLoginSuccess}
+                        onLogout={handleLogout}
+                        isLightSection={isLightSection}
+                        onShowProfile={handleShowProfile}
+                        variant="inline"
+                        buttonText="Anmelden"
+                        className="w-full"
+                      />
                     </div>
                   </SheetHeader>
 
@@ -297,6 +340,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
                             }`}
                           ></div>
                           <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl"></div>
+
                           <div
                             className={`relative z-10 p-2 rounded-xl transition-all duration-300 flex items-center justify-center w-10 h-10 ${
                               isActive
@@ -316,6 +360,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
                               )}
                             </div>
                           </div>
+
                           <div className="relative z-10 flex-1">
                             <span className="font-semibold tracking-wide block">{item.label}</span>
                             <span className={`text-xs block ${isLightSection ? "text-gray-300" : "text-gray-400"}`}>
@@ -384,6 +429,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
                     }`}
                   ></div>
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-2xl"></div>
+
                   <div className="w-4 h-4 text-orange-400 group-hover:text-orange-300 transition-all duration-300 relative z-10">
                     {typeof IconComponent === "function" && IconComponent.name === "ChiliIcon" ? (
                       <ChiliIcon className="w-4 h-4" />
@@ -400,14 +446,26 @@ export function Header({ onAdminOpen }: HeaderProps) {
           </nav>
 
           {/* Espacio vacío a la derecha en desktop para mantener balance visual */}
-          <div className="hidden lg:block w-16"></div>
+          <div className="hidden lg:block w-32"></div>
         </div>
       </div>
 
       {/* Modern Bottom Border */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-400/50 to-transparent">
         <div className="h-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+
       </div>
-    </header>
+      </header>
+
+      {/* User Profile Modal */}
+      {showUserProfile && (
+        <UserProfile
+          onClose={handleProfileClose}
+          onAccountDeleted={() => {
+            setShowUserProfile(false)
+          }}
+        />
+      )}
+    </>
   )
 }
