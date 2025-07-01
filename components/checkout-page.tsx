@@ -494,7 +494,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
       orderId,
       customerInfo: customerData,
       cart: cart,
-      total: getFinalTotal(),
+      total: finalTotal,
       timestamp: new Date().toISOString()
     }
     
@@ -513,6 +513,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
   }
 
   const handleInvoicePayment = async () => {
+    const finalTotal = getFinalTotal()
     if (!validateForm()) {
       return
     }
@@ -536,7 +537,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
         status: "INVOICE_SENT",
         customerInfo: customerInfo,
         cart: cart,
-        total: getFinalTotal(),
+        total: finalTotal,
         createdAt: savedOrder.createdAt,
       })
 
@@ -555,6 +556,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
   }
 
   const handlePaymentConfirmation = async (success: boolean) => {
+    const finalTotal = getFinalTotal()
     if (success) {
       setIsSubmitting(true)
 
@@ -567,7 +569,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
           status: "COMPLETED",
           customerInfo: customerInfo,
           cart: cart,
-          total: getFinalTotal(),
+          total: finalTotal,
           createdAt: savedOrder.createdAt,
         })
 
@@ -607,6 +609,9 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
       setStripePaymentStatus("success")
       setIsSubmitting(true)
 
+      // Guardar el total ANTES de cualquier operación que pueda limpiar el carrito
+      const finalTotal = getFinalTotal()
+
       let userId = null
 
       // Create user account if requested
@@ -631,8 +636,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
         status: "COMPLETED",
         customerInfo: customerInfo,
         cart: cart,
-        total: getFinalTotal(),
-        createdAt: savedOrder.createdAt,
+        total: finalTotal,        createdAt: savedOrder.createdAt,
         paymentMethod: "stripe",
         paymentId: paymentIntent.id
       })
@@ -1019,7 +1023,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
             <div className="bg-green-50 rounded-lg p-6 mb-6">
               <h3 className="text-lg font-semibold text-green-700 mb-2">Bestelldetails</h3>
               <p className="text-green-600">Bestellnummer: {orderDetails?.id}</p>
-              <p className="text-green-600">Betrag: {getFinalTotal().toFixed(2)} CHF</p>
+              <p className="text-green-600">Betrag: {orderDetails?.total?.toFixed(2) || "0.00"} CHF</p>
               <p className="text-green-600">Status: {orderDetails?.status === "INVOICE_SENT" ? "Rechnung wird gesendet" : "Bezahlt"}</p>
               {isLoggedIn && <p className="text-green-600">Konto: Gespeichert ✅</p>}
             </div>
@@ -1720,7 +1724,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                   <Separator />
                   <div className="flex justify-between text-xl font-bold">
                     <span>Gesamt:</span>
-                    <span className="text-orange-600">{getFinalTotal().toFixed(2)} CHF</span>
+                    <span className="text-orange-600">{orderDetails?.total?.toFixed(2) || "0.00"} CHF</span>
                   </div>
                 </div>
               </CardContent>
@@ -1927,7 +1931,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                         onClick={handlePayPalPayment}
                         className="w-full h-16 text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black shadow-xl hover:shadow-2xl transition-all duration-300"
                       >
-                        💳 Mit PayPal bezahlen - {getFinalTotal().toFixed(2)} CHF
+                        💳 Mit PayPal bezahlen - {orderDetails?.total?.toFixed(2) || "0.00"} CHF
                       </Button>
                     ) : paymentMethod === "stripe" ? (
                       // Stripe payment is handled by StripePayment component above
@@ -1946,7 +1950,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
                             Bestellung wird verarbeitet...
                           </>
                         ) : (
-                          <>📄 Kauf auf Rechnung - {getFinalTotal().toFixed(2)} CHF</>
+                          <>📄 Kauf auf Rechnung - {orderDetails?.total?.toFixed(2) || "0.00"} CHF</>
                         )}
                       </Button>
                     )}
