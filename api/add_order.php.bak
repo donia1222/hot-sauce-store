@@ -108,9 +108,6 @@ try {
     if ($paypalPayerID) {
         $notes .= ($notes ? "\n" : "") . "PayPal Payer ID: " . $paypalPayerID;
     }
-    if ($paymentMethod === 'stripe') {
-        $notes .= ($notes ? "\n" : "") . "Pago con tarjeta de crédito (Stripe) - Pago completado";
-    }
     if ($paymentMethod === 'invoice') {
         $notes .= ($notes ? "\n" : "") . "Kauf auf Rechnung - Rechnung wird per Post gesendet";
     }
@@ -200,10 +197,6 @@ try {
         if ($paymentMethod === 'invoice') {
             $emailResponse = sendInvoiceConfirmationEmail($emailData);
             error_log("Invoice email sent: " . json_encode($emailResponse));
-        } elseif ($paymentMethod === 'stripe') {
-            // Stripe - llamar al endpoint de confirmación específico
-            $emailResponse = sendStripeConfirmationEmail($emailData);
-            error_log("Stripe email sent: " . json_encode($emailResponse));
         } else {
             // PayPal - llamar al endpoint de confirmación existente
             $emailResponse = sendPayPalConfirmationEmail($emailData);
