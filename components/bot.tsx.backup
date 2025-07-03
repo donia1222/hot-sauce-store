@@ -283,11 +283,10 @@ export default function SpaceChat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [hasAutoOpened, setHasAutoOpened] = useState(false)
 
   // Array de preguntas sobre salsas picantes
   const allQuestions = [
-
+    "kontaktieren",
     "Welche ist Ihre schärfste Sauce?",
     "Was ist der Unterschied zwischen BBQ und Hot Sauce?",
     "Welche sind Ihre meistverkauften Saucen?",
@@ -530,22 +529,6 @@ ${contactMessage}`
     initializeProducts()
   }, [])
 
-  // Auto-open chat after 30 seconds on first visit (only on large screens)
-  useEffect(() => {
-    const isLargeScreen = () => window.innerWidth >= 1024
-    const hasVisitedBefore = sessionStorage.getItem("smokehouseChatAutoOpened")
-    
-    if (!hasVisitedBefore && isLargeScreen() && !hasAutoOpened && !isOpen) {
-      const timer = setTimeout(() => {
-        setIsOpen(true)
-        setHasAutoOpened(true)
-        sessionStorage.setItem("smokehouseChatAutoOpened", "true")
-      }, 30000) // 30 seconds
-      
-      return () => clearTimeout(timer)
-    }
-  }, [hasAutoOpened, isOpen])
-
   // Renderiza formulario de contacto - Versión responsiva
   const renderContactFlow = () => {
     return (
@@ -738,7 +721,7 @@ ${contactMessage}`
       {!isOpen && showChatButton && (
         <button 
           onClick={() => setIsOpen(true)} 
-          className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] group transition-all duration-500 ${
+          className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 group transition-all duration-500 ${
             showChatButton ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0'
           }`}
         >
@@ -769,7 +752,7 @@ ${contactMessage}`
       )}
 
       {/* Ventana del chat - Responsiva para pantallas pequeñas */}
-      <div className={`fixed bottom-2 right-2 left-2 sm:bottom-6 sm:right-6 sm:left-auto z-[9998] sm:w-96 h-[calc(100vh-100px)] sm:h-[600px] max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 transition-all duration-500 ${
+      <div className={`fixed bottom-2 right-2 left-2 sm:bottom-6 sm:right-6 sm:left-auto z-40 sm:w-96 h-[calc(100vh-100px)] sm:h-[600px] max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 transition-all duration-500 ${
         isOpen 
           ? 'translate-y-0 opacity-100 scale-100' 
           : 'translate-y-8 opacity-0 scale-95 pointer-events-none'
