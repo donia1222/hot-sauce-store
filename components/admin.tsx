@@ -19,6 +19,8 @@ import {
   Search,
   Star,
   X,
+  AlertTriangle,
+  Package2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -87,6 +89,8 @@ interface Product {
   description: string
   price: number | string
   category: string
+  stock: number
+  stock_status: "in_stock" | "low_stock" | "out_of_stock"
   heat_level: number
   rating: number | string
   badge: string
@@ -97,9 +101,12 @@ interface Product {
 
 interface ProductStats {
   total_products: number
-  hot_sauce_count: number
-  bbq_sauce_count: number
-  avg_price: number
+  hot_sauces: number
+  bbq_sauces: number
+  total_stock: number
+  out_of_stock: number
+  low_stock: number
+  in_stock: number
 }
 
 interface AdminProps {
@@ -128,7 +135,7 @@ export function Admin({ onClose }: AdminProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [productStats, setProductStats] = useState<ProductStats | null>(null)
-  const [productsLoading, setProductsLoading] = useState(false) // Cambiar de true a false
+  const [productsLoading, setProductsLoading] = useState(false)
   const [productsError, setProductsError] = useState("")
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -147,6 +154,7 @@ export function Admin({ onClose }: AdminProps) {
   const [productFilters, setProductFilters] = useState({
     search: "",
     category: "",
+    stock_status: "",
     sortBy: "name",
   })
 
@@ -213,12 +221,17 @@ export function Admin({ onClose }: AdminProps) {
       setProductsLoading(true)
       setProductsError("")
 
-      const response = await fetch(`${API_BASE_URL}/get_products.php`)
+      const params = new URLSearchParams()
+      if (productFilters.stock_status) {
+        params.append("stock_status", productFilters.stock_status)
+      }
+
+      const response = await fetch(`${API_BASE_URL}/get_products.php?${params}`)
       const data = await response.json()
 
       if (data.success) {
         setProducts(data.products)
-        updateProductStats(data.products)
+        setProductStats(data.stats)
       } else {
         setProductsError("Error al cargar productos")
       }
@@ -228,19 +241,6 @@ export function Admin({ onClose }: AdminProps) {
     } finally {
       setProductsLoading(false)
     }
-  }
-
-  const updateProductStats = (productList: Product[]) => {
-    const stats: ProductStats = {
-      total_products: productList.length,
-      hot_sauce_count: productList.filter((p) => p.category === "hot-sauce").length,
-      bbq_sauce_count: productList.filter((p) => p.category === "bbq-sauce").length,
-      avg_price:
-        productList.length > 0
-          ? productList.reduce((sum, p) => sum + Number.parseFloat(p.price.toString()), 0) / productList.length
-          : 0,
-    }
-    setProductStats(stats)
   }
 
   const filterProducts = () => {
@@ -263,6 +263,11 @@ export function Admin({ onClose }: AdminProps) {
       filtered = filtered.filter((product) => product.category === productFilters.category)
     }
 
+    // Filtro de estado de stock
+    if (productFilters.stock_status) {
+      filtered = filtered.filter((product) => product.stock_status === productFilters.stock_status)
+    }
+
     // Ordenamiento
     filtered.sort((a, b) => {
       switch (productFilters.sortBy) {
@@ -270,6 +275,8 @@ export function Admin({ onClose }: AdminProps) {
           return a.name.localeCompare(b.name)
         case "price":
           return Number.parseFloat(a.price.toString()) - Number.parseFloat(b.price.toString())
+        case "stock":
+          return b.stock - a.stock
         case "rating":
           return Number.parseFloat(b.rating.toString()) - Number.parseFloat(a.rating.toString())
         case "heat_level":
@@ -440,6 +447,32 @@ export function Admin({ onClose }: AdminProps) {
     }
   }
 
+  const getStockStatusColor = (status: string) => {
+    switch (status) {
+      case "in_stock":
+        return "bg-green-100 text-green-800 border-green-200"
+      case "low_stock":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "out_of_stock":
+        return "bg-red-100 text-red-800 border-red-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const getStockStatusText = (status: string) => {
+    switch (status) {
+      case "in_stock":
+        return "En Stock"
+      case "low_stock":
+        return "Stock Bajo"
+      case "out_of_stock":
+        return "Sin Stock"
+      default:
+        return status
+    }
+  }
+
   const getCategoryDisplay = (category: string) => {
     switch (category) {
       case "hot-sauce":
@@ -511,7 +544,7 @@ export function Admin({ onClose }: AdminProps) {
               </div>
             </div>
 
-            <div className=" space-x-4">
+            <div className="flex items-center space-x-4">
               <Button
                 onClick={activeTab === "orders" ? loadOrders : loadProducts}
                 disabled={ordersLoading || productsLoading}
@@ -520,16 +553,13 @@ export function Admin({ onClose }: AdminProps) {
                 <RefreshCw className={`w-4 h-4 mr-2 ${ordersLoading || productsLoading ? "animate-spin" : ""}`} />
                 Actualizar
               </Button>
-              <Button onClick={onClose} variant="outline" className="border-gray-300 bg-gray-200 mt-4">
+              <Button onClick={onClose} variant="outline" className="border-gray-300">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
               </Button>
             </div>
-            
           </div>
-          
         </div>
-        
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -693,15 +723,13 @@ export function Admin({ onClose }: AdminProps) {
               {orders.map((order) => (
                 <Card key={order.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                        <Badge className={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge>
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Package className="w-6 h-6 text-gray-600" />
                         <span>{order.order_number}</span>
                       </div>
-                  
+                      <Badge className={getStatusColor(order.status)}>{getStatusText(order.status)}</Badge>
                     </CardTitle>
-                    
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -790,39 +818,39 @@ export function Admin({ onClose }: AdminProps) {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-600 text-sm">Hot Sauces</p>
-                        <p className="text-2xl font-bold text-red-600">{productStats.hot_sauce_count}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                        <Flame className="w-6 h-6 text-red-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-600 text-sm">BBQ Sauces</p>
-                        <p className="text-2xl font-bold text-orange-600">{productStats.bbq_sauce_count}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <Flame className="w-6 h-6 text-orange-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-600 text-sm">Precio Promedio</p>
-                        <p className="text-2xl font-bold text-green-600">{productStats.avg_price.toFixed(2)} CHF</p>
+                        <p className="text-gray-600 text-sm">Stock Total</p>
+                        <p className="text-2xl font-bold text-green-600">{productStats.total_stock}</p>
                       </div>
                       <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <DollarSign className="w-6 h-6 text-green-600" />
+                        <Package2 className="w-6 h-6 text-green-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-600 text-sm">Stock Bajo</p>
+                        <p className="text-2xl font-bold text-yellow-600">{productStats.low_stock}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-600 text-sm">Sin Stock</p>
+                        <p className="text-2xl font-bold text-red-600">{productStats.out_of_stock}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <X className="w-6 h-6 text-red-600" />
                       </div>
                     </div>
                   </CardContent>
@@ -848,7 +876,7 @@ export function Admin({ onClose }: AdminProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <Label htmlFor="product-search">Buscar</Label>
                     <div className="relative">
@@ -866,8 +894,8 @@ export function Admin({ onClose }: AdminProps) {
                   <div>
                     <Label htmlFor="product-category">Categoría</Label>
                     <Select
-                      value={productFilters.category}
-                      onValueChange={(value) => setProductFilters((prev) => ({ ...prev, category: value }))}
+                      value={productFilters.category || "all"}
+                      onValueChange={(value) => setProductFilters((prev) => ({ ...prev, category: value === "all" ? "" : value }))}
                     >
                       <SelectTrigger className="bg-white border-gray-300">
                         <SelectValue placeholder="Todas las categorías" />
@@ -876,6 +904,24 @@ export function Admin({ onClose }: AdminProps) {
                         <SelectItem value="all">Todas las categorías</SelectItem>
                         <SelectItem value="hot-sauce">Hot Sauce</SelectItem>
                         <SelectItem value="bbq-sauce">BBQ Sauce</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="product-stock-status">Estado Stock</Label>
+                    <Select
+                      value={productFilters.stock_status || "all"}
+                      onValueChange={(value) => setProductFilters((prev) => ({ ...prev, stock_status: value === "all" ? "" : value }))}
+                    >
+                      <SelectTrigger className="bg-white border-gray-300">
+                        <SelectValue placeholder="Todos los estados" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        <SelectItem value="all">Todos los estados</SelectItem>
+                        <SelectItem value="in_stock">En Stock</SelectItem>
+                        <SelectItem value="low_stock">Stock Bajo</SelectItem>
+                        <SelectItem value="out_of_stock">Sin Stock</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -892,6 +938,7 @@ export function Admin({ onClose }: AdminProps) {
                       <SelectContent className="bg-white">
                         <SelectItem value="name">Nombre</SelectItem>
                         <SelectItem value="price">Precio</SelectItem>
+                        <SelectItem value="stock">Stock</SelectItem>
                         <SelectItem value="rating">Rating</SelectItem>
                         <SelectItem value="heat_level">Nivel de Picante</SelectItem>
                         <SelectItem value="category">Categoría</SelectItem>
@@ -903,7 +950,7 @@ export function Admin({ onClose }: AdminProps) {
                   <div className="flex items-end">
                     <Button
                       onClick={() => {
-                        setProductFilters({ search: "", category: "", sortBy: "name" })
+                        setProductFilters({ search: "", category: "", stock_status: "", sortBy: "name" })
                       }}
                       className="bg-orange-500 hover:bg-orange-600 text-white"
                     >
@@ -952,6 +999,17 @@ export function Admin({ onClose }: AdminProps) {
                         <span className="font-bold text-lg text-gray-800">
                           {Number.parseFloat(product.price.toString()).toFixed(2)} CHF
                         </span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getStockStatusColor(product.stock_status)}>
+                            {getStockStatusText(product.stock_status)}
+                          </Badge>
+                          <span className="text-sm font-medium text-gray-700">
+                            Stock: {product.stock}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between">
@@ -1178,6 +1236,21 @@ export function Admin({ onClose }: AdminProps) {
                   </Select>
                 </div>
                 <div>
+                  <Label htmlFor="stock">Stock *</Label>
+                  <Input
+                    id="stock"
+                    name="stock"
+                    type="number"
+                    min="0"
+                    required
+                    defaultValue={currentEditingProduct?.stock || "0"}
+                    className="bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <Label htmlFor="heat_level">Nivel de Picante (1-5)</Label>
                   <Select name="heat_level" defaultValue={currentEditingProduct?.heat_level?.toString() || "1"}>
                     <SelectTrigger className="bg-white border-gray-300">
@@ -1191,6 +1264,19 @@ export function Admin({ onClose }: AdminProps) {
                       <SelectItem value="5">5 - Sehr scharf</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="rating">Rating (0-5)</Label>
+                  <Input
+                    id="rating"
+                    name="rating"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="5"
+                    defaultValue={currentEditingProduct?.rating || ""}
+                    className="bg-white"
+                  />
                 </div>
               </div>
 
@@ -1215,20 +1301,6 @@ export function Admin({ onClose }: AdminProps) {
                     className="bg-white"
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="rating">Rating (0-5)</Label>
-                <Input
-                  id="rating"
-                  name="rating"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  defaultValue={currentEditingProduct?.rating || ""}
-                  className="bg-white"
-                />
               </div>
 
               <div>
@@ -1300,4 +1372,3 @@ export function Admin({ onClose }: AdminProps) {
     </div>
   )
 }
-

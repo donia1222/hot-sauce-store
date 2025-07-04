@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Flame, Zap, Home, ChefHat, Heart, Menu, X } from "lucide-react"
+import { Flame, Zap, Home, ChefHat, Heart, Menu, X, Thermometer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import { AdminAuth } from "./admin-auth"
@@ -69,9 +69,12 @@ export function Header({ onAdminOpen }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [currentSection, setCurrentSection] = useState("hero")
   const [showUserProfile, setShowUserProfile] = useState(false)
-  // Secciones con fondo claro
+  // Secciones con fondo claro  
   const lightSections = ["premium-showcase", "offers"]
+  // Secciones con fondo oscuro
+  const darkSections = ["spice-discovery"]
   const isLightSection = lightSections.includes(currentSection)
+  const isDarkSection = darkSections.includes(currentSection)
 
   // Detecta la sección actual basada en el scroll
   useEffect(() => {
@@ -125,6 +128,12 @@ export function Header({ onAdminOpen }: HeaderProps) {
       description: "Zur Hauptseite",
     },
     {
+      id: "spice-discovery",
+      label: "Picante Test",
+      icon: Thermometer,
+      description: "Encuentra tu nivel perfecto",
+    },
+    {
       id: "offers",
       label: "Scharfe Saucen",
       icon: ChiliIcon,
@@ -147,14 +156,18 @@ export function Header({ onAdminOpen }: HeaderProps) {
   // Estilos dinámicos basados en la sección actual
   const headerStyles = isLightSection
     ? "bg-black/80 backdrop-blur-2xl border-b border-gray-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+    : isDarkSection
+    ? "bg-black/80 backdrop-blur-2xl border-b border-red-500/20 shadow-[0_8px_32px_rgba(239,68,68,0.2)]"
     : "bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
 
   const menuStyles = isLightSection
     ? "bg-black/90 backdrop-blur-2xl border-r border-gray-800/50 shadow-2xl"
+    : isDarkSection
+    ? "bg-black/90 backdrop-blur-2xl border-r border-red-500/20 shadow-2xl"
     : "bg-black/40 backdrop-blur-2xl border-r border-white/10 shadow-2xl"
 
-  const textColor = isLightSection ? "text-white" : "text-gray-300"
-  const textColorHover = isLightSection ? "hover:text-gray-200" : "hover:text-white"
+  const textColor = (isLightSection || isDarkSection) ? "text-white" : "text-gray-300"
+  const textColorHover = (isLightSection || isDarkSection) ? "hover:text-gray-200" : "hover:text-white"
 
   const handleLoginSuccess = (user: any) => {
     console.log("Usuario logueado en header:", user)

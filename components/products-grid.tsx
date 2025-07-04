@@ -12,7 +12,7 @@ import { Flame, Star, ShoppingCart, Minus, Plus, MapPin, Award, Info } from "luc
 import { ShoppingCartComponent } from "./shopping-cart"
 import { CheckoutPage } from "@/components/checkout-page"
 
-// Actualizar la interfaz para incluir category
+// Actualizar la interfaz para incluir category y stock
 interface Product {
   id?: number
   name: string
@@ -25,6 +25,7 @@ interface Product {
   badge: string
   origin: string
   category?: string
+  stock?: number
   created_at?: string
   updated_at?: string
 }
@@ -42,6 +43,7 @@ interface ApiProduct {
   badge: string
   origin: string
   category?: string
+  stock?: number
   created_at?: string
   updated_at?: string
 }
@@ -75,12 +77,20 @@ interface ProductsGridProps {
   onAddToCart?: (product: Product, quantity: number) => void
   purchasedItems?: Set<number>
   onMarkAsPurchased?: (productId: number) => void
+  cart?: CartItem[]
+  onRemoveFromCart?: (productId: number) => void
+  onClearCart?: () => void
+  onGoToCheckout?: () => void
 }
 
 export default function ProductsGridCompact({
   onAddToCart = () => {},
   purchasedItems = new Set(),
   onMarkAsPurchased = () => {},
+  cart: parentCart,
+  onRemoveFromCart: parentRemoveFromCart,
+  onClearCart: parentClearCart,
+  onGoToCheckout: parentGoToCheckout,
 }: ProductsGridProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [quantities, setQuantities] = useState<Record<number, number>>({})
@@ -99,6 +109,8 @@ export default function ProductsGridCompact({
   const [cart, setCart] = useState<CartItem[]>([])
   const [currentView, setCurrentView] = useState<"products" | "checkout" | "success">("products")
   const cartRef = useRef<HTMLDivElement>(null)
+
+  // Note: activeCart variables will be defined after the handler functions
 
   const API_BASE_URL = "https://web.lweb.ch/shop"
 
@@ -193,9 +205,14 @@ export default function ProductsGridCompact({
 
   // Sincronizar addedItems con el carrito para mostrar el estado visual correcto
   useEffect(() => {
-    const addedProductIds = new Set(cart.map(item => item.id))
+    const currentCart = parentCart || cart
+    const addedProductIds = new Set(currentCart.map(item => item.id))
     setAddedItems(addedProductIds)
-  }, [cart])
+    
+    // Update cart count based on active cart
+    const totalItems = currentCart.reduce((sum, item) => sum + item.quantity, 0)
+    setCartCount(totalItems)
+  }, [parentCart, cart])
 
   // Animación escalonada
   useEffect(() => {
@@ -226,6 +243,7 @@ export default function ProductsGridCompact({
         const normalizedProducts: Product[] = data.products.map((product: ApiProduct) => ({
           ...product,
           heatLevel: product.heat_level || 0,
+          stock: product.stock || 0,
         }))
         setProducts(normalizedProducts)
         if (data.stats) {
@@ -361,6 +379,12 @@ export default function ProductsGridCompact({
     setCurrentView("checkout")
   }
 
+  // Use parent cart when available, otherwise use local cart
+  const activeCart = parentCart || cart
+  const activeRemoveFromCart = parentRemoveFromCart || removeFromCartHandler
+  const activeClearCart = parentClearCart || clearCartHandler
+  const activeGoToCheckout = parentGoToCheckout || goToCheckoutHandler
+
   const handleOrderComplete = () => {
     setCurrentView("success")
     clearCartHandler() // Esto ya limpia localStorage
@@ -371,6 +395,11 @@ export default function ProductsGridCompact({
   }
 
   const handlePurchase = (product: Product, event?: React.MouseEvent, fromModal?: boolean) => {
+    // Check if product is in stock
+    if ((product.stock || 0) === 0) {
+      return
+    }
+
     // Si viene del modal, agregar al carrito sin animación y cerrar modal
     if (fromModal) {
       onAddToCart(product, getQty(product.id!))
@@ -624,6 +653,21 @@ export default function ProductsGridCompact({
             </div>
           </div>
 
+          {/* Stock information */}
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <h4 className="font-semibold text-gray-900 mb-2">Verfügbarkeit</h4>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${
+                (product.stock || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <span className={`font-medium ${
+                (product.stock || 0) > 0 ? 'text-green-700' : 'text-red-700'
+              }`}>
+                {(product.stock || 0) > 0 ? `${product.stock} auf Lager` : 'Nicht verfügbar'}
+              </span>
+            </div>
+          </div>
+
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-4">
               <div className="text-3xl font-bold text-gray-900">
@@ -656,17 +700,19 @@ export default function ProductsGridCompact({
             {/* Botón de compra */}
             <Button
               onClick={() => handlePurchase(product, undefined, true)}
-              disabled={purchasedItems.has(product.id!)}
+              disabled={purchasedItems.has(product.id!) || (product.stock || 0) === 0}
               className={`w-full font-semibold py-3 rounded-lg transition-all duration-500 shadow-md hover:shadow-lg ${
                 purchasedItems.has(product.id!) || addedItems.has(product.id!)
                   ? "bg-green-600 hover:bg-green-700"
-                  : product.category === "bbq-sauce"
-                    ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
-                    : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
+                  : (product.stock || 0) === 0
+                    ? "bg-gray-500 hover:bg-gray-600"
+                    : product.category === "bbq-sauce"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                      : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
               } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              {purchasedItems.has(product.id!) || addedItems.has(product.id!) ? "Gekauft" : "In den Warenkorb"}
+              {(product.stock || 0) === 0 ? "Ausverkauft" : (purchasedItems.has(product.id!) || addedItems.has(product.id!) ? "Gekauft" : "In den Warenkorb")}
             </Button>
           </div>
         </div>
@@ -743,6 +789,18 @@ export default function ProductsGridCompact({
                 </div>
               </div>
 
+              {/* Stock information */}
+              <div className="flex items-center gap-2 mb-3 lg:mb-4">
+                <div className={`w-2 h-2 rounded-full ${
+                  (product.stock || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <span className={`text-xs lg:text-sm font-medium ${
+                  (product.stock || 0) > 0 ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {(product.stock || 0) > 0 ? `${product.stock} auf Lager` : 'Ausverkauft'}
+                </span>
+              </div>
+
               {/* MEJORADO: Botones con ancho apropiado y mejor diseño */}
               <div className="flex items-center gap-2 lg:gap-3">
                 <Dialog open={isModalOpen && selectedProduct?.id === product.id} onOpenChange={setIsModalOpen}>
@@ -766,22 +824,26 @@ export default function ProductsGridCompact({
 
                 <Button
                   onClick={(e) => handlePurchase(product, e)}
-                  disabled={purchasedItems.has(product.id!) || animatingProducts.has(product.id!)}
+                  disabled={purchasedItems.has(product.id!) || animatingProducts.has(product.id!) || (product.stock || 0) === 0}
                   size="sm"
                   className={`w-auto min-w-[120px] lg:min-w-[150px] font-semibold transition-all duration-500 shadow-md hover:shadow-lg ${
                     purchasedItems.has(product.id!) || addedItems.has(product.id!)
                       ? "bg-green-600 hover:bg-green-700"
-                      : product.category === "bbq-sauce"
-                        ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
-                        : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
+                      : (product.stock || 0) === 0
+                        ? "bg-gray-500 hover:bg-gray-600"
+                        : product.category === "bbq-sauce"
+                          ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                          : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
                   } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
                 >
                   <ShoppingCart className="w-4 h-4 mr-1" />
-                  {purchasedItems.has(product.id!) || addedItems.has(product.id!)
-                    ? "✓ Gekauft"
-                    : animatingProducts.has(product.id!)
-                      ? "Wird hinzugefügt..."
-                      : "Kaufen"}
+                  {(product.stock || 0) === 0
+                    ? "Ausverkauft"
+                    : purchasedItems.has(product.id!) || addedItems.has(product.id!)
+                      ? "✓ Gekauft"
+                      : animatingProducts.has(product.id!)
+                        ? "Wird hinzugefügt..."
+                        : "Kaufen"}
                 </Button>
               </div>
             </div>
@@ -861,11 +923,11 @@ export default function ProductsGridCompact({
       <ShoppingCartComponent
         isOpen={isCartOpen}
         onOpenChange={setIsCartOpen}
-        cart={cart}
+        cart={activeCart}
         onAddToCart={addToCartHandler}
-        onRemoveFromCart={removeFromCartHandler}
-        onGoToCheckout={goToCheckoutHandler}
-        onClearCart={clearCartHandler}
+        onRemoveFromCart={activeRemoveFromCart}
+        onGoToCheckout={activeGoToCheckout}
+        onClearCart={activeClearCart}
       />
       <section className="py-12 px-4 bg-white min-h-screen">
         {/* MEJORADO: Container más ancho para pantallas grandes */}
