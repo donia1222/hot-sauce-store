@@ -19,7 +19,7 @@ interface Product {
   description: string
   price: number
   image?: string
-  image_url?: string
+  image_url?: string // Ensure this is properly typed
   heatLevel: number
   rating: number
   badge: string
@@ -65,6 +65,7 @@ interface CartItem {
   name: string
   price: number
   image: string
+  image_url?: string
   description: string
   heatLevel: number
   rating: number
@@ -244,6 +245,7 @@ export default function ProductsGridCompact({
           ...product,
           heatLevel: product.heat_level || 0,
           stock: product.stock || 0,
+          image_url: product.image_url || product.image || "/placeholder.svg",
         }))
         setProducts(normalizedProducts)
         if (data.stats) {
@@ -319,7 +321,8 @@ export default function ProductsGridCompact({
       id: product.id!,
       name: product.name,
       price: product.price,
-      image: product.image_url || "/placeholder.svg",
+      image: product.image_url || product.image || "/placeholder.svg",
+      image_url: product.image_url, // Preserve the full URL
       description: product.description,
       heatLevel: product.heatLevel,
       rating: product.rating,

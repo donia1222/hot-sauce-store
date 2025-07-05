@@ -18,6 +18,7 @@ interface Product {
 
 interface CartItem extends Product {
   quantity: number
+  image_url?: string
 }
 
 interface ShoppingCartProps {
@@ -40,6 +41,7 @@ export function ShoppingCartComponent({
   onClearCart,
 }: ShoppingCartProps) {
   const MINIMUM_ORDER_AMOUNT = 0
+
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0)
@@ -99,43 +101,60 @@ export function ShoppingCartComponent({
             </div>
           ) : (
             <div className="space-y-3">
-              {cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg border border-orange-500/20"
-                >
-                  <img
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.name}
-                    className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-xs sm:text-sm text-white line-clamp-2 leading-tight">
-                      {item.name}
-                    </h3>
-                    <p className="text-orange-400 font-bold text-sm sm:text-base">{item.price.toFixed(2)} CHF</p>
+              {cart.map((item) => {
+                // Build the proper image URL - prioritize full URL first, then build from filename
+                const imageUrl = item.image_url || 
+                  (item.image && item.image.startsWith('http') ? item.image : 
+                   (item.image ? `https://web.lweb.ch/shop/uploads/${item.image}` : 
+                    "/placeholder.svg"));
+                
+                
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg border border-orange-500/20"
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={item.name}
+                      className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
+                      onError={(e) => {
+                        console.log(`❌ Image load error for ${item.name}:`, imageUrl);
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }}
+                      onLoad={() => {
+                        console.log(`✅ Image loaded successfully for ${item.name}:`, imageUrl);
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-xs sm:text-sm text-white line-clamp-2 leading-tight">
+                        {item.name}
+                      </h3>
+                      <p className="text-orange-400 font-bold text-sm sm:text-base">{item.price.toFixed(2)} CHF</p>
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 hover:bg-red-700 border-red-500 p-0"
+                        onClick={() => onRemoveFromCart(item.id)}
+                      >
+                        <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                      <span className="w-6 sm:w-8 text-center text-white font-bold text-sm">{item.quantity}</span>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 hover:bg-green-700 border-green-500 p-0"
+                        onClick={() => onAddToCart(item)}
+                      >
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="w-6 h-6 sm:w-8 sm:h-8 bg-red-600 hover:bg-red-700 border-red-500 p-0"
-                      onClick={() => onRemoveFromCart(item.id)}
-                    >
-                      <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
-                    <span className="w-6 sm:w-8 text-center text-white font-bold text-sm">{item.quantity}</span>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 hover:bg-green-700 border-green-500 p-0"
-                      onClick={() => onAddToCart(item)}
-                    >
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

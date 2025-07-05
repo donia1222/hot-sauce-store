@@ -63,13 +63,30 @@ export default function PremiumHotSauceStore() {
   const [isInitialLoad, setIsInitialLoad] = useState(true)
   // Remove sample products - SpiceDiscovery now loads from API directly
 
-  // 💾 SIEMPRE limpiar carrito al cargar la página
+  // 💾 Cargar carrito desde localStorage al iniciar
   useEffect(() => {
-    console.log('🧹 INIT: Limpiando carrito al iniciar página')
-    // Limpiar completamente el carrito al cargar la página
-    localStorage.removeItem('cantina-cart')
-    localStorage.removeItem('cart-should-be-cleared')
-    setCart([])
+    console.log('🔄 INIT: Cargando carrito desde localStorage')
+    
+    // Verificar si hay un flag para limpiar carrito
+    const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
+    if (shouldClearCart === 'true') {
+      console.log('🧹 INIT: Limpiando carrito por flag')
+      localStorage.removeItem('cantina-cart')
+      localStorage.removeItem('cart-should-be-cleared')
+      setCart([])
+    } else {
+      // Cargar carrito existente desde localStorage
+      try {
+        const savedCart = localStorage.getItem('cantina-cart')
+        if (savedCart) {
+          const cartData: CartItem[] = JSON.parse(savedCart)
+          console.log('📦 INIT: Carrito cargado desde localStorage:', cartData)
+          setCart(cartData)
+        }
+      } catch (error) {
+        console.error('Error loading cart from localStorage:', error)
+      }
+    }
     setIsInitialLoad(false)
 
     // 🎉 Verificar si hay un pago exitoso reciente
@@ -95,7 +112,8 @@ export default function PremiumHotSauceStore() {
 
   // 🔄 Guardar carrito en localStorage cada vez que cambie (pero no durante la carga inicial)
   useEffect(() => {
-    if (!isInitialLoad && cart.length > 0) {
+    if (!isInitialLoad) {
+      console.log('💾 Guardando carrito en localStorage:', cart)
       localStorage.setItem("cantina-cart", JSON.stringify(cart))
     }
   }, [cart, isInitialLoad])
