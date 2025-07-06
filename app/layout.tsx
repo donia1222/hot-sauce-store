@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Analytics } from '@vercel/analytics/next';
+
 
 export const metadata: Metadata = {
   title: 'Salsas.ch',
@@ -25,7 +27,7 @@ export default function RootLayout({
         {/* Meta redundante por si prefieres incluirla manualmente */}
         <meta name="theme-color" content="#3333" />
       </head>
-      <body>{children}</body>
+      <body>{children} <Analytics /></body>
     </html>
   )
 }
