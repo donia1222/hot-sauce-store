@@ -673,7 +673,7 @@ export default function ProductsGridCompact({
 
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-4">
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-gray-600">
                 {(product.price * getQty(product.id!)).toFixed(2)} CHF
               </div>
               <div className="text-sm text-gray-500">Einzelpreis: {product.price.toFixed(2)} CHF</div>
