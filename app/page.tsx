@@ -11,22 +11,18 @@ import { CheckoutPage } from "@/components/checkout-page"
 import { Footer } from "@/components/footer"
 import { Admin } from "@/components/admin"
 import  Bot  from "@/components/bot"
-import { ConstructionNotice } from "./construction-notice"
+import { ConstructionNotice } from "./construction-notice" 
 import SpiceDiscovery from "@/components/spice-discovery" 
-
 interface Product {
-  id?: number
+  id: number
   name: string
   price: number
-  image?: string
+  image: string
   description: string
   heatLevel: number
   rating: number
   badge?: string
   origin?: string
-  image_url?: string
-  category?: string
-  stock?: number
 }
 
 interface ComboOffer {
@@ -45,8 +41,6 @@ interface ComboOffer {
 }
 
 interface CartItem extends Product {
-  id: number  // CartItem debe tener id requerido
-  image: string  // CartItem debe tener imagen para mostrar en el carrito
   quantity: number
   isCombo?: boolean
   comboId?: string
@@ -61,32 +55,14 @@ export default function PremiumHotSauceStore() {
   const [purchasedCombos, setPurchasedCombos] = useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = useState<"store" | "checkout" | "admin">("store")
   const [isInitialLoad, setIsInitialLoad] = useState(true)
-  // Remove sample products - SpiceDiscovery now loads from API directly
 
-  // 💾 Cargar carrito desde localStorage al iniciar
+  // 💾 SIEMPRE limpiar carrito al cargar la página
   useEffect(() => {
-    console.log('🔄 INIT: Cargando carrito desde localStorage')
-    
-    // Verificar si hay un flag para limpiar carrito
-    const shouldClearCart = localStorage.getItem('cart-should-be-cleared')
-    if (shouldClearCart === 'true') {
-      console.log('🧹 INIT: Limpiando carrito por flag')
-      localStorage.removeItem('cantina-cart')
-      localStorage.removeItem('cart-should-be-cleared')
-      setCart([])
-    } else {
-      // Cargar carrito existente desde localStorage
-      try {
-        const savedCart = localStorage.getItem('cantina-cart')
-        if (savedCart) {
-          const cartData: CartItem[] = JSON.parse(savedCart)
-          console.log('📦 INIT: Carrito cargado desde localStorage:', cartData)
-          setCart(cartData)
-        }
-      } catch (error) {
-        console.error('Error loading cart from localStorage:', error)
-      }
-    }
+    console.log('🧹 INIT: Limpiando carrito al iniciar página')
+    // Limpiar completamente el carrito al cargar la página
+    localStorage.removeItem('cantina-cart')
+    localStorage.removeItem('cart-should-be-cleared')
+    setCart([])
     setIsInitialLoad(false)
 
     // 🎉 Verificar si hay un pago exitoso reciente
@@ -112,8 +88,7 @@ export default function PremiumHotSauceStore() {
 
   // 🔄 Guardar carrito en localStorage cada vez que cambie (pero no durante la carga inicial)
   useEffect(() => {
-    if (!isInitialLoad) {
-      console.log('💾 Guardando carrito en localStorage:', cart)
+    if (!isInitialLoad && cart.length > 0) {
       localStorage.setItem("cantina-cart", JSON.stringify(cart))
     }
   }, [cart, isInitialLoad])
@@ -214,12 +189,6 @@ export default function PremiumHotSauceStore() {
   }, [cart])
 
   const addToCart = (product: Product, quantity = 1) => {
-    // Asegurar que el producto tiene un ID válido
-    if (!product.id) {
-      console.error("Product must have an ID to be added to cart")
-      return
-    }
-
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id && !item.isCombo)
       if (existingItem) {
@@ -227,14 +196,7 @@ export default function PremiumHotSauceStore() {
           item.id === product.id && !item.isCombo ? { ...item, quantity: item.quantity + quantity } : item,
         )
       }
-      // Convertir Product a CartItem asegurando que id e image existen
-      const cartItem: CartItem = {
-        ...product,
-        id: product.id!, // Usar non-null assertion ya que verificamos arriba
-        image: product.image || product.image_url || "/placeholder.svg", // Asegurar que hay imagen
-        quantity
-      }
-      return [...prevCart, cartItem]
+      return [...prevCart, { ...product, quantity }]
     })
   }
 
@@ -367,22 +329,14 @@ export default function PremiumHotSauceStore() {
       <section id="spice-discovery" className="py-16 bg-gradient-to-br from-gray-900 via-black to-gray-900">
         <div className="container mx-auto px-4">
           <SpiceDiscovery 
-            onAddToCart={addToCart}
+   
             className="max-w-7xl mx-auto"
           />
         </div>
       </section>
 
       <section id="offers">
-        <ProductsGridCombined 
-          onAddToCart={addToCart}
-          purchasedItems={purchasedItems}
-          onMarkAsPurchased={markAsPurchased}
-          cart={cart}
-          onRemoveFromCart={removeFromCart}
-          onClearCart={clearCart}
-          onGoToCheckout={goToCheckout}
-        />
+  <ProductsGridCombined />
       </section>
 
       <CulinaryInspiration />

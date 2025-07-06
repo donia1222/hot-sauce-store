@@ -256,42 +256,8 @@ export default function SpiceDiscovery({
                 </div>
               </div>
 
-              {/* Stock Status */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  isOutOfStock ? 'bg-red-500' : 'bg-green-500'
-                }`} />
-                <span className={`text-xs font-medium ${
-                  isOutOfStock ? 'text-red-400' : 'text-green-400'
-                }`}>
-                  {isOutOfStock ? 'Agotado' : `${product.stock} en stock`}
-                </span>
-              </div>
 
-              {/* Price and Action */}
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold text-white">
-                  {product.price.toFixed(2)} CHF
-                </span>
-                
-                <Button
-                  onClick={(e) => handlePurchase(product, e)}
-                  disabled={isOutOfStock || addedItems.has(product.id!) || animatingProducts.has(product.id!)}
-                  size="sm"
-                  className={`${
-                    addedItems.has(product.id!)
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : isOutOfStock 
-                        ? 'bg-gray-600 hover:bg-gray-600 cursor-not-allowed' 
-                        : product.category === "bbq-sauce"
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'
-                          : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600'
-                  } text-white border-0 shadow-lg transition-all duration-300 group-hover:scale-105`}
-                >
-                  <ShoppingCart className="w-4 h-4 mr-1" />
-                  {addedItems.has(product.id!) ? '✓ Hinzugefügt' : isOutOfStock ? 'Ausverkauft' : 'Hinzufügen'}
-                </Button>
-              </div>
+
             </div>
           </div>
         </CardContent>
