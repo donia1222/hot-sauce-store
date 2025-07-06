@@ -800,7 +800,7 @@ export default function ProductsGridCompact({
                 <span className={`text-xs lg:text-sm font-medium ${
                   (product.stock || 0) > 0 ? 'text-green-700' : 'text-red-700'
                 }`}>
-                  {(product.stock || 0) > 0 ? `${product.stock} auf Lager` : 'Ausverkauft'}
+                  {(product.stock || 0) > 0 ? `auf Lager` : 'Ausverkauft'}
                 </span>
               </div>
 
