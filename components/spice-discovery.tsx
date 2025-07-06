@@ -94,6 +94,26 @@ export default function SpiceDiscovery({
 
   const API_BASE_URL = "https://web.lweb.ch/shop"
 
+  // Function to handle Kaufen button click
+  const handleKaufenClick = (product: Product) => {
+    // Scroll to products section
+    const productsSection = document.getElementById("offers")
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+
+    // Open product modal
+    setTimeout(() => {
+      const event = new CustomEvent("openProductModal", {
+        detail: {
+          productId: product.id,
+          productName: product.name
+        }
+      })
+      window.dispatchEvent(event)
+    }, 800) // Delay to allow scroll to complete
+  }
+
   // Load products from API
   useEffect(() => {
     const loadProducts = async () => {
@@ -250,6 +270,14 @@ export default function SpiceDiscovery({
                     <Flame key={i} className="w-3 h-3 text-red-500 fill-red-500" />
                   ))}
                 </div>
+                
+                <Button
+                  onClick={() => handleKaufenClick(product)}
+                  className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs px-3 py-1 h-auto font-semibold transition-all duration-300"
+                >
+                  <ShoppingCart className="w-3 h-3 mr-1" />
+    
+                </Button>
               </div>
 
 
