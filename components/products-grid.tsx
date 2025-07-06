@@ -403,7 +403,7 @@ export default function ProductsGridCompact({
       return
     }
 
-    // Si viene del modal, agregar al carrito sin animación y cerrar modal
+    // Si viene del modal, agregar al carrito con animación y cerrar modal
     if (fromModal) {
       onAddToCart(product, getQty(product.id!))
       onMarkAsPurchased(product.id!)
@@ -412,7 +412,9 @@ export default function ProductsGridCompact({
       setCartBounce(true)
       setTimeout(() => setCartBounce(false), 600)
       setAddedItems((prev) => new Set([...prev, product.id!]))
-      setIsModalOpen(false) // Cerrar modal
+      
+      // Cerrar modal con animación nativa del Dialog
+      setIsModalOpen(false)
       
       setTimeout(() => {
         setAddedItems((prev) => {
@@ -423,7 +425,6 @@ export default function ProductsGridCompact({
       }, 2000)
       return
     }
-
     // Obtener la posición del elemento que se está animando
     const target = event?.currentTarget as HTMLElement
     const rect = target?.getBoundingClientRect()
