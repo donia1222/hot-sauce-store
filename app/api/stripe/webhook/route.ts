@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       // OPCIONAL: Aquí puedes hacer una llamada a tu PHP backend para actualizar el estado
       // if (paymentIntent.metadata.orderId) {
       //   try {
-      //     await fetch('https://web.lweb.ch/shop/update_order_status.php', {
+      //     await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/update_order_status.php', {
       //       method: 'POST',
       //       headers: { 'Content-Type': 'application/json' },
       //       body: JSON.stringify({

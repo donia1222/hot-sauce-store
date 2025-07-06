@@ -1,5 +1,5 @@
 // Configuración de la API - Tu servidor
-const API_BASE_URL = "https://web.lweb.ch/shop"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export interface Product {
   id?: number

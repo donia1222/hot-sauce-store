@@ -109,7 +109,7 @@ export function LoginAuth({
   const [resetMessage, setResetMessage] = useState("")
   const [resetErrors, setResetErrors] = useState<any>({})
 
-  const API_BASE_URL = "https://web.lweb.ch/shop"
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
   // Check if user is logged in on component mount
   useEffect(() => {

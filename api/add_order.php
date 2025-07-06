@@ -93,6 +93,84 @@ try {
     $pdo->beginTransaction();
     error_log("Transaction started");
     
+    // ============================================
+    // VALIDAR Y VERIFICAR STOCK DISPONIBLE
+    // ============================================
+    error_log("=== CHECKING STOCK AVAILABILITY ===");
+    
+    $stockErrors = [];
+    $stockUpdates = [];
+    
+    foreach ($cart as $index => $item) {
+        $productId = $item['id'] ?? 0;
+        $requestedQuantity = $item['quantity'] ?? 1;
+        
+        if ($productId <= 0) {
+            $stockErrors[] = "Producto inválido en posición $index";
+            continue;
+        }
+        
+        // Obtener stock actual del producto
+        $stockSql = "SELECT id, name, stock FROM products WHERE id = :id";
+        $stockStmt = $pdo->prepare($stockSql);
+        $stockStmt->execute([':id' => $productId]);
+        $product = $stockStmt->fetch();
+        
+        if (!$product) {
+            $stockErrors[] = "Producto con ID $productId no encontrado";
+            continue;
+        }
+        
+        $currentStock = $product['stock'];
+        $productName = $product['name'];
+        
+        error_log("Product: $productName (ID: $productId) - Current stock: $currentStock, Requested: $requestedQuantity");
+        
+        // Verificar si hay suficiente stock
+        if ($currentStock < $requestedQuantity) {
+            $stockErrors[] = "Stock insuficiente para '$productName'. Disponible: $currentStock, Solicitado: $requestedQuantity";
+            continue;
+        }
+        
+        // Preparar actualización de stock
+        $newStock = $currentStock - $requestedQuantity;
+        $stockUpdates[] = [
+            'id' => $productId,
+            'name' => $productName,
+            'currentStock' => $currentStock,
+            'requestedQuantity' => $requestedQuantity,
+            'newStock' => $newStock
+        ];
+    }
+    
+    // Si hay errores de stock, cancelar la transacción
+    if (!empty($stockErrors)) {
+        $pdo->rollback();
+        error_log("Stock validation failed: " . implode(", ", $stockErrors));
+        throw new Exception("Error de stock: " . implode("; ", $stockErrors));
+    }
+    
+    // ============================================
+    // ACTUALIZAR STOCK DE PRODUCTOS
+    // ============================================
+    error_log("=== UPDATING PRODUCT STOCK ===");
+    
+    $updateStockSql = "UPDATE products SET stock = :newStock WHERE id = :productId";
+    $updateStockStmt = $pdo->prepare($updateStockSql);
+    
+    foreach ($stockUpdates as $update) {
+        $updateResult = $updateStockStmt->execute([
+            ':newStock' => $update['newStock'],
+            ':productId' => $update['id']
+        ]);
+        
+        if (!$updateResult) {
+            throw new Exception("Error al actualizar stock del producto: " . $update['name']);
+        }
+        
+        error_log("Stock updated for {$update['name']} (ID: {$update['id']}): {$update['currentStock']} -> {$update['newStock']}");
+    }
+    
     // Determinar método de pago y estado
     $paymentMethod = $data['paymentMethod'] ?? 'paypal';
     $paymentStatus = $data['paymentStatus'] ?? ($paymentMethod === 'invoice' ? 'pending' : 'completed');
@@ -108,12 +186,17 @@ try {
     if ($paypalPayerID) {
         $notes .= ($notes ? "\n" : "") . "PayPal Payer ID: " . $paypalPayerID;
     }
-    if ($paymentMethod === 'stripe') {
-        $notes .= ($notes ? "\n" : "") . "Pago con tarjeta de crédito (Stripe) - Pago completado";
-    }
     if ($paymentMethod === 'invoice') {
         $notes .= ($notes ? "\n" : "") . "Kauf auf Rechnung - Rechnung wird per Post gesendet";
     }
+    
+    // Agregar información de stock actualizado a las notas
+    $stockNotes = "Stock actualizado: ";
+    foreach ($stockUpdates as $update) {
+        $stockNotes .= "{$update['name']} (-{$update['requestedQuantity']}), ";
+    }
+    $stockNotes = rtrim($stockNotes, ", ");
+    $notes .= ($notes ? "\n" : "") . $stockNotes;
     
     // Insertar pedido principal
     $orderSql = "INSERT INTO orders (
@@ -200,10 +283,6 @@ try {
         if ($paymentMethod === 'invoice') {
             $emailResponse = sendInvoiceConfirmationEmail($emailData);
             error_log("Invoice email sent: " . json_encode($emailResponse));
-        } elseif ($paymentMethod === 'stripe') {
-            // Stripe - llamar al endpoint de confirmación específico
-            $emailResponse = sendStripeConfirmationEmail($emailData);
-            error_log("Stripe email sent: " . json_encode($emailResponse));
         } else {
             // PayPal - llamar al endpoint de confirmación existente
             $emailResponse = sendPayPalConfirmationEmail($emailData);
@@ -220,6 +299,7 @@ try {
         'message' => 'Order saved successfully',
         'orderId' => $orderId,
         'orderNumber' => $orderNumber,
+        'stockUpdates' => $stockUpdates, // Información sobre el stock actualizado
         'data' => [
             'id' => $orderId,
             'orderNumber' => $orderNumber,

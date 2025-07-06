@@ -105,7 +105,7 @@ export function ShoppingCartComponent({
                 // Build the proper image URL - prioritize full URL first, then build from filename
                 const imageUrl = item.image_url || 
                   (item.image && item.image.startsWith('http') ? item.image : 
-                   (item.image ? `https://web.lweb.ch/shop/uploads/${item.image}` : 
+                   (item.image ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/uploads/${item.image}` : 
                     "/placeholder.svg"));
                 
                 

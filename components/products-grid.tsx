@@ -113,7 +113,7 @@ export default function ProductsGridCompact({
 
   // Note: activeCart variables will be defined after the handler functions
 
-  const API_BASE_URL = "https://web.lweb.ch/shop"
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
   // Cargar productos desde la API y carrito desde localStorage
   useEffect(() => {
