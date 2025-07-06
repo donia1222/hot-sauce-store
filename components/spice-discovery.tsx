@@ -275,7 +275,7 @@ export default function SpiceDiscovery({
         <h2 className="text-4xl font-black text-white mb-2">
           Finde deine <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">perfekte Sauce</span>
         </h2>
-        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+        <p className="text-gray-400 text-xl max-w-2xl mx-auto">
           Nutze unseren intelligenten Messer, um Saucen zu entdecken, die perfekt zu deiner Schärfe-Toleranz passen
         </p>
       </div>

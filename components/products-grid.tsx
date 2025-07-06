@@ -941,13 +941,13 @@ export default function ProductsGridCompact({
               <Award className="w-4 h-4" />
               Premium Kollektion
             </div>
-            <h3 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 mb-3 lg:mb-4">
+            <h3 className="text-4xl font-black text-gray-900 mb-3 lg:mb-4">
               SMOKEHOUSE
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600">
                 SAUCES
               </span>
             </h3>
-            <p className="text-gray-600 lg:text-lg xl:text-xl max-w-xl lg:max-w-2xl mx-auto">Premium Saucen für wahre Kenner ausgewählt</p>
+            <p className="text-gray-600 text-xl max-w-2xl mx-auto">Premium Saucen für wahre Kenner ausgewählt</p>
           </div>
 
           {/* MEJORADO: Tabs con mejor diseño */}
