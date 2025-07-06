@@ -244,11 +244,7 @@ export default function SpiceDiscovery({
               </p>
               
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex">{renderStars(product.rating)}</div>
-                  <span className="text-gray-400 text-sm">{product.rating}</span>
-                </div>
-                
+        
                 <div className="flex items-center gap-1">
                   {Array.from({ length: product.heatLevel }, (_, i) => (
                     <Flame key={i} className="w-3 h-3 text-red-500 fill-red-500" />
