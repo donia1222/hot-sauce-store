@@ -2071,6 +2071,7 @@ export function CheckoutPage({ cart, onBackToStore, onClearCart, onAddToCart, on
             }}
           />
         )}
+        
       </div>
     </div>
   )
