@@ -133,30 +133,11 @@ export default function FireThermometer({
       </div>
       
       <CardContent className="relative p-4 sm:p-6 lg:p-8">
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-8 lg:mb-10">
-          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500/20 to-orange-500/20 backdrop-blur-md px-6 py-3 rounded-full border border-red-500/30 mb-6 shadow-lg hover:shadow-xl transition-all duration-300">
-            <Thermometer className="w-6 h-6 text-red-400 animate-pulse" />
-            <span className="text-white font-bold text-base sm:text-lg bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
-              Schärfe-Messer
-            </span>
-            <Flame className="w-6 h-6 text-orange-400 animate-pulse" />
-          </div>
-          
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-            Wie viel Schärfe verträgst du?
-          </h2>
-          <p className="text-gray-400 text-base sm:text-lg px-2 sm:px-0 max-w-2xl mx-auto leading-relaxed">
-            Entdecke dein perfektes Schärfe-Level und finde deine ideale Sauce
-          </p>
-        </div>
+
 
         {/* Heat Level Selection */}
         <div className="px-2 sm:px-0">
           <div className="text-center mb-8">
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
-              Wähle dein Schärfe-Level
-            </h3>
             
             {/* Current Level Display */}
             <div className={`inline-flex items-center gap-4 px-8 py-4 rounded-2xl ${currentLevel.bgColor} backdrop-blur-md border ${currentLevel.borderColor} mb-8 shadow-xl hover:shadow-2xl transition-all duration-500 ${isAnimating ? 'animate-pulse scale-105' : ''}`}>

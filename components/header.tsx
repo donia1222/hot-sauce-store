@@ -129,7 +129,7 @@ export function Header({ onAdminOpen }: HeaderProps) {
     },
     {
       id: "spice-discovery",
-      label: "Picante Test",
+      label: "Scharfer Test",
       icon: Thermometer,
       description: "Encuentra tu nivel perfecto",
     },

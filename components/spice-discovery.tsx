@@ -339,9 +339,7 @@ export default function SpiceDiscovery({
               <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-600 rounded-lg flex items-center justify-center">
                 <Flame className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-white">
-                Empfohlene Saucen für dich
-              </h3>
+
               <Badge className="bg-red-500/20 text-red-400 border border-red-500/30">
                 {recommendedProducts.length} gefunden
               </Badge>
