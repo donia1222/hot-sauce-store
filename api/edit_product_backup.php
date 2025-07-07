@@ -33,8 +33,8 @@ try {
         
         $id = intval($id);
         
-        // Obtener información del producto para eliminar imágenes
-        $sql = "SELECT image, image2, image3, image4 FROM products WHERE id = :id";
+        // Obtener información del producto para eliminar imagen
+        $sql = "SELECT image FROM products WHERE id = :id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':id' => $id]);
         $product = $stmt->fetch();
@@ -52,12 +52,9 @@ try {
             throw new Exception('Error al eliminar producto de la base de datos');
         }
         
-        // Eliminar todas las imágenes del servidor si existen
-        $image_fields = ['image', 'image2', 'image3', 'image4'];
-        foreach ($image_fields as $field) {
-            if ($product[$field] && file_exists('upload/' . $product[$field])) {
-                unlink('upload/' . $product[$field]);
-            }
+        // Eliminar imagen del servidor si existe
+        if ($product['image'] && file_exists('upload/' . $product['image'])) {
+            unlink('upload/' . $product['image']);
         }
         
         echo json_encode([
@@ -119,51 +116,41 @@ try {
             throw new Exception('El stock debe ser un número igual o mayor a 0');
         }
         
-        // Mantener imágenes actuales por defecto
-        $image_names = [
-            $existing_product['image'],
-            $existing_product['image2'],
-            $existing_product['image3'],
-            $existing_product['image4']
-        ];
+        $image_name = $existing_product['image']; // Mantener imagen actual por defecto
         
-        $upload_dir = 'upload/';
-        
-        // Crear directorio si no existe
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        
-        // Procesar hasta 4 imágenes nuevas
-        for ($i = 0; $i < 4; $i++) {
-            $file_key = $i === 0 ? 'image_0' : "image_$i";
+        // Manejar nueva imagen si se subió
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'upload/';
             
-            if (isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
-                $file_extension = pathinfo($_FILES[$file_key]['name'], PATHINFO_EXTENSION);
-                $new_image_name = uniqid() . '_' . time() . '_' . $i . '.' . $file_extension;
-                $upload_path = $upload_dir . $new_image_name;
-                
-                // Validar tipo de archivo
-                $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                if (!in_array(strtolower($file_extension), $allowed_types)) {
-                    throw new Exception("Tipo de archivo no permitido para imagen " . ($i + 1) . ". Permitidos: " . implode(', ', $allowed_types));
+            // Crear directorio si no existe
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+            
+            $file_extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+            $new_image_name = uniqid() . '_' . time() . '.' . $file_extension;
+            $upload_path = $upload_dir . $new_image_name;
+            
+            // Validar tipo de archivo
+            $allowed_types = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (!in_array(strtolower($file_extension), $allowed_types)) {
+                throw new Exception('Tipo de archivo no permitido. Permitidos: ' . implode(', ', $allowed_types));
+            }
+            
+            // Validar tamaño (máximo 5MB)
+            if ($_FILES['image']['size'] > 5 * 1024 * 1024) {
+                throw new Exception('Archivo demasiado grande. Máximo 5MB');
+            }
+            
+            // Mover nuevo archivo
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
+                // Eliminar imagen anterior si existe
+                if ($existing_product['image'] && file_exists($upload_dir . $existing_product['image'])) {
+                    unlink($upload_dir . $existing_product['image']);
                 }
-                
-                // Validar tamaño (máximo 5MB)
-                if ($_FILES[$file_key]['size'] > 5 * 1024 * 1024) {
-                    throw new Exception("Archivo demasiado grande para imagen " . ($i + 1) . ". Máximo 5MB");
-                }
-                
-                // Mover nuevo archivo
-                if (move_uploaded_file($_FILES[$file_key]['tmp_name'], $upload_path)) {
-                    // Eliminar imagen anterior si existe
-                    if ($image_names[$i] && file_exists($upload_dir . $image_names[$i])) {
-                        unlink($upload_dir . $image_names[$i]);
-                    }
-                    $image_names[$i] = $new_image_name;
-                } else {
-                    throw new Exception("Error al subir la imagen " . ($i + 1));
-                }
+                $image_name = $new_image_name;
+            } else {
+                throw new Exception('Error al subir la nueva imagen');
             }
         }
         
@@ -173,10 +160,7 @@ try {
                 description = :description, 
                 price = :price, 
                 stock = :stock,
-                image = :image,
-                image2 = :image2,
-                image3 = :image3,
-                image4 = :image4,
+                image = :image, 
                 heat_level = :heat_level, 
                 rating = :rating, 
                 badge = :badge, 
@@ -192,10 +176,7 @@ try {
             ':description' => trim($description),
             ':price' => floatval($price),
             ':stock' => intval($stock),
-            ':image' => $image_names[0],
-            ':image2' => $image_names[1],
-            ':image3' => $image_names[2],
-            ':image4' => $image_names[3],
+            ':image' => $image_name,
             ':heat_level' => intval($heat_level),
             ':rating' => floatval($rating),
             ':badge' => trim($badge),
@@ -207,19 +188,12 @@ try {
             throw new Exception('Error al actualizar producto en la base de datos');
         }
         
-        // Construir URLs de imágenes
-        $image_urls = [];
-        for ($i = 0; $i < 4; $i++) {
-            $image_urls[] = $image_names[$i] ? 'https://admin.hot-bbq.ch/upload/' . $image_names[$i] : null;
-        }
-        
         echo json_encode([
             'success' => true,
             'message' => 'Producto actualizado exitosamente',
             'category' => $category,
             'stock' => intval($stock),
-            'image_urls' => $image_urls,
-            'image_url' => $image_urls[0] // Mantener compatibilidad con imagen principal
+            'image_url' => $image_name ? 'https://admin.hot-bbq.ch/upload/' . $image_name : null
         ]);
     }
     

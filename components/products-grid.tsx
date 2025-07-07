@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Flame, Star, ShoppingCart, Minus, Plus, MapPin, Award, Info } from "lucide-react"
+import { Flame, Star, ShoppingCart, Minus, Plus, MapPin, Award, Info, ChevronLeft, ChevronRight } from "lucide-react"
 import { ShoppingCartComponent } from "./shopping-cart"
 import { CheckoutPage } from "@/components/checkout-page"
 
@@ -20,6 +20,7 @@ interface Product {
   price: number
   image?: string
   image_url?: string // Ensure this is properly typed
+  image_urls?: (string | null)[] // Array de URLs de imágenes
   heatLevel: number
   rating: number
   badge: string
@@ -38,6 +39,7 @@ interface ApiProduct {
   price: number
   image?: string
   image_url?: string
+  image_urls?: (string | null)[] // Array de URLs de imágenes
   heat_level: number
   rating: number
   badge: string
@@ -109,6 +111,7 @@ export default function ProductsGridCompact({
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [cart, setCart] = useState<CartItem[]>([])
   const [currentView, setCurrentView] = useState<"products" | "checkout" | "success">("products")
+  const [currentImageIndex, setCurrentImageIndex] = useState<Record<number, number>>({})
   const cartRef = useRef<HTMLDivElement>(null)
 
   // Note: activeCart variables will be defined after the handler functions
@@ -241,12 +244,22 @@ export default function ProductsGridCompact({
       const data: ApiResponse = await response.json()
 
       if (data.success) {
-        const normalizedProducts: Product[] = data.products.map((product: ApiProduct) => ({
-          ...product,
-          heatLevel: product.heat_level || 0,
-          stock: product.stock || 0,
-          image_url: product.image_url || product.image || "/placeholder.svg",
-        }))
+        const normalizedProducts: Product[] = data.products.map((product: ApiProduct) => {
+          // Debug: Log de la respuesta de la API
+          console.log(`API Response para producto ${product.name}:`, {
+            image_urls: product.image_urls,
+            image_url: product.image_url,
+            image: product.image
+          })
+          
+          return {
+            ...product,
+            heatLevel: product.heat_level || 0,
+            stock: product.stock || 0,
+            image_url: product.image_url || product.image || "/placeholder.svg",
+            image_urls: product.image_urls || [product.image_url || product.image || "/placeholder.svg"],
+          }
+        })
         setProducts(normalizedProducts)
         if (data.stats) {
           setStats(data.stats)
@@ -314,6 +327,36 @@ export default function ProductsGridCompact({
   }
 
   const getQty = (id: number) => quantities[id] ?? 1
+
+  // Funciones para navegar entre imágenes
+  const getCurrentImageIndex = (productId: number) => currentImageIndex[productId] ?? 0
+  
+  const nextImage = (productId: number, totalImages: number) => {
+    setCurrentImageIndex(prev => ({
+      ...prev,
+      [productId]: ((prev[productId] ?? 0) + 1) % totalImages
+    }))
+  }
+  
+  const prevImage = (productId: number, totalImages: number) => {
+    setCurrentImageIndex(prev => ({
+      ...prev,
+      [productId]: ((prev[productId] ?? 0) - 1 + totalImages) % totalImages
+    }))
+  }
+
+  const getValidImages = (product: Product) => {
+    const validImages = (product.image_urls || []).filter(url => url !== null && url !== undefined && url !== "")
+    // Debug: Log para verificar las imágenes
+    if (product.id && validImages.length > 0) {
+      console.log(`Producto ${product.name} (ID: ${product.id}):`, {
+        image_urls: product.image_urls,
+        validImages: validImages,
+        count: validImages.length
+      })
+    }
+    return validImages
+  }
 
   // Funciones del carrito con persistencia
   const addToCartHandler = (product: any) => {
@@ -600,36 +643,104 @@ export default function ProductsGridCompact({
   )
 
   // Componente del modal de información detallada
-  const ProductDetailModal = ({ product }: { product: Product }) => (
-    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-      <DialogHeader>
-        <DialogTitle className="text-2xl font-bold text-gray-900 bg-white">{product.name}</DialogTitle>
-      </DialogHeader>
+  const ProductDetailModal = ({ product }: { product: Product }) => {
+    const validImages = getValidImages(product)
+    const currentIndex = getCurrentImageIndex(product.id!)
+    const hasMultipleImages = validImages.length > 1
 
-      <div className="grid md:grid-cols-2 gap-6 bg-white text-gray-900 p-4 rounded-lg">
-        {/* Imagen grande */}
-        <div className="relative">
-          <img
-            src={product.image_url || "/placeholder.svg?height=300&width=300"}
-            alt={product.name}
-            className="w-full h-64 md:h-80 object-cover rounded-lg shadow-lg"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.src = "/placeholder.svg?height=300&width=300"
-            }}
-          />
-          <Badge
-            className={`absolute top-3 left-3 text-sm px-3 py-1 font-medium shadow-lg ${
-              product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
-            }`}
-          >
-            {product.badge}
-          </Badge>
-        </div>
+    return (
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-gray-900 bg-white">{product.name}</DialogTitle>
+        </DialogHeader>
 
-        {/* Información detallada */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
+        <div className="grid md:grid-cols-2 gap-6 bg-white text-gray-900 p-4 rounded-lg">
+          {/* Galería de imágenes */}
+          <div className="relative">
+            <div className="relative overflow-hidden rounded-lg shadow-lg">
+              <img
+                src={validImages[currentIndex] || "/placeholder.svg?height=300&width=300"}
+                alt={`${product.name} - Imagen ${currentIndex + 1}`}
+                className="w-full h-64 md:h-80 object-cover transition-transform duration-300"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = "/placeholder.svg?height=300&width=300"
+                }}
+              />
+              
+              {/* Navegación de imágenes */}
+              {hasMultipleImages && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white border-gray-300"
+                    onClick={() => prevImage(product.id!, validImages.length)}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white border-gray-300"
+                    onClick={() => nextImage(product.id!, validImages.length)}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Indicadores de imagen */}
+                  <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1">
+                    {validImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(prev => ({ ...prev, [product.id!]: index }))}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          index === currentIndex ? 'bg-white' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {/* Miniaturas */}
+            {hasMultipleImages && (
+              <div className="flex gap-2 mt-3 overflow-x-auto">
+                {validImages.map((imageUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(prev => ({ ...prev, [product.id!]: index }))}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      index === currentIndex ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={`${product.name} - Miniatura ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = "/placeholder.svg?height=64&width=64"
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <Badge
+              className={`absolute top-3 left-3 text-sm px-3 py-1 font-medium shadow-lg ${
+                product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
+              }`}
+            >
+              {product.badge}
+            </Badge>
+          </div>
+
+          {/* Información detallada */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-gray-500" />
             <span className="text-gray-600">Herkunft: {product.origin}</span>
           </div>
@@ -722,10 +833,15 @@ export default function ProductsGridCompact({
         </div>
       </div>
     </DialogContent>
-  )
+    )
+  }
 
   // MEJORADO: Tarjeta de producto con mejor diseño para pantallas grandes
   const renderEnhancedProductCard = (product: Product, index: number) => {
+    const validImages = getValidImages(product)
+    const currentIndex = getCurrentImageIndex(product.id!)
+    const hasMultipleImages = validImages.length > 1
+
     return (
       <Card
         key={product.id}
@@ -739,17 +855,49 @@ export default function ProductsGridCompact({
         <CardContent className="p-4 lg:p-6">
           {/* MEJORADO: Layout que cambia según el tamaño de pantalla */}
           <div className="flex gap-4 lg:gap-6">
-            {/* MEJORADO: Imagen más grande en pantallas grandes */}
+            {/* MEJORADO: Imagen con carousel */}
             <div className="relative w-20 h-20 lg:w-32 lg:h-32 flex-shrink-0">
-              <img
-                src={product.image_url || "/placeholder.svg?height=128&width=128"}
-                alt={product.name}
-                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500 shadow-md"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = "/placeholder.svg?height=128&width=128"
-                }}
-              />
+              <div className="relative w-full h-full rounded-lg overflow-hidden">
+                <img
+                  src={validImages[currentIndex] || "/placeholder.svg?height=128&width=128"}
+                  alt={`${product.name} - Imagen ${currentIndex + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 shadow-md"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = "/placeholder.svg?height=128&width=128"
+                  }}
+                />
+                
+                {/* Navegación de imágenes solo visible en hover */}
+                {hasMultipleImages && (
+                  <>
+                    <button
+                      onClick={() => prevImage(product.id!, validImages.length)}
+                      className="absolute left-1 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70"
+                    >
+                      <ChevronLeft className="w-3 h-3 lg:w-4 lg:h-4" />
+                    </button>
+                    <button
+                      onClick={() => nextImage(product.id!, validImages.length)}
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70"
+                    >
+                      <ChevronRight className="w-3 h-3 lg:w-4 lg:h-4" />
+                    </button>
+                    
+                    {/* Indicadores de imagen */}
+                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
+                      {validImages.map((_, imgIndex) => (
+                        <div
+                          key={imgIndex}
+                          className={`w-1.5 h-1.5 rounded-full transition-all ${
+                            imgIndex === currentIndex ? 'bg-white' : 'bg-white/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
               
               <Badge
                 className={`absolute -top-1 -right-1 lg:-top-2 lg:-right-2 text-xs px-1.5 py-0.5 lg:px-2 lg:py-1 font-medium shadow-sm ${
@@ -758,6 +906,13 @@ export default function ProductsGridCompact({
               >
                 {product.badge}
               </Badge>
+              
+              {/* Contador de imágenes */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
+                  {currentIndex + 1}/{validImages.length}
+                </div>
+              )}
             </div>
 
             {/* MEJORADO: Contenido principal con mejor espaciado */}

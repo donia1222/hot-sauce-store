@@ -295,7 +295,7 @@ export function Admin({ onClose }: AdminProps) {
 
   const showAddProductModal = () => {
     setCurrentEditingProduct(null)
-    setImagePreviews([null, null, null, null])
+    setImagePreview(null)
     setIsProductModalOpen(true)
   }
 
@@ -306,7 +306,7 @@ export function Admin({ onClose }: AdminProps) {
 
       if (data.success) {
         setCurrentEditingProduct(data.product)
-        setImagePreviews(data.product.image_urls || [data.product.image_url, null, null, null])
+        setImagePreview(data.product.image_url)
         setIsProductModalOpen(true)
       } else {
         toast({
@@ -338,15 +338,6 @@ export function Admin({ onClose }: AdminProps) {
 
     if (isEditing) {
       formData.append("id", currentEditingProduct.id.toString())
-    }
-
-    // Handle multiple images
-    const form = e.currentTarget
-    for (let i = 0; i < 4; i++) {
-      const imageInput = form.elements.namedItem(`image_${i}`) as HTMLInputElement
-      if (imageInput?.files?.[0]) {
-        formData.append(`image_${i}`, imageInput.files[0])
-      }
     }
 
     try {
@@ -414,18 +405,17 @@ export function Admin({ onClose }: AdminProps) {
     }
   }
 
-  const handleImageChange = (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
-        const newPreviews = [...imagePreviews]
-        newPreviews[index] = e.target?.result as string
-        setImagePreviews(newPreviews)
+        setImagePreview(e.target?.result as string)
       }
       reader.readAsDataURL(file)
     }
   }
+
   // Utility Functions
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -1314,43 +1304,32 @@ export function Admin({ onClose }: AdminProps) {
               </div>
 
               <div>
-                <Label>Imágenes del Producto</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  {[0, 1, 2, 3].map((index) => (
-                    <div key={index} className="space-y-2">
-                      <Label htmlFor={`image_${index}`}>Imagen {index + 1}</Label>
-                      <Input
-                        id={`image_${index}`}
-                        name={`image_${index}`}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange(index)}
-                        className="bg-white"
-                      />
-                      {imagePreviews[index] && (
-                        <div className="relative">
-                          <img
-                            src={imagePreviews[index] || "/placeholder.svg"}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-cover rounded border"
-                          />
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => {
-                              const newPreviews = [...imagePreviews]
-                              newPreviews[index] = null
-                              setImagePreviews(newPreviews)
-                            }}
-                            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <Label htmlFor="image">Imagen del Producto</Label>
+                <Input
+                  id="image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="bg-white"
+                />
+                {imagePreview && (
+                  <div className="mt-2 relative">
+                    <img
+                      src={imagePreview || "/placeholder.svg"}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded border"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => setImagePreview(null)}
+                      className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">

@@ -40,20 +40,12 @@ try {
             exit();
         }
         
-        // Agregar URLs completas de las imágenes
-        $image_urls = [];
-        $image_fields = ['image', 'image2', 'image3', 'image4'];
-        
-        foreach ($image_fields as $field) {
-            if (!empty($product[$field])) {
-                $image_urls[] = 'https://admin.hot-bbq.ch/upload/' . $product[$field];
-            } else {
-                $image_urls[] = null;
-            }
+        // Agregar URL completa de la imagen
+        if ($product['image']) {
+            $product['image_url'] = 'https://admin.hot-bbq.ch/upload/' . $product['image'];
+        } else {
+            $product['image_url'] = null;
         }
-        
-        $product['image_urls'] = $image_urls;
-        $product['image_url'] = $image_urls[0]; // Mantener compatibilidad
         
         // Convertir tipos de datos
         $product['id'] = intval($product['id']);
@@ -114,20 +106,12 @@ try {
         
         // Procesar cada producto
         foreach ($products as &$product) {
-            // Agregar URLs completas de las imágenes
-            $image_urls = [];
-            $image_fields = ['image', 'image2', 'image3', 'image4'];
-            
-            foreach ($image_fields as $field) {
-                if (!empty($product[$field])) {
-                    $image_urls[] = 'https://admin.hot-bbq.ch/upload/' . $product[$field];
-                } else {
-                    $image_urls[] = null;
-                }
+            // Agregar URL completa de las imágenes
+            if ($product['image']) {
+                $product['image_url'] = 'https://admin.hot-bbq.ch/upload/' . $product['image'];
+            } else {
+                $product['image_url'] = null;
             }
-            
-            $product['image_urls'] = $image_urls;
-            $product['image_url'] = $image_urls[0]; // Mantener compatibilidad
             
             // Convertir tipos de datos
             $product['id'] = intval($product['id']);

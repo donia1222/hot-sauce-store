@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql24j11.db.hostpoint.internal
--- Erstellungszeit: 07. Jul 2025 um 11:56
+-- Erstellungszeit: 07. Jul 2025 um 20:00
 -- Server-Version: 10.6.22-MariaDB-log
 -- PHP-Version: 8.2.28
 
@@ -175,11 +175,11 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `price`, `image`, `heat_level`, `rating`, `badge`, `origin`, `created_at`, `updated_at`, `category`, `stock`, `image2`, `image3`, `image4`) VALUES
-(1, 'Big Red\'s - Big Yella', 'Goldgelbe Schärfe mit sonnigem Geschmack und intensivem Kick', 14.90, '685c7d335c170_1750891827.webp', 4, 4.80, 'Sonnig', 'USA', '2025-06-25 21:31:10', '2025-06-26 14:11:35', 'hot-sauce', 0, NULL, NULL, NULL),
-(2, 'Big Red\'s - Heat Wave', 'Eine Hitzewelle aus roten Chilis für wahre Schärfe-Liebhaber', 12.84, '685c7d48e63dd_1750891848.webp', 5, 4.90, 'Hitzewelle', 'USA', '2025-06-25 21:31:10', '2025-07-04 13:24:51', 'hot-sauce', 6, NULL, NULL, NULL),
-(3, 'Big Red\'s  - Green Chili', 'Frische grüne Chilis mit authentischem mexikanischem Geschmack', 11.24, '685c7d5f1439a_1750891871.webp', 3, 5.00, 'Frisch', 'USA', '2025-06-25 21:31:10', '2025-07-06 22:55:03', 'hot-sauce', 12, NULL, NULL, NULL),
+(1, 'Big Red\'s - Big Yella', 'Goldgelbe Schärfe mit sonnigem Geschmack und intensivem Kick', 14.90, '685c7d335c170_1750891827.webp', 4, 4.80, 'Sonnig', 'USA', '2025-06-25 21:31:10', '2025-07-07 10:33:16', 'hot-sauce', 0, '686ba26c8a141_1751884396_1.webp', NULL, NULL),
+(2, 'Big Red\'s - Heat Wave', 'Eine Hitzewelle aus roten Chilis für wahre Schärfe-Liebhaber', 12.84, '686be19d9a1d0_1751900573.png', 5, 4.90, 'Hitzewelle', 'USA', '2025-06-25 21:31:10', '2025-07-07 15:02:53', 'hot-sauce', 6, NULL, NULL, NULL),
+(3, 'Big Red\'s  - Green Chili', 'Frische grüne Chilis mit authentischem mexikanischem Geschmack', 11.24, '686bf10c530b3_1751904524.webp', 3, 5.00, 'Frisch', 'USA', '2025-06-25 21:31:10', '2025-07-07 16:08:44', 'hot-sauce', 12, '686ba57675a91_1751885174_1.png', '686b9ce72e4ba_1751882983_2.webp', NULL),
 (4, 'Big Red\'s - Original Sauce', 'Die legendäre Originalrezept seit Generationen unverändert', 1.10, '685c7d7713465_1750891895.webp', 4, 4.60, 'Klassiker', 'USA', '2025-06-25 21:31:10', '2025-07-04 13:24:44', 'hot-sauce', 6, NULL, NULL, NULL),
-(5, 'Big Red\'s  - Habanero', 'Authentische Habanero-Chilis für den ultimativen Schärfe-Genuss', 14.93, '685c7d93043e7_1750891923.webp', 3, 4.80, 'Habanero', 'USA', '2025-06-25 21:31:10', '2025-07-06 00:44:34', 'hot-sauce', 0, NULL, NULL, NULL),
+(5, 'Big Red\'s  - Habanero', 'Authentische Habanero-Chilis für den ultimativen Schärfe-Genuss', 14.93, '686bf5f4a425b_1751905780.jpg', 3, 4.80, 'Habanero', 'USA', '2025-06-25 21:31:10', '2025-07-07 17:58:04', 'hot-sauce', 0, '686baad313071_1751886547_1.webp', '686bc96451efb_1751894372_2.png', NULL),
 (11, 'Honey BBQ', 'Eine perfekte Mischung aus natürlichem Honig und rauchigen Gewürzen, die jeden Grillabend veredelt', 14.00, '685d3bbfd4b29_1750940607.webp', 3, 4.90, 'Süß', 'USA', '2025-06-25 21:42:18', '2025-07-04 13:24:24', 'bbq-sauce', 12, NULL, NULL, NULL),
 (12, 'Garlic BBQ', 'Für Knoblauch-Liebhaber - eine Geschmacksexplosion, die Ihr Fleisch transformiert', 14.00, '685c7cb9d36ea_1750891705.webp', 1, 4.90, 'Intensiv', 'USA', '2025-06-25 21:42:18', '2025-07-07 00:00:18', 'bbq-sauce', 4, NULL, NULL, NULL),
 (13, 'Carolina-Style BBQ', 'Traditionelles Südstaaten-Rezept, international preisgekrönt', 14.00, '685c7cc861e68_1750891720.webp', 5, 4.90, 'Preisgekrönt', 'USA', '2025-06-25 21:42:18', '2025-07-06 00:41:11', 'bbq-sauce', 4, NULL, NULL, NULL),
@@ -272,7 +272,7 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `session_token`, `expires_at`, `cr
 (35, 32, '3e280e91dd03d8f630853349d1ac494772e3e6219bebf91e34bb3ae5642eae54', '2025-07-24 12:57:10', '2025-06-24 12:53:22', '2025-06-24 12:57:10'),
 (36, 33, '1662d5b67b3c4f2a3cd061ff7976af177812b68ec7d29a6b578105e7fa44c9be', '2025-07-24 12:57:59', '2025-06-24 12:57:49', '2025-06-24 12:57:59'),
 (37, 34, 'b452fe3ea8f75ff7d99f5ef467fd10e36929be6abf3ea57c2395dcdc60049197', '2025-07-24 13:01:11', '2025-06-24 13:00:56', '2025-06-24 13:01:11'),
-(40, 37, 'f07f5e34bd4a87384d03453a3776f55e8a3216764d7ca0de8f111388da8e814e', '2025-08-04 23:29:50', '2025-06-24 13:09:06', '2025-07-05 23:29:50'),
+(40, 37, 'f07f5e34bd4a87384d03453a3776f55e8a3216764d7ca0de8f111388da8e814e', '2025-08-06 14:04:19', '2025-06-24 13:09:06', '2025-07-07 14:04:19'),
 (41, 38, 'b6a426a3c4b0257b329462da4836e2fa60272d8edaa1aaeff72c5dcd13422b75', '2025-07-24 13:14:44', '2025-06-24 13:09:35', '2025-06-24 13:14:44'),
 (42, 39, '46adddbfe488fca49f2c3855a6171e18381590443501c7c94bfc6a7065403c33', '2025-07-24 13:15:34', '2025-06-24 13:15:20', '2025-06-24 13:15:34'),
 (43, 39, 'c4ba95efa72c7020e9c0b55a555734565abc6f85e29910020acd2cd22866a072', '2025-07-24 23:00:21', '2025-06-24 13:16:06', '2025-06-24 23:00:21'),
@@ -300,18 +300,18 @@ INSERT INTO `user_sessions` (`id`, `user_id`, `session_token`, `expires_at`, `cr
 (68, 44, '0ebdb47b719b39731aa12d93fda7942940a76d717433711215c08889589ed4d2', '2025-07-30 11:32:28', '2025-06-29 22:52:06', '2025-06-30 11:32:28'),
 (69, 44, '698b122963825751fed337729cd0e0aad8b5c3caf43020a3f18b4c4abb089350', '2025-07-30 10:59:45', '2025-06-30 10:40:39', '2025-06-30 10:59:45'),
 (70, 44, '2392b373baf6efbf83e1680fceb3167249ab225e0872474f4c13c2facc64a7d1', '2025-08-05 22:25:52', '2025-06-30 11:33:08', '2025-07-06 22:25:52'),
-(71, 44, '594e2f474622da2dcf1de53712dcc6c9f4cda6221f0ffb2990f36fa574856af5', '2025-08-04 23:56:28', '2025-06-30 22:19:36', '2025-07-05 23:56:28'),
-(72, 44, 'a6177e3c47a375165cee02b523cd1fb86c875f4b8fde576bb08ce40c86aedef2', '2025-07-30 22:51:53', '2025-06-30 22:47:48', '2025-06-30 22:51:53'),
+(71, 44, '594e2f474622da2dcf1de53712dcc6c9f4cda6221f0ffb2990f36fa574856af5', '2025-08-06 13:55:51', '2025-06-30 22:19:36', '2025-07-07 13:55:51'),
+(72, 44, 'a6177e3c47a375165cee02b523cd1fb86c875f4b8fde576bb08ce40c86aedef2', '2025-08-06 14:50:16', '2025-06-30 22:47:48', '2025-07-07 14:50:16'),
 (73, 44, '66f82f250f548baff612c16181e7a69438aef8f258ad585a1884c9c61dfa3e4f', '2025-07-30 23:31:08', '2025-06-30 23:27:15', '2025-06-30 23:31:08'),
 (74, 45, '1a3e7406c62e5e321aa4e0974fbd092d1125e58fb7acfb6e87e0fd59b99fc176', '2025-07-30 23:37:24', '2025-06-30 23:37:24', '2025-06-30 23:37:24'),
 (75, 46, 'ba7f18efef23f53b91c1d9381beb7c7194d099e7251345eca7ed783b68227889', '2025-07-30 23:39:08', '2025-06-30 23:38:10', '2025-06-30 23:39:08'),
 (76, 46, 'd94746a3cd7ba6e9e6dca48bbb39d04ea5017b42ff2dda06f366e1e5709f1a9c', '2025-07-31 22:19:32', '2025-06-30 23:39:30', '2025-07-01 22:19:32'),
 (77, 44, 'b2e217cb68d756c6c8e3537e474d1713d2091373377f4a81d58da21a6462afc3', '2025-08-05 01:06:26', '2025-07-01 14:49:52', '2025-07-06 01:06:26'),
-(78, 44, 'f1fde31fc6651aef978d86a965c9830685d60f7792834a3bd4d4138e5416c2fd', '2025-08-06 00:24:16', '2025-07-01 22:20:02', '2025-07-07 00:24:16'),
+(78, 44, 'f1fde31fc6651aef978d86a965c9830685d60f7792834a3bd4d4138e5416c2fd', '2025-08-06 13:52:19', '2025-07-01 22:20:02', '2025-07-07 13:52:19'),
 (79, 44, 'd154434c817d044f0e1b7643683d14deb40cf6fad6c33801d5b171118cf1557f', '2025-08-01 00:02:15', '2025-07-01 23:31:58', '2025-07-02 00:02:15'),
-(80, 44, 'b47a4c6c6bcb2af5c11fa3231e8dc4723a79b76520fb0db9c75612e9b405a289', '2025-08-05 23:54:39', '2025-07-06 00:27:10', '2025-07-06 23:54:39'),
+(80, 44, 'b47a4c6c6bcb2af5c11fa3231e8dc4723a79b76520fb0db9c75612e9b405a289', '2025-08-06 15:24:44', '2025-07-06 00:27:10', '2025-07-07 15:24:44'),
 (81, 44, '7ed0474a3a87ec2b49eafe14f0c4ca4653dbb5b40473e91e803c7e39316028ce', '2025-08-05 22:38:46', '2025-07-06 22:38:38', '2025-07-06 22:38:46'),
-(82, 44, '78fa3e80b5a7a69232bf2b1e31134b36d422e636d6cfaf0d86063eabd7314d18', '2025-08-06 09:22:21', '2025-07-06 23:58:33', '2025-07-07 09:22:21');
+(82, 44, '78fa3e80b5a7a69232bf2b1e31134b36d422e636d6cfaf0d86063eabd7314d18', '2025-08-06 17:34:08', '2025-07-06 23:58:33', '2025-07-07 17:34:08');
 
 --
 -- Indizes der exportierten Tabellen
@@ -382,7 +382,7 @@ ALTER TABLE `order_items`
 -- AUTO_INCREMENT für Tabelle `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT für Tabelle `users`
