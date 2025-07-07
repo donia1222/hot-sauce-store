@@ -42,7 +42,7 @@ try {
         
         // Agregar URL completa de la imagen
         if ($product['image']) {
-            $product['image_url'] = 'https://web.lweb.ch/shop/uploads/' . $product['image'];
+            $product['image_url'] = 'https://admin.hot-bbq.ch/upload/' . $product['image'];
         } else {
             $product['image_url'] = null;
         }
@@ -108,7 +108,7 @@ try {
         foreach ($products as &$product) {
             // Agregar URL completa de las imágenes
             if ($product['image']) {
-                $product['image_url'] = 'https://web.lweb.ch/shop/uploads/' . $product['image'];
+                $product['image_url'] = 'https://admin.hot-bbq.ch/upload/' . $product['image'];
             } else {
                 $product['image_url'] = null;
             }

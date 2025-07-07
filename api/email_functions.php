@@ -1,6 +1,6 @@
 <?php
 /**
- * TESTING
+ * Funciones para gestión de emails de confirmación
  * Separado del archivo principal para mejor organización
  */
 

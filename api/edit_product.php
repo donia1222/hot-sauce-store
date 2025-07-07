@@ -53,8 +53,8 @@ try {
         }
         
         // Eliminar imagen del servidor si existe
-        if ($product['image'] && file_exists('uploads/' . $product['image'])) {
-            unlink('uploads/' . $product['image']);
+        if ($product['image'] && file_exists('upload/' . $product['image'])) {
+            unlink('upload/' . $product['image']);
         }
         
         echo json_encode([
@@ -120,7 +120,7 @@ try {
         
         // Manejar nueva imagen si se subió
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = 'uploads/';
+            $upload_dir = 'upload/';
             
             // Crear directorio si no existe
             if (!is_dir($upload_dir)) {
@@ -193,7 +193,7 @@ try {
             'message' => 'Producto actualizado exitosamente',
             'category' => $category,
             'stock' => intval($stock),
-            'image_url' => $image_name ? 'https://web.lweb.ch/shop/uploads/' . $image_name : null
+            'image_url' => $image_name ? 'https://admin.hot-bbq.ch/upload/' . $image_name : null
         ]);
     }
     

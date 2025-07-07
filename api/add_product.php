@@ -51,7 +51,7 @@ try {
     // Manejar subida de imagen
     $image_name = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = 'uploads/';
+        $upload_dir = 'upload/';
         
         // Crear directorio si no existe
         if (!is_dir($upload_dir)) {
@@ -107,7 +107,7 @@ try {
         'message' => 'Producto añadido exitosamente',
         'product_id' => intval($product_id),
         'category' => $category,
-        'image_url' => $image_name ? 'uploads/' . $image_name : null
+        'image_url' => $image_name ? 'https://admin.hot-bbq.ch/upload/' . $image_name : null
     ]);
     
 } catch (Exception $e) {
