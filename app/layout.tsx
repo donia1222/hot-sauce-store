@@ -8,13 +8,14 @@ export const metadata: Metadata = {
   description: 'Die exclusivste Premium-Kollektion scharfer Saucen der Welt',
   generator: '9745 Sevelen',
   /** Color del navegador (barra de direcciones, pestañas, etc.) */
-  themeColor: '#3333',
+  themeColor: '#000000',
   icons: {
     icon: '/favicon.png',
     apple: '/icon-192x192.png',
   },
   manifest: '/manifest.json',
 }
+
 
 export default function RootLayout({
   children,
