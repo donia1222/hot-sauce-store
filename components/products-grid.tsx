@@ -191,6 +191,8 @@ export default function ProductsGridCompact({
           description: `Información detallada sobre ${productData.name}`,
           price: productData.price,
           image_url: productData.image,
+          image_urls: productData.image ? [productData.image] : [],
+          stock: productData.stock || 0,
           heatLevel: productData.heatLevel,
           rating: 4.5, // Valor por defecto
           badge: productData.badge,
@@ -785,6 +787,7 @@ export default function ProductsGridCompact({
 
             <Badge
               className={`absolute top-3 left-3 text-sm px-3 py-1 font-medium shadow-lg ${
+                
                 product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
               }`}
             >

@@ -137,7 +137,10 @@ try {
         // Procesar hasta 4 imágenes nuevas
         for ($i = 0; $i < 4; $i++) {
             $file_key = $i === 0 ? 'image_0' : "image_$i";
+            $remove_key = "remove_image_$i";
+            $keep_key = "keep_image_$i";
             
+            // Si hay nueva imagen subida
             if (isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
                 $file_extension = pathinfo($_FILES[$file_key]['name'], PATHINFO_EXTENSION);
                 $new_image_name = uniqid() . '_' . time() . '_' . $i . '.' . $file_extension;
@@ -165,6 +168,16 @@ try {
                     throw new Exception("Error al subir la imagen " . ($i + 1));
                 }
             }
+            // Si se indica eliminar la imagen
+            else if (isset($_POST[$remove_key]) && $_POST[$remove_key] === 'true') {
+                // Eliminar imagen del servidor si existe
+                if ($image_names[$i] && file_exists($upload_dir . $image_names[$i])) {
+                    unlink($upload_dir . $image_names[$i]);
+                }
+                $image_names[$i] = null;
+            }
+            // Si se indica mantener la imagen, no hacer nada (ya está en $image_names[$i])
+            // Si no se especifica nada, mantener la imagen existente por defecto
         }
         
         // Actualizar producto en la base de datos

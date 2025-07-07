@@ -27,6 +27,7 @@ type DetectedProduct = {
   price: number
   badge: string
   heatLevel: number
+  stock?: number
 }
 
 // Base de datos de productos que se carga dinámicamente desde la API
@@ -50,7 +51,8 @@ async function loadProductsFromAPI(): Promise<DetectedProduct[]> {
         image: product.image_url || "/placeholder.svg?height=128&width=128", // Usar image_url de la API
         price: product.price,
         badge: product.badge,
-        heatLevel: product.heat_level
+        heatLevel: product.heat_level,
+        stock: product.stock
       }))
       
       console.log('✅ Productos cargados exitosamente:', products.length)
@@ -225,7 +227,8 @@ function DetectedProductsDisplay({ products, onCloseChat }: { products: Detected
             
             // Crear evento personalizado para comunicar el producto al grid
             const event = new CustomEvent('openProductModal', { 
-              detail: { 
+              detail: {
+                productId: productData.id, 
                 productData: productData,
                 searchByName: true
               } 
