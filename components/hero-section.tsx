@@ -28,6 +28,7 @@ export function HeroSection() {
       element.scrollIntoView({ behavior: "smooth" })
     }
   }
+  
 
   return (
     <section
