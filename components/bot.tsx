@@ -35,11 +35,16 @@ let productDatabase: DetectedProduct[] = []
 // Función para cargar productos desde la API
 async function loadProductsFromAPI(): Promise<DetectedProduct[]> {
   try {
-    const response = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/get_products.php')
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/get_products.php`
+    console.log('🔗 Cargando productos desde API:', apiUrl)
+    
+    const response = await fetch(apiUrl)
     const data = await response.json()
     
+    console.log('📦 Respuesta de la API:', data)
+    
     if (data.success && data.products) {
-      return data.products.map((product: any) => ({
+      const products = data.products.map((product: any) => ({
         id: product.id,
         name: product.name,
         image: product.image_url || "/placeholder.svg?height=128&width=128", // Usar image_url de la API
@@ -47,10 +52,16 @@ async function loadProductsFromAPI(): Promise<DetectedProduct[]> {
         badge: product.badge,
         heatLevel: product.heat_level
       }))
+      
+      console.log('✅ Productos cargados exitosamente:', products.length)
+      console.log('🔍 Primeros 3 productos:', products.slice(0, 3))
+      return products
     }
+    
+    console.log('❌ No se pudieron cargar productos. Respuesta:', data)
     return []
   } catch (error) {
-    console.error('Error loading products from API:', error)
+    console.error('❌ Error loading products from API:', error)
     return []
   }
 }
@@ -60,27 +71,79 @@ function detectProductsInText(responseText: string): DetectedProduct[] {
   const detectedProducts: DetectedProduct[] = []
   const lowerResponseText = responseText.toLowerCase()
   
+  console.log('🔍 Detectando productos en texto:', lowerResponseText)
+  console.log('📦 Base de datos tiene', productDatabase.length, 'productos')
+  
   // Para cada producto en nuestra base de datos, verificamos si es mencionado
   productDatabase.forEach(product => {
-    // Creamos múltiples variantes de búsqueda para cada producto
-    const searchVariants = [
-      product.name.toLowerCase(),
-      product.name.toLowerCase().replace(/big red's - /, ''), // "Heat Wave" sin el prefijo
-      product.name.toLowerCase().replace(/bbq/, 'sauce'), // "Honey Sauce" como variante
-      product.badge.toLowerCase() // También buscamos por el badge como "süß", "scharf"
-    ]
+    // Creamos variantes de búsqueda más específicas y precisas
+    const productName = product.name.toLowerCase()
+    const searchVariants = []
     
-    // Si alguna variante se encuentra en el texto y no está ya detectada
+    // Solo agregamos el nombre completo del producto
+    searchVariants.push(productName)
+    
+    // Nombre sin prefijo "Big Red's - " (más específico)
+    if (productName.includes('big red\'s - ')) {
+      searchVariants.push(productName.replace(/big red's - /, ''))
+    }
+    
+    // Variantes específicas SOLO para productos comunes mencionados frecuentemente
+    if (productName.includes('honey') && productName.includes('bbq')) {
+      searchVariants.push('honey bbq sauce', 'honey bbq')
+    }
+    if (productName.includes('garlic') && productName.includes('bbq')) {
+      searchVariants.push('garlic bbq sauce', 'garlic bbq')
+    }
+    if (productName.includes('carolina') && productName.includes('bbq')) {
+      searchVariants.push('carolina-style bbq', 'carolina style bbq', 'carolina bbq')
+    }
+    if (productName.includes('chipotle') && productName.includes('bbq')) {
+      searchVariants.push('chipotle bbq sauce', 'chipotle bbq')
+    }
+    if (productName.includes('habanero')) {
+      searchVariants.push('habanero sauce', 'habanero')
+    }
+    if (productName.includes('heat wave')) {
+      searchVariants.push('heat wave', 'heatwave')
+    }
+    
+    // Filtrar variantes válidas y limpiar duplicados
+    const validVariants = [...new Set(searchVariants)]
+      .filter(variant => variant && variant.length > 3) // Mínimo 4 caracteres para evitar matches cortos
+      .map(variant => variant.trim())
+    
+    // Solo buscar matches MUY específicos
     const isAlreadyDetected = detectedProducts.some(dp => dp.id === product.id)
-    const isTextMatch = searchVariants.some(variant => 
-      lowerResponseText.includes(variant) && variant.length > 2 // Evitar coincidencias de 1-2 caracteres
-    )
     
-    if (isTextMatch && !isAlreadyDetected) {
+    // Buscar matches MUY específicos usando word boundaries para evitar falsos positivos
+    const matchedVariant = validVariants.find(variant => {
+      // Crear patrón con word boundaries para match exacto
+      const escapedVariant = variant.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      
+      // Para BBQ sauces, buscar el nombre específico con diferentes variantes
+      if (variant.includes('bbq') || variant.includes('sauce')) {
+        const patterns = [
+          new RegExp(`\\b${escapedVariant}\\b`, 'i'), // Nombre exacto
+          new RegExp(`\\b${escapedVariant} sauce\\b`, 'i'), // Con "sauce"
+          new RegExp(`\\bdie ${escapedVariant}\\b`, 'i'), // Con artículo "die"
+          new RegExp(`\\b${escapedVariant}\\s+\\(`, 'i'), // Seguido de paréntesis (para menciones con detalles)
+        ]
+        return patterns.some(pattern => pattern.test(responseText))
+      }
+      
+      // Para otros productos, buscar con word boundaries
+      const pattern = new RegExp(`\\b${escapedVariant}\\b`, 'i')
+      return pattern.test(responseText)
+    })
+    
+    if (matchedVariant && !isAlreadyDetected) {
+      console.log(`✅ Producto detectado: "${product.name}" por variante: "${matchedVariant}"`)
       detectedProducts.push(product)
     }
   })
   
+  console.log('🎯 Productos detectados:', detectedProducts.map(p => p.name))
   return detectedProducts
 }
 
