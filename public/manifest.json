@@ -1,11 +1,11 @@
 {
   "name": "FEUER KÖNIGREICH - Salsas.ch",
-  "short_name": "Salsas.ch",
+  "short_name": "Salsas",
   "description": "Die exclusivste Premium-Kollektion scharfer Saucen der Welt",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3333",
+  "theme_color": "#000000",
   "orientation": "portrait-primary",
   "icons": [
     {
