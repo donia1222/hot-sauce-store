@@ -142,6 +142,7 @@ export function Admin({ onClose }: AdminProps) {
   const [currentEditingProduct, setCurrentEditingProduct] = useState<Product | null>(null)
   const [deleteProductId, setDeleteProductId] = useState<number | null>(null)
   const [imagePreviews, setImagePreviews] = useState<(string | null)[]>([null, null, null, null])
+  const [removedImages, setRemovedImages] = useState<boolean[]>([false, false, false, false])
 
   // Filtros Orders
   const [orderFilters, setOrderFilters] = useState({
@@ -296,6 +297,7 @@ export function Admin({ onClose }: AdminProps) {
   const showAddProductModal = () => {
     setCurrentEditingProduct(null)
     setImagePreviews([null, null, null, null])
+    setRemovedImages([false, false, false, false])
     setIsProductModalOpen(true)
   }
 
@@ -307,6 +309,7 @@ export function Admin({ onClose }: AdminProps) {
       if (data.success) {
         setCurrentEditingProduct(data.product)
         setImagePreviews(data.product.image_urls || [data.product.image_url, null, null, null])
+        setRemovedImages([false, false, false, false])
         setIsProductModalOpen(true)
       } else {
         toast({
@@ -346,6 +349,13 @@ export function Admin({ onClose }: AdminProps) {
       const imageInput = form.elements.namedItem(`image_${i}`) as HTMLInputElement
       if (imageInput?.files?.[0]) {
         formData.append(`image_${i}`, imageInput.files[0])
+      } else if (isEditing) {
+        // Si no hay nueva imagen, verificar si se debe eliminar o mantener
+        if (removedImages[i]) {
+          formData.append(`remove_image_${i}`, 'true')
+        } else if (imagePreviews[i]) {
+          formData.append(`keep_image_${i}`, 'true')
+        }
       }
     }
 
@@ -1341,6 +1351,13 @@ export function Admin({ onClose }: AdminProps) {
                               const newPreviews = [...imagePreviews]
                               newPreviews[index] = null
                               setImagePreviews(newPreviews)
+                              
+                              // Mark image for removal if editing existing product
+                              if (currentEditingProduct) {
+                                const newRemoved = [...removedImages]
+                                newRemoved[index] = true
+                                setRemovedImages(newRemoved)
+                              }
                             }}
                             className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white"
                           >
