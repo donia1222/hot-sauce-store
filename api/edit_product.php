@@ -174,7 +174,7 @@ try {
                 if ($image_names[$i] && file_exists($upload_dir . $image_names[$i])) {
                     unlink($upload_dir . $image_names[$i]);
                 }
-                $image_names[$i] = null;
+                $image_names[$i] = "";
             }
             // Si se indica mantener la imagen, no hacer nada (ya está en $image_names[$i])
             // Si no se especifica nada, mantener la imagen existente por defecto
