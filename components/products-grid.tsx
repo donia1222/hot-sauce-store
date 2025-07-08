@@ -112,7 +112,6 @@ export default function ProductsGridCompact({
   const [cart, setCart] = useState<CartItem[]>([])
   const [currentView, setCurrentView] = useState<"products" | "checkout" | "success">("products")
   const [currentImageIndex, setCurrentImageIndex] = useState<Record<number, number>>({})
-  const [autoplayIntervals, setAutoplayIntervals] = useState<Record<number, NodeJS.Timeout>>({})
   const cartRef = useRef<HTMLDivElement>(null)
 
   // Note: activeCart variables will be defined after the handler functions
@@ -221,30 +220,16 @@ export default function ProductsGridCompact({
     setCartCount(totalItems)
   }, [parentCart, cart])
 
-  // Animación escalonada y autoplay
+  // Animación escalonada
   useEffect(() => {
     if (products.length > 0) {
       setVisibleProducts(new Set())
-      
-      // Limpiar todos los autoplay existentes
-      Object.values(autoplayIntervals).forEach(interval => clearInterval(interval))
-      setAutoplayIntervals({})
       
       const timer = setTimeout(() => {
         const filteredProducts = getFilteredProducts()
         filteredProducts.forEach((product, index) => {
           setTimeout(() => {
             setVisibleProducts((prev) => new Set([...prev, index]))
-            
-            // Iniciar autoplay para productos con múltiples imágenes
-            if (product.id) {
-              const validImages = getValidImages(product)
-              if (validImages.length > 1) {
-                setTimeout(() => {
-                  startAutoplay(product.id!, validImages.length)
-                }, 1000) // Esperar 1 segundo después de que aparezca
-              }
-            }
           }, index * 50)
         })
       }, 200)
@@ -377,42 +362,6 @@ export default function ProductsGridCompact({
     return validImages
   }
 
-  // Funciones para autoplay
-  const startAutoplay = (productId: number, totalImages: number) => {
-    if (totalImages <= 1) return
-    
-    // Limpiar intervalo existente si hay uno
-    stopAutoplay(productId)
-    
-    const interval = setInterval(() => {
-      nextImage(productId, totalImages)
-    }, 3000) // Cambiar cada 3 segundos
-    
-    setAutoplayIntervals(prev => ({
-      ...prev,
-      [productId]: interval
-    }))
-  }
-
-  const stopAutoplay = (productId: number) => {
-    if (autoplayIntervals[productId]) {
-      clearInterval(autoplayIntervals[productId])
-      setAutoplayIntervals(prev => {
-        const newIntervals = { ...prev }
-        delete newIntervals[productId]
-        return newIntervals
-      })
-    }
-  }
-
-  // Limpiar todos los intervalos al desmontar el componente
-  useEffect(() => {
-    return () => {
-      Object.values(autoplayIntervals).forEach(interval => {
-        clearInterval(interval)
-      })
-    }
-  }, [])
 
   // Funciones del carrito con persistencia
   const addToCartHandler = (product: any) => {
@@ -913,17 +862,7 @@ export default function ProductsGridCompact({
           {/* MEJORADO: Layout que cambia según el tamaño de pantalla */}
           <div className="flex gap-4 lg:gap-6">
             {/* MEJORADO: Imagen con carousel */}
-            <div 
-              className="relative w-20 h-20 lg:w-32 lg:h-32 flex-shrink-0"
-              onMouseEnter={() => stopAutoplay(product.id!)}
-              onMouseLeave={() => {
-                if (hasMultipleImages) {
-                  setTimeout(() => {
-                    startAutoplay(product.id!, validImages.length)
-                  }, 3000) // Reanudar 3 segundos después de quitar el mouse
-                }
-              }}
-            >
+            <div className="relative w-20 h-20 lg:w-32 lg:h-32 flex-shrink-0">
               <div className="relative w-full h-full rounded-lg overflow-hidden">
                 <img
                   src={validImages[currentIndex] ?? "/placeholder.svg?height=128&width=128"}
@@ -939,21 +878,13 @@ export default function ProductsGridCompact({
                 {hasMultipleImages && (
                   <>
                     <button
-                      onClick={() => {
-                        prevImage(product.id!, validImages.length)
-                        // Parar autoplay permanentemente cuando el usuario interactúa manualmente
-                        stopAutoplay(product.id!)
-                      }}
+                      onClick={() => prevImage(product.id!, validImages.length)}
                       className="absolute left-1 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70"
                     >
                       <ChevronLeft className="w-3 h-3 lg:w-4 lg:h-4" />
                     </button>
                     <button
-                      onClick={() => {
-                        nextImage(product.id!, validImages.length)
-                        // Parar autoplay permanentemente cuando el usuario interactúa manualmente
-                        stopAutoplay(product.id!)
-                      }}
+                      onClick={() => nextImage(product.id!, validImages.length)}
                       className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70"
                     >
                       <ChevronRight className="w-3 h-3 lg:w-4 lg:h-4" />
