@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -112,6 +112,8 @@ export default function ProductsGridCompact({
   const [cart, setCart] = useState<CartItem[]>([])
   const [currentView, setCurrentView] = useState<"products" | "checkout" | "success">("products")
   const [currentImageIndex, setCurrentImageIndex] = useState<Record<number, number>>({})
+  const [modalImageIndex, setModalImageIndex] = useState<number>(0)
+  const [modalQuantity, setModalQuantity] = useState<number>(1)
   const cartRef = useRef<HTMLDivElement>(null)
 
   // Note: activeCart variables will be defined after the handler functions
@@ -321,32 +323,32 @@ export default function ProductsGridCompact({
     ))
   }
 
-  const updateQty = (id: number, delta: number) => {
+  const updateQty = useCallback((id: number, delta: number) => {
     setQuantities((prev) => {
       const current = prev[id] ?? 1
       const next = Math.min(10, Math.max(1, current + delta))
       return { ...prev, [id]: next }
     })
-  }
+  }, [])
 
   const getQty = (id: number) => quantities[id] ?? 1
 
-  // Funciones para navegar entre imágenes
-  const getCurrentImageIndex = (productId: number) => currentImageIndex[productId] ?? 0
+  // Funciones para navegar entre imágenes - estabilizadas con useCallback
+  const getCurrentImageIndex = useCallback((productId: number) => currentImageIndex[productId] ?? 0, [currentImageIndex])
   
-  const nextImage = (productId: number, totalImages: number) => {
+  const nextImage = useCallback((productId: number, totalImages: number) => {
     setCurrentImageIndex(prev => ({
       ...prev,
       [productId]: ((prev[productId] ?? 0) + 1) % totalImages
     }))
-  }
+  }, [])
   
-  const prevImage = (productId: number, totalImages: number) => {
+  const prevImage = useCallback((productId: number, totalImages: number) => {
     setCurrentImageIndex(prev => ({
       ...prev,
       [productId]: ((prev[productId] ?? 0) - 1 + totalImages) % totalImages
     }))
-  }
+  }, [])
 
   const getValidImages = (product: Product): string[] => {
     const validImages = (product.image_urls || [])
@@ -647,26 +649,61 @@ export default function ProductsGridCompact({
     </div>
   )
 
-  // Componente del modal de información detallada
-  const ProductDetailModal = ({ product }: { product: Product }) => {
+  // Componente del modal de información detallada - Completamente aislado
+  const ProductDetailModal = memo(({ product }: { product: Product }) => {
     const validImages = getValidImages(product)
-    const currentIndex = getCurrentImageIndex(product.id!)
+    const [modalCurrentImageIndex, setModalCurrentImageIndex] = useState(0)
+    const [modalCurrentQuantity, setModalCurrentQuantity] = useState(1)
     const hasMultipleImages = validImages.length > 1
+    
+    // Inicializar valores cuando se abre el modal
+    useEffect(() => {
+      setModalCurrentImageIndex(getCurrentImageIndex(product.id!))
+      setModalCurrentQuantity(getQty(product.id!))
+    }, [product.id])
+    
+    // Handlers estables con useCallback para evitar re-renders del modal
+    const handlePrevImage = useCallback(() => {
+      setModalCurrentImageIndex(prev => 
+        (prev - 1 + validImages.length) % validImages.length
+      )
+    }, [validImages.length])
+    
+    const handleNextImage = useCallback(() => {
+      setModalCurrentImageIndex(prev => 
+        (prev + 1) % validImages.length
+      )
+    }, [validImages.length])
+    
+    const handleImageSelect = useCallback((index: number) => {
+      setModalCurrentImageIndex(index)
+    }, [])
+    
+    const handleQuantityChange = useCallback((delta: number) => {
+      setModalCurrentQuantity(prev => {
+        const next = Math.min(10, Math.max(1, prev + delta))
+        // Actualizar también el estado global
+        updateQty(product.id!, delta)
+        return next
+      })
+    }, [product.id])
 
     return (
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-gray-900 bg-white">{product.name}</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[95vh] w-[95vw] sm:w-[90vw] overflow-y-auto bg-white rounded-lg sm:rounded-xl">
+        <DialogHeader className="pb-2 sm:pb-4">
+          <DialogTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 bg-white leading-tight pr-8">
+            {product.name}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-2 gap-6 bg-white text-gray-900 p-4 rounded-lg">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 bg-white text-gray-900 p-1 sm:p-4 rounded-lg">
           {/* Galería de imágenes */}
-          <div className="relative">
-            <div className="relative overflow-hidden rounded-lg shadow-lg">
+          <div className="relative order-1 lg:order-none">
+            <div className="relative overflow-hidden rounded-lg sm:rounded-xl shadow-lg">
               <img
-                src={validImages[currentIndex] ?? "/placeholder.svg?height=300&width=300"}
-                alt={`${product.name} - Imagen ${currentIndex + 1}`}
-                className="w-full h-64 md:h-80 object-cover transition-transform duration-300"
+                src={validImages[modalCurrentImageIndex] ?? "/placeholder.svg?height=300&width=300"}
+                alt={`${product.name} - Imagen ${modalCurrentImageIndex + 1}`}
+                className="w-full h-48 sm:h-64 md:h-72 lg:h-80 object-cover transition-transform duration-300"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.src = "/placeholder.svg?height=300&width=300"
@@ -679,28 +716,28 @@ export default function ProductsGridCompact({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white border-gray-300"
-                    onClick={() => prevImage(product.id!, validImages.length)}
+                    className="absolute left-1 sm:left-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white border-gray-300 shadow-md w-8 h-8 sm:w-10 sm:h-10 p-0"
+                    onClick={handlePrevImage}
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white border-gray-300"
-                    onClick={() => nextImage(product.id!, validImages.length)}
+                    className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white border-gray-300 shadow-md w-8 h-8 sm:w-10 sm:h-10 p-0"
+                    onClick={handleNextImage}
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                   
                   {/* Indicadores de imagen */}
-                  <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1">
+                  <div className="absolute bottom-2 sm:bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1 sm:gap-2">
                     {validImages.map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => setCurrentImageIndex(prev => ({ ...prev, [product.id!]: index }))}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          index === currentIndex ? 'bg-white' : 'bg-white/50'
+                        onClick={() => handleImageSelect(index)}
+                        className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all shadow-sm ${
+                          index === modalCurrentImageIndex ? 'bg-white scale-110' : 'bg-white/60'
                         }`}
                       />
                     ))}
@@ -711,13 +748,13 @@ export default function ProductsGridCompact({
             
             {/* Miniaturas */}
             {hasMultipleImages && (
-              <div className="flex gap-2 mt-3 overflow-x-auto">
+              <div className="flex gap-2 mt-2 sm:mt-3 overflow-x-auto pb-2 scrollbar-hide">
                 {validImages.map((imageUrl, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentImageIndex(prev => ({ ...prev, [product.id!]: index }))}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      index === currentIndex ? 'border-red-500' : 'border-gray-200'
+                    onClick={() => handleImageSelect(index)}
+                    className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      index === modalCurrentImageIndex ? 'border-red-500 scale-105' : 'border-gray-200'
                     }`}
                   >
                     <img
@@ -735,8 +772,7 @@ export default function ProductsGridCompact({
             )}
 
             <Badge
-              className={`absolute top-3 left-3 text-sm px-3 py-1 font-medium shadow-lg ${
-                
+              className={`absolute top-2 sm:top-3 left-2 sm:left-3 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 font-medium shadow-lg ${
                 product.category === "bbq-sauce" ? "bg-amber-500 text-white" : "bg-red-500 text-white"
               }`}
             >
@@ -745,102 +781,108 @@ export default function ProductsGridCompact({
           </div>
 
           {/* Información detallada */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4 order-2 lg:order-none">
             <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600">Herkunft: {product.origin}</span>
-          </div>
+              <MapPin className="w-4 h-4 text-gray-500" />
+              <span className="text-sm sm:text-base text-gray-600">Herkunft: {product.origin}</span>
+            </div>
 
-          <div>
-            <h4 className="font-semibold text-gray-900 mb-2">Beschreibung</h4>
-            <p className="text-gray-600 leading-relaxed">{product.description}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Bewertung</h4>
+              <h4 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Beschreibung</h4>
+              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{product.description}</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Bewertung</h4>
+                <div className="flex items-center gap-2">
+                  <div className="flex">{renderStars(product.rating, "lg")}</div>
+                  <span className="font-medium text-gray-700 text-sm sm:text-base">{product.rating}/5</span>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Schärfegrad</h4>
+                <div className="flex items-center gap-1">
+                  <div className="flex">{renderHeatLevel(product.heatLevel, "lg")}</div>
+                  <span className="text-sm text-gray-600 ml-2">{product.heatLevel}/5</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Stock information */}
+            <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Verfügbarkeit</h4>
               <div className="flex items-center gap-2">
-                <div className="flex">{renderStars(product.rating, "lg")}</div>
-                <span className="font-medium text-gray-700">{product.rating}/5</span>
+                <div className={`w-3 h-3 rounded-full ${
+                  (product.stock || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <span className={`font-medium text-sm sm:text-base ${
+                  (product.stock || 0) > 0 ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {(product.stock || 0) > 0 ? `${product.stock} auf Lager` : 'Nicht verfügbar'}
+                </span>
               </div>
             </div>
 
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Schärfegrad</h4>
-              <div className="flex items-center gap-1">
-                <div className="flex">{renderHeatLevel(product.heatLevel, "lg")}</div>
-                <span className="text-sm text-gray-600 ml-2">{product.heatLevel}/5</span>
+            <div className="border-t pt-3 sm:pt-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+                <div className="text-xl sm:text-2xl font-bold text-gray-600">
+                  {(product.price * modalCurrentQuantity).toFixed(2)} CHF
+                </div>
+                <div className="text-xs sm:text-sm text-gray-500">Einzelpreis: {product.price.toFixed(2)} CHF</div>
               </div>
-            </div>
-          </div>
 
-          {/* Stock information */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <h4 className="font-semibold text-gray-900 mb-2">Verfügbarkeit</h4>
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${
-                (product.stock || 0) > 0 ? 'bg-green-500' : 'bg-red-500'
-              }`}></div>
-              <span className={`font-medium ${
-                (product.stock || 0) > 0 ? 'text-green-700' : 'text-red-700'
-              }`}>
-                {(product.stock || 0) > 0 ? `${product.stock} auf Lager` : 'Nicht verfügbar'}
-              </span>
-            </div>
-          </div>
-
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-2xl font-bold text-gray-600">
-                {(product.price * getQty(product.id!)).toFixed(2)} CHF
+              {/* Controles de cantidad */}
+              <div className="flex items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleQuantityChange(-1)}
+                  className="px-2 sm:px-3 py-2 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900 h-8 sm:h-10 w-8 sm:w-10"
+                >
+                  <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
+                <span className="px-3 sm:px-4 py-2 font-semibold text-base sm:text-lg text-gray-900 min-w-[40px] text-center">
+                  {modalCurrentQuantity}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleQuantityChange(1)}
+                  className="px-2 sm:px-3 py-2 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900 h-8 sm:h-10 w-8 sm:w-10"
+                >
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
               </div>
-              <div className="text-sm text-gray-500">Einzelpreis: {product.price.toFixed(2)} CHF</div>
-            </div>
 
-            {/* Controles de cantidad */}
-            <div className="flex items-center justify-center gap-4 mb-4">
+              {/* Botón de compra */}
               <Button
-                size="sm"
-                variant="outline"
-                onClick={() => updateQty(product.id!, -1)}
-                className="px-3 py-2 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900"
+                onClick={() => {
+                  // Actualizar la cantidad global antes de la compra
+                  setQuantities(prev => ({ ...prev, [product.id!]: modalCurrentQuantity }))
+                  handlePurchase(product, undefined, true)
+                }}
+                disabled={purchasedItems.has(product.id!) || (product.stock || 0) === 0}
+                className={`w-full font-semibold py-3 sm:py-4 rounded-lg transition-all duration-500 shadow-md hover:shadow-lg text-sm sm:text-base ${
+                  purchasedItems.has(product.id!) || addedItems.has(product.id!)
+                    ? "bg-green-600 hover:bg-green-700"
+                    : (product.stock || 0) === 0
+                      ? "bg-gray-500 hover:bg-gray-600"
+                      : product.category === "bbq-sauce"
+                        ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                        : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
+                } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
               >
-                <Minus className="w-4 h-4" />
-              </Button>
-              <span className="px-4 py-2 font-semibold text-lg text-gray-900">{getQty(product.id!)}</span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => updateQty(product.id!, 1)}
-                className="px-3 py-2 bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:text-gray-900"
-              >
-                <Plus className="w-4 h-4" />
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                {(product.stock || 0) === 0 ? "Ausverkauft" : (purchasedItems.has(product.id!) || addedItems.has(product.id!) ? "Gekauft" : "In den Warenkorb")}
               </Button>
             </div>
-
-            {/* Botón de compra */}
-            <Button
-              onClick={() => handlePurchase(product, undefined, true)}
-              disabled={purchasedItems.has(product.id!) || (product.stock || 0) === 0}
-              className={`w-full font-semibold py-3 rounded-lg transition-all duration-500 shadow-md hover:shadow-lg ${
-                purchasedItems.has(product.id!) || addedItems.has(product.id!)
-                  ? "bg-green-600 hover:bg-green-700"
-                  : (product.stock || 0) === 0
-                    ? "bg-gray-500 hover:bg-gray-600"
-                    : product.category === "bbq-sauce"
-                      ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
-                      : "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-pink-600"
-              } disabled:opacity-50 disabled:cursor-not-allowed text-white`}
-            >
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              {(product.stock || 0) === 0 ? "Ausverkauft" : (purchasedItems.has(product.id!) || addedItems.has(product.id!) ? "Gekauft" : "In den Warenkorb")}
-            </Button>
           </div>
         </div>
-      </div>
-    </DialogContent>
+      </DialogContent>
     )
-  }
+  })
 
   // MEJORADO: Tarjeta de producto con mejor diseño para pantallas grandes
   const renderEnhancedProductCard = (product: Product, index: number) => {
